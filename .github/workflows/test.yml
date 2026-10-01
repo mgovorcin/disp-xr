@@ -1,0 +1,66 @@
+name: test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: pytest (${{ matrix.environment }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        environment: [test-py312, test-py313, test-py314]
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0  # setuptools_scm needs the tags to set the version
+
+      - uses: prefix-dev/setup-pixi@v0.10.2
+        with:
+          environments: ${{ matrix.environment }}
+          locked: true  # fail if pixi.lock is out of date with pyproject.toml
+          cache: true
+
+      - name: Run tests
+        if: matrix.environment != 'test-py312'
+        run: pixi run -e ${{ matrix.environment }} pytest -n auto
+
+      - name: Run tests with coverage
+        if: matrix.environment == 'test-py312'
+        run: >
+          pixi run -e ${{ matrix.environment }} pytest -n auto
+          --cov=disp_xr --cov-report=term --cov-report=xml
+          --cov-report="markdown-append:$GITHUB_STEP_SUMMARY"
+
+      - name: Upload coverage report
+        if: matrix.environment == 'test-py312'
+        uses: actions/upload-artifact@v7
+        with:
+          name: coverage-xml
+          path: coverage.xml
+
+  lint:
+    name: pre-commit (ruff, mypy, black)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: prefix-dev/setup-pixi@v0.10.2
+        with:
+          environments: test
+          locked: true
+          cache: true
+
+      - name: Run pre-commit hooks
+        run: pixi run -e test check
