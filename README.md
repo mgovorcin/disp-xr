@@ -49,17 +49,18 @@ Since we use [black](https://black.readthedocs.io/en/stable/) for formatting and
 
 ### Running the unit tests
 
-NOTE: ADD TESTS
+Tests run on small synthetic DISP-S1 stacks written at run time (`tests/fixtures/make_disp.py`); no data download is needed. See `tests/data/README.md`.
 
-After making functional changes and/or have added new tests, you should run pytest to check that everything is working as expected.
+```bash
+pixi run -e test test   # pytest, including doctests in src/disp_xr
+pixi run -e test cov    # with a coverage report
+```
 
-First, install the extra test dependencies:
+With conda/mamba, install the test extra and run pytest:
+
 ```bash
 python -m pip install --no-deps -e .[test]
-```
-
-Then run the tests:
-
-```bash
 pytest
 ```
+
+Tests marked `xfail(strict=True)` assert the correct behavior for known bugs listed in `docs/code_review.md`. When a fix lands, the test starts passing, pytest reports it as a failure (XPASS), and the marker is removed in the same change.

@@ -114,6 +114,7 @@ libgdal-netcdf = "*"
 [tool.pixi.tasks]
 check = "pre-commit run -a"
 test = "pytest"
+cov = "pytest --cov=disp_xr --cov-report=term-missing"
 
 [tool.pixi.feature.test.dependencies]
 cf_xarray = "*"
@@ -211,6 +212,17 @@ plugins = ["pydantic.mypy"]
 
 
 [tool.pytest.ini_options]
+testpaths = ["tests", "src/disp_xr"]
+# Doctests run on the package. Modules that need an optional extra or a
+# dependency being removed are skipped until their plan task rewrites them:
+# static_layers (imports opera_utils, T12), mintpy (mintpy extra, T14),
+# download (aws extra, T4.5).
+addopts = """
+  --doctest-modules
+  --ignore=src/disp_xr/static_layers.py
+  --ignore=src/disp_xr/mintpy.py
+  --ignore=src/disp_xr/download.py
+"""
 doctest_optionflags = "NORMALIZE_WHITESPACE NUMBER"
 
 filterwarnings = [
@@ -220,5 +232,7 @@ filterwarnings = [
   "ignore:.*pkg_resources.*",
   "ignore::DeprecationWarning",
   "ignore:h5py is running against HDF5.*:UserWarning",
+  # netCDF4 wheels built against an older numpy ABI warn on import; harmless.
+  "ignore:numpy.ndarray size changed:RuntimeWarning",
   "ignore:Exception ignored in.* <_io.FileIO.*:pytest.PytestUnraisableExceptionWarning"
 ]
