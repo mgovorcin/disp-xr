@@ -1,0 +1,140 @@
+# disp-xr project index
+
+**Last indexed:** 2026-10-01 · branch `feature/t1-packaging` at `2f37c2d` (5 commits on `main` `ce0d105`, not pushed)
+
+How and when this file is rebuilt: see "Project Index (cyclical indexing)" in [CLAUDE.md](../CLAUDE.md).
+
+## Documents
+
+| File | Answers | Lines |
+| --- | --- | --- |
+| [specs.md](specs.md) | What to build: requirements F1–F16, S1–S4, C1–C6, storage rules, non-functional rows, open questions | 324 |
+| [todo.md](todo.md) | In what order: tasks T1–T39 (228 subtasks), dependencies, milestones M0–M3 | 622 |
+| [code_review.md](code_review.md) | What exists: keep / refactor / drop per module, 7 bugs, the `timeseries_fitting` branch | 161 |
+| [porting.md](porting.md) | What is ported from opera_utils, where it goes, license terms, upstream bugs to fix | 132 |
+| [references.md](references.md) | Outside practices followed and their sources: earth-mover repositories, Zarr docs, xarray ecosystem | 206 |
+| [check_plan.py](check_plan.py) | Mechanical check of `todo.md` (run in every indexing cycle) | — |
+| [img/](img/) | `architecture.png`, `roadmap.png`, exported from the PRD doc | — |
+| [../CLAUDE.md](../CLAUDE.md) | Coding rules and the indexing cycle | — |
+
+The PRD also lives as a shared doc; `specs.md` is its copy in the repo and must match it.
+
+## Status
+
+| Milestone | Tasks | Done |
+| --- | --- | --- |
+| M0 Foundation (v0.1) | T1–T8 | 1 / 8 (T2 done; T1 6 of 8 and T3 4 of 6 subtasks done) |
+| M1 Core API (v0.2) | T9–T18 | 0 / 10 |
+| M2 Analysis (v0.3) | T19–T34 | 0 / 16 |
+| M3 Release (v1.0) | T35–T39 | 0 / 5 |
+
+Work is on branch `feature/t1-packaging`, committed, not pushed: `7dc863c` (annotation fix), `17849f2` (T1), `051abfe` (T2), `2f37c2d` (T3), then this docs commit. T1: static dependencies and extras, aligned Python versions, opera_utils removed from `environment.yml`, pixi environments with a lock file; still open are `license-files` (waits for T4.7) and naming maintainers (T1.4b). T2 is done: `tests/` holds a synthetic DISP-S1 stack factory that copies the real layout, 32 passing tests and 5 strict xfails for known bugs (`pixi run -e test test`, about 16 s). T3: `.github/workflows/test.yml` (pytest on Python 3.12, 3.13, 3.14 through pixi; coverage report; pre-commit job) and a ruff rule that bans `opera_utils` and `verde` imports; the workflow has not run on GitHub yet. Branch protection (T3.5) and a coverage badge need GitHub admin access.
+
+## Requirements to tasks
+
+| Requirement | Tasks | Status |
+| --- | --- | --- |
+| F1 Discover | T5 | Exists, buggy (`product.py`); to be replaced by a port |
+| F2 Open | T6 | Exists, local only (`stack.py`) |
+| F3 Stack | T7 | Exists, buggy (`stack.py`); to be replaced by a port |
+| F4 Mask | T10 | Partial (`quality_metrics.py`) |
+| F5 Reference | T11 | Partial (`utils.find_reference_point`) |
+| F6 Correct | T13 | Not started |
+| F7 Geometry | T12 | Exists (`static_layers.py`), imports opera_utils |
+| F8 Time series | T20 | On branch `timeseries_fitting` |
+| F9 Spatial models | T19, T24, T33 | Not started |
+| F10 GNSS | T25 | Not started |
+| F11 Multi-frame | T36 | Not started |
+| F12 Export | T14 | Exists, buggy (`io.py`, `mintpy.py`) |
+| F13 Plot | T17 | Not started |
+| F14 CLI | T15 | Entry point broken |
+| F15 Plate motion | T13.5 | Not started |
+| F16 Search | T4.5 | Exists, S1 only (`download.py`) |
+| S1 Colored-noise velocity | T20, T21, T22, T23 | OLS only, on branch |
+| S2 Downsampling | T26, T27, T28, T29 | Not started |
+| S3 Temporal denoising | T30, T31 | Prototype outside repo (`00_tools/tests/temporal_denoising`) |
+| S4 Residual analysis | T32 | Residual statistics on branch |
+| C1 Zarr v3 output | T14.2, T14.2a | Not started |
+| C2 Icechunk store (opt-in) | T14.2b | Not started |
+| C3 Virtual datasets (opt-in) | T5.8, T6.5b | Not started |
+| C4 Multiscale pyramids | T27.7 | Not started |
+| C5 Map serving example | T37.5 | Not started |
+| C6 Batch builds and benchmarks | T37.3b, T37.4 | Not started |
+| X DataTree | T6.4b, T36.1b | Not started |
+| X flox grouped reductions | T10.3, T23.2, T32.1 | Not started |
+| X apply_ufunc kernels | T7.2, T20.3, T22.3 | Not started |
+| NFR Packaging, Licensing | T1, T4.7, T38 | In progress (T1) |
+| NFR Testing, typing | T2, T3 | T2 done; T3 written, not yet run on GitHub |
+| NFR Compatibility | T5.7, T35 | Not started |
+| NFR Metadata, Provenance | T14.2a, T14.4 | Not started |
+| NFR Benchmarks, Performance, Memory | T37 | Not started |
+| NFR Docs | T16 | Not started |
+| API rules (config, history, order) | T4.9, T9, T15.2 | Not started |
+
+## Modules (main, `src/disp_xr`)
+
+| Module | Lines | Requirement | Verdict | Tasks |
+| --- | --- | --- | --- | --- |
+| `product.py` | 123 | F1 | Replace with a port | T5 |
+| `stack.py` | 87 | F2, F3 | Rewrite; chaining ported | T6, T7 |
+| `quality_metrics.py` | 179 | F4 | Rewrite lazily | T10 |
+| `utils.py` | 236 | F5, F7 | Split | T4, T11, T12 |
+| `static_layers.py` | 321 | F7 | Keep logic, new I/O, drop the opera_utils import | T12 |
+| `io.py` | 206 | F12 | Replace with rioxarray | T14 |
+| `mintpy.py` | 516 | F12 | Replace with a port | T14 |
+| `download.py` | 245 | F16 | Keep as the search port (`search.py`) | T4.5 |
+| `cli/geometry.py` | 28 | F14 | Rebuild | T4.6, T15 |
+| `log/` | 169 | Infrastructure | Keep | — |
+| `timeseries/` (branch `origin/timeseries_fitting`) | 1,554 | F8, S1, S4 | Keep, merge first | T4.0, T20, T32 |
+
+## Decisions log
+
+| Date | Decision |
+| --- | --- |
+| 2026-09-30 | 1.0 supports DISP-S1 and DISP-NISAR |
+| 2026-09-30 | verde is a design reference only; disp-xr has its own fit/predict estimators |
+| 2026-09-30 | Package belongs to OPERA Cal/Val |
+| 2026-09-30 | Colored-noise estimator lives in disp-xr |
+| 2026-09-30 | Default weight layers: phase similarity, temporal coherence, inversion residuals; cycle jumps down-weight, never mask |
+| 2026-09-30 | Quadtree split metric decided by a trade study (displacement, velocity, spatial structure) |
+| 2026-09-30 | Temporal denoising ships both Kalman and LOWESS |
+| 2026-09-30 | No dependency on opera_utils; needed functions are ported into disp-xr with attribution |
+| 2026-09-30 | Follow earth-mover practices; Icechunk and VirtualiZarr are opt-in |
+| 2026-10-01 | zarr.dev documentation is the reference for Zarr best practices |
+| 2026-10-01 | xarray ecosystem reviewed; libraries adopted and ideas copied are listed in `references.md` section 3 |
+| 2026-10-01 | `open_disp` refuses granules of mixed production versions (different dtype or encoding) |
+| 2026-10-01 | Mosaic CRS: UTM zone with the largest share of valid pixels by default, explicit CRS beyond two zones; regional products mosaic at the downsampled level |
+| 2026-10-01 | MintPy export is the `mintpy` extra; search stays in disp-xr as `search.py` (both followed from earlier decisions) |
+
+## Out of sync
+
+- Local checkouts `01_OPERA/STAKEHOLDER/disp-xr` and `01_OPERA/VLM/disp-xr` are on `timeseries_fitting`; `00_tools/src/disp-xr` is on `main`. The conda envs `disp_xr` and `disp_xr_py311` hold non-editable installs of old commits.
+- `static_layers.py` still imports `opera_utils`, so `import disp_xr.static_layers` fails in the new environments (removed in T12.1). `environment.yml` no longer lists it.
+- `pyproject.toml` URLs point to `opera-adt/disp-xr`, the live repo, while the PRD says the package belongs to OPERA Cal/Val. The old `OPERA-Cal-Val/disp_xr_tools` URL redirects to the personal repo `mgovorcin/disp_xr_tools`.
+- `feature/t1-packaging` is not pushed and does not follow the `type/summary` branch naming of the `git-commit-pr` skill; rename it when it becomes a PR.
+- `code_review.md` has a new bug 8 (`get_disp_info` crashes on pandas 3 when versions differ).
+- `.claude/skills` is a symlink to `../skills`, which does not exist in this repo; `.claude/` is excluded through `.git/info/exclude`, as in geepers.
+
+## Not verified
+
+- `code_review.md` and the Context lines of `todo.md` were not checked by a second reader against the code. The 7 bugs were read from the source when the review was written.
+- `porting.md` was spot-checked only (license, filename regex, module locations, upstream bugs 1–3).
+- `references.md` sections 2 and 3 come from one reader. Section 1 was checked claim by claim.
+- DISP granule facts in `references.md` (chunking, dtypes, `time` units) come from a few granules; T2.2 confirms them.
+
+## Checks passed this cycle
+
+- `python docs/check_plan.py`: 39 tasks, 228 subtasks, no duplicate or dangling ids; "Depends on" lines, mermaid graph and dependency table agree; no cycles; every task except T39 unlocks another; headings match task titles.
+- All relative links in `docs/*.md` and `CLAUDE.md` resolve.
+- No sentence in `specs.md`, `todo.md` or `code_review.md` tells disp-xr to depend on, wrap or vendor opera_utils.
+- Every requirement in the table above has at least one task.
+
+## Index log
+
+| Date | Trigger | Changes |
+| --- | --- | --- |
+| 2026-09-30 | First index | Created from `specs.md`, `todo.md`, `code_review.md` and the source on `main` |
+| 2026-10-01 | T3 mostly finished | CI workflow, per-Python pixi environments, banned-import rule; T3.4 badge and T3.5 branch protection left for repo admins |
+| 2026-10-01 | T2 finished | Added `tests/` (fixture factory, layout record from real F44055 and F11116 granules, characterization tests); pytest config with doctests; pixi `cov` task. New in `code_review.md`: bug 8 and four smaller findings |
+| 2026-10-01 | T1 subtasks finished (T1.1–T1.3, T1.5–T1.7) | Ticked in `todo.md`; added T1.7 (pixi); `check_plan.py` accepts ticked boxes. Verified: `mamba env create`, `pip install -e .`, `pip check`, all pre-commit hooks pass; pixi `default`, `test`, `docs`, `dev` environments install and import `disp_xr` |
+| 2026-10-01 | `specs.md` changed (opera_utils decision applied, audit findings, earth-mover, Zarr and xarray-ecosystem research) | Added `porting.md`, `references.md`, `check_plan.py`. PRD: F14–F16, storage rules, ecosystem libraries, 4 new NFR rows, correlated-error cell sigma, odd downsampling factors. Plan: 226 subtasks (was 209); T4.5, T4.7, T5, T6, T7, T10, T11, T12, T14 rewritten as ports; C4 moved from T28 to T27.7; NISAR trade-study frames moved to T35.5. Cleared the four contradictions listed in the first index |
