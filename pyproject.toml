@@ -63,6 +63,8 @@ aws = ["s3fs", "asf_search", "dem_stitcher", "tile_mate", "requests", "shapely"]
 # with the HDF parser API used here.
 cloud = ["virtualizarr[hdf,icechunk]>=2.4"]
 eof = ["xeofs"]
+# Optional backend for disp_xr.timeseries.jax_solve_linear_system.
+jax = ["jax"]
 
 [project.urls]
 Homepage = "https://github.com/opera-adt/disp-xr"
@@ -238,13 +240,13 @@ testpaths = ["tests", "src/disp_xr"]
 # Doctests run on the package. Modules that need an optional extra or a
 # dependency being removed are skipped until their plan task rewrites them:
 # static_layers (imports opera_utils, T12), mintpy (mintpy extra, T14),
-# download (aws extra, T4.5), timeseries (imports jax unconditionally).
+# download (aws extra, T4.5), timeseries/_jax_solver (jax extra).
 addopts = """
   --doctest-modules
   --ignore=src/disp_xr/static_layers.py
   --ignore=src/disp_xr/mintpy.py
   --ignore=src/disp_xr/download.py
-  --ignore=src/disp_xr/timeseries
+  --ignore=src/disp_xr/timeseries/_jax_solver.py
 """
 doctest_optionflags = "NORMALIZE_WHITESPACE NUMBER"
 

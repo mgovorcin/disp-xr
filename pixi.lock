@@ -6158,8 +6158,8 @@ packages:
   requires_python: '>=3.11'
 - pypi: ./
   name: disp-xr
-  version: 0.0.post1.dev24+g051abfeb1.d20261001
-  sha256: d2c91d5a6f837b3f40ead9e38034a6c89e1b3d889c8eca894c70542e6af2c1c4
+  version: 0.0.post1.dev29+g8a84a6193.d20261001
+  sha256: c6fc66304e4bcb6dce9954592a46d33e99456f14d8c8fdd400495030008ba245
   requires_dist:
   - click>=7.0
   - dask
@@ -6202,6 +6202,7 @@ packages:
   - shapely ; extra == 'aws'
   - virtualizarr[hdf,icechunk]>=2.4 ; extra == 'cloud'
   - xeofs ; extra == 'eof'
+  - jax ; extra == 'jax'
   requires_python: '>=3.12'
   editable: true
 - conda: https://conda.anaconda.org/conda-forge/noarch/distlib-0.4.3-pyhcf101f3_0.conda

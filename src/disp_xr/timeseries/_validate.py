@@ -1,13 +1,13 @@
-from typing import Optional, Tuple, Union
+from typing import Optional, Tuple
 
-import jax.numpy as jnp
 import numpy as np
+from numpy.typing import ArrayLike
 
 
 def validate_input_data(
-    data: Union[np.ndarray, jnp.ndarray],
+    data: ArrayLike,
     dates: np.ndarray,
-    weights: Optional[Union[np.ndarray, jnp.ndarray]] = None,
+    weights: Optional[ArrayLike] = None,
 ) -> Tuple[np.ndarray, np.ndarray, Optional[np.ndarray]]:
     """Validate and standardize input data.
 

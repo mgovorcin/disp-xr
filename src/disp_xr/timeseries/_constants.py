@@ -1,8 +1,7 @@
 from enum import Enum
-from typing import Any, Dict, NamedTuple, Union
+from typing import Any, Dict, NamedTuple
 
-import jax.numpy as jnp
-import numpy as np
+from numpy.typing import ArrayLike
 
 
 class FittingBackend(Enum):
@@ -40,46 +39,46 @@ class FitResult(NamedTuple):
 
     Attributes
     ----------
-    coeffs : Union[np.ndarray, jnp.ndarray]
+    coeffs : ArrayLike
         Parameter estimates. The coefficient ordering follows:
         - Polynomial terms: [constant, linear/factorial(1), quadratic/factorial(2), ...]
         - Periodic terms: [sin(2π*t/P1), cos(2π*t/P1), sin(2π*t/P2), cos(2π*t/P2), ...]
         - Step functions: [step1, step2, ...]
         - Exponential terms: [exp_decay1, exp_decay2, ...]
         - Logarithmic terms: [log_term1, log_term2, ...]
-    mse : Union[np.ndarray, jnp.ndarray]
+    mse : ArrayLike
         Mean squared error per pixel
-    Qxx : Union[np.ndarray, jnp.ndarray]
+    Qxx : ArrayLike
         Covariance matrix of parameter estimates
-    residuals : Union[np.ndarray, jnp.ndarray]
+    residuals : ArrayLike
         Model residuals (observed - fitted)
-    n_valid : Union[np.ndarray, jnp.ndarray]
+    n_valid : ArrayLike
         Number of valid (non-NaN) observations used in fitting
-    rank : Union[np.ndarray, jnp.ndarray]
+    rank : ArrayLike
         Effective rank of the design matrix
     metadata : Dict[str, Any]
         Additional fitting metadata including model specification and diagnostics
 
     """
 
-    coeffs: Union[np.ndarray, jnp.ndarray]
-    mse: Union[np.ndarray, jnp.ndarray]
-    Qxx: Union[np.ndarray, jnp.ndarray]
-    standard_errors: Union[np.ndarray, jnp.ndarray]
-    residuals: Union[np.ndarray, jnp.ndarray]
-    rank: Union[np.ndarray, jnp.ndarray]
+    coeffs: ArrayLike
+    mse: ArrayLike
+    Qxx: ArrayLike
+    standard_errors: ArrayLike
+    residuals: ArrayLike
+    rank: ArrayLike
     metadata: Dict[str, Any] = {}
 
 
 class StatisticalResult(NamedTuple):
     """Container for comprehensive statistical analysis results."""
 
-    coefficients: Union[np.ndarray, jnp.ndarray]
-    standard_errors: Union[np.ndarray, jnp.ndarray]
-    z_scores: Union[np.ndarray, jnp.ndarray]
-    t_statistics: Union[np.ndarray, jnp.ndarray]
-    p_values: Union[np.ndarray, jnp.ndarray]
-    confidence_intervals_lower: Union[np.ndarray, jnp.ndarray]
-    confidence_intervals_upper: Union[np.ndarray, jnp.ndarray]
-    is_significant: Union[np.ndarray, jnp.ndarray]
-    correlation_matrix: Union[np.ndarray, jnp.ndarray]
+    coefficients: ArrayLike
+    standard_errors: ArrayLike
+    z_scores: ArrayLike
+    t_statistics: ArrayLike
+    p_values: ArrayLike
+    confidence_intervals_lower: ArrayLike
+    confidence_intervals_upper: ArrayLike
+    is_significant: ArrayLike
+    correlation_matrix: ArrayLike

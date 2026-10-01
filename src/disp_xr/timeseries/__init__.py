@@ -1,9 +1,10 @@
+from typing import Any
+
 from ._design_matrix import (
     create_design_matrix,
     get_coefficient_names,
     infer_parameters_from_names,
 )
-from ._jax_solver import jax_solve_linear_system
 from ._numpy_solver import lscov_2d
 from ._stats_analysis import get_residuals_analysis
 from .estimate_fit import (
@@ -14,14 +15,27 @@ from .estimate_fit import (
 )
 
 __all__ = [
-    create_design_matrix,
-    get_coefficient_names,
-    infer_parameters_from_names,
-    lscov_2d,
-    jax_solve_linear_system,
-    get_residuals_analysis,
-    fit_timeseries,
-    fit_timeseries_block,
-    get_predicted,
-    sincos_to_amplitude_phase,
+    "create_design_matrix",
+    "fit_timeseries",
+    "fit_timeseries_block",
+    "get_coefficient_names",
+    "get_predicted",
+    "get_residuals_analysis",
+    "infer_parameters_from_names",
+    "jax_solve_linear_system",
+    "lscov_2d",
+    "sincos_to_amplitude_phase",
 ]
+
+
+def __getattr__(name: str) -> Any:
+    # JAX is an optional backend, so its solver is imported on first use.
+    if name == "jax_solve_linear_system":
+        try:
+            from ._jax_solver import jax_solve_linear_system
+        except ModuleNotFoundError as e:
+            raise ModuleNotFoundError(
+                "jax_solve_linear_system needs JAX: pip install 'disp_xr[jax]'"
+            ) from e
+        return jax_solve_linear_system
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
