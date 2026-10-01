@@ -124,7 +124,7 @@ def get_extent(ds: xr.Dataset) -> Tuple[float, float, float, float]:
     return (x0, x1, y1, y0)
 
 
-def get_burst_ids(disp_path: Union[str, Path]) -> tuple[Optional[str], Optional[str]]:
+def get_burst_ids(disp_path: Union[str, Path]) -> list[str]:
     """Extract burst ID and track ID from a DISP file path.
 
     Parameters
@@ -134,8 +134,8 @@ def get_burst_ids(disp_path: Union[str, Path]) -> tuple[Optional[str], Optional[
 
     Returns
     -------
-    tuple[Optional[str], Optional[str]]
-        A tuple containing the burst ID and track ID. If not found, returns None.
+    list[str]
+        Burst IDs in ASF format, ``T<track>_<burst>_IW<n>``.
 
     """
 
