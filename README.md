@@ -11,14 +11,24 @@ Analysis tools using [`xarray`](xarray.dev) for OPERA Surface Displacement from 
 ```bash
 git clone https://github.com/opera-adt/disp-xr.git
 ```
-2. Install dependencies, either to a new environment:
+2. Install with [pixi](https://pixi.sh) (recommended). It reads `pyproject.toml` and installs `disp_xr` in editable mode:
+```bash
+cd disp-xr
+pixi install            # core environment
+pixi install -e dev     # plus tests, linters, aws, plot, mintpy and notebook extras
+pixi run -e test test   # run the tests
+pixi run -e test check  # run the pre-commit hooks
+```
+Environments: `default`, `test`, `docs` and `dev`.
+
+   Or install the dependencies with conda/mamba, either to a new environment:
 ```bash
 mamba env create --name disp_xr --file disp-xr/environment.yml
 conda activate disp_xr
 ```
 or install within your existing env with mamba.
 
-3. Install `disp_xr` via pip in editable mode
+3. With conda/mamba only (pixi already did this), install `disp_xr` via pip in editable mode
 ```bash
 python -m pip install --no-deps -e  disp-xr
 ```

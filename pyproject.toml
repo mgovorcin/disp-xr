@@ -14,28 +14,146 @@ classifiers = [
   "Programming Language :: Python :: 3",
   "Operating System :: OS Independent",
 ]
-license = { file = "LICENSE.txt" }
+license = { file = "LICENSE" }
 
-# The version will be written into a version.py upon install, auto-generated
-# see section: setuptools_scm
-# https://setuptools.pypa.io/en/latest/userguide/pyproject_config.html#dynamic-metadata
-# dependencies will be read from text files
-dynamic = ["version", "dependencies", "optional-dependencies"]
+# The version is written to src/disp_xr/_version.py on install (setuptools_scm).
+dynamic = ["version"]
+
+# Core dependencies only. disp-xr must not depend on opera_utils or verde
+# (see docs/specs.md); the functions it needs are ported (docs/porting.md).
+dependencies = [
+  "click>=7.0",
+  "dask",
+  # Nested groups need >=3.1.6: earlier versions silently drop arrays.
+  "zarr>=3.1.6",
+  "flox",
+  "fsspec",
+  "h5netcdf",
+  "h5py",
+  "netcdf4",
+  "numpy",
+  "packaging",
+  "pandas",
+  "pydantic>=2.4",
+  "pyproj",
+  "pyyaml",
+  "rasterio",
+  # 0.23 writes the Zarr spatial: and proj: conventions.
+  "rioxarray>=0.23",
+  "scipy",
+  "xarray",
+]
+
+[project.optional-dependencies]
+test = ["pytest", "pytest-cov", "pytest-xdist", "cf_xarray"]
+docs = [
+  "mkdocs",
+  "mkdocs-material",
+  "mkdocstrings>=0.29",
+  "mkdocstrings-python>=1.16",
+  "mkdocs-jupyter",
+]
+gnss = ["xvec", "geopandas"]
+# MintPy is used only to read exports back in round-trip tests.
+mintpy = ["mintpy"]
+plot = ["matplotlib"]
+interactive = ["hvplot", "datashader"]
+aws = ["s3fs", "asf_search", "dem_stitcher", "tile_mate", "requests", "shapely"]
+# virtualizarr[icechunk] brings icechunk and obstore; 2.4 is the first release
+# with the HDF parser API used here.
+cloud = ["virtualizarr[hdf,icechunk]>=2.4"]
+eof = ["xeofs"]
 
 [project.urls]
-Homepage = "https://github.com/OPERA-Cal-Val/disp_xr_tools"
-"Bug Tracker" = "https://github.com/OPERA-Cal-Val/disp_xr_tools/issues"
+Homepage = "https://github.com/opera-adt/disp-xr"
+"Bug Tracker" = "https://github.com/opera-adt/disp-xr/issues"
 
 # Entry points for the command line interface
 [project.scripts]
 disp_xr = "disp_xr.cli:cli_app"
 
-#[tool.setuptools.dynamic]
-#dependencies = { file = ["requirements.txt"] }
+# pixi: `pixi install` (default env), `pixi install -e dev` (tests, linters,
+# all extras), `pixi run test`, `pixi run check`. Conda dependencies mirror
+# [project.dependencies]; keep the two lists in sync. pixi turns each
+# [project.optional-dependencies] extra into a feature of the same name, so
+# the features below only add conda builds of those packages.
+[tool.pixi.workspace]
+channels = ["conda-forge"]
+platforms = ["linux-64", "osx-arm64"]
 
-# extra requirements: `pip install tropo[docs]` or `pip install .[docs]`
-#[tool.setuptools.dynamic.optional-dependencies.test]
-#file = ["tests/requirements.txt"]
+[tool.pixi.pypi-dependencies]
+disp_xr = { path = ".", editable = true }
+
+[tool.pixi.dependencies]
+python = ">=3.12"
+pip = ">=21.3"
+git = "*"
+click = ">=7.0"
+dask = "*"
+zarr = ">=3.1.6"
+flox = "*"
+fsspec = "*"
+h5netcdf = "*"
+h5py = "*"
+netcdf4 = "*"
+numbagg = "*"
+numpy = "*"
+packaging = "*"
+pandas = "*"
+pydantic = ">=2.4"
+pyproj = "*"
+pyyaml = "*"
+rasterio = "*"
+rioxarray = ">=0.23"
+scipy = "*"
+xarray = "*"
+gdal = "*"
+libgdal-hdf5 = "*"
+libgdal-netcdf = "*"
+
+[tool.pixi.tasks]
+check = "pre-commit run -a"
+test = "pytest"
+
+[tool.pixi.feature.test.dependencies]
+cf_xarray = "*"
+mypy = "*"
+pre-commit = "*"
+pytest = "*"
+pytest-cov = "*"
+pytest-xdist = "*"
+ruff = "*"
+types-pyyaml = "*"
+
+[tool.pixi.feature.docs.dependencies]
+mkdocs = "*"
+mkdocs-jupyter = "*"
+mkdocs-material = "*"
+# Older pairs break against current griffe.
+mkdocstrings = ">=0.29"
+mkdocstrings-python = ">=1.16"
+
+[tool.pixi.feature.aws.dependencies]
+asf_search = "*"
+requests = "*"
+s3fs = "*"
+shapely = "*"
+
+[tool.pixi.feature.plot.dependencies]
+matplotlib = "*"
+
+[tool.pixi.feature.mintpy.dependencies]
+mintpy = "*"
+
+[tool.pixi.feature.notebooks.dependencies]
+folium = "*"
+ipykernel = "*"
+mapclassify = "*"
+
+[tool.pixi.environments]
+test = { features = ["test"], solve-group = "default" }
+docs = { features = ["docs"], solve-group = "default" }
+dev = { features = ["test", "aws", "plot", "mintpy", "notebooks"], solve-group = "default" }
 
 [tool.setuptools_scm]
 # https://github.com/pypa/setuptools_scm#configuration-parameters
@@ -46,6 +164,9 @@ version_scheme = "no-guess-dev" # Will not guess the next version
 
 [tool.ruff]
 src = ["src"]
+# The notebooks are rewritten as gallery examples in T16 (docs/todo.md).
+extend-exclude = ["notebooks"]
+force-exclude = true
 unsafe-fixes = true
 
 [tool.ruff.lint]
@@ -84,7 +205,7 @@ ignore = [
 "tests/**" = ["D", "N", "PTH"]
 
 [tool.mypy]
-python_version = "3.11"
+python_version = "3.12"
 ignore_missing_imports = true
 plugins = ["pydantic.mypy"]
 

@@ -177,3 +177,6 @@ src/*/_version.py
 .ruff_cache/
 
 .vscode
+
+# pixi environments
+.pixi

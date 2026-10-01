@@ -3,38 +3,52 @@ channels:
   - conda-forge
   - nodefaults
 dependencies:
-  - python > 3.13
+  - python>=3.12
   - pip>=21.3  # https://pip.pypa.io/en/stable/reference/build-system/pyproject-toml/#editable-installation
   - git  # for pip install, due to setuptools_scm
+  # core (mirrors [project.dependencies] in pyproject.toml)
   - click>=7.0
-  - xarray
   - dask
-  - rioxarray
-  - types-PyYAML
-  - rasterio
-  - pyproj
-  - gdal
-  - numpy
-  - scipy
-  - pandas
-  - netcdf4
+  - zarr>=3.1.6
+  - flox
+  - fsspec
   - h5netcdf
+  - h5py
+  - netcdf4
+  - numpy
+  - packaging
+  - pandas
+  - pydantic>=2.4
+  - pyproj
+  - pyyaml
+  - rasterio
+  - rioxarray>=0.23
+  - scipy
+  - xarray
+  # xarray uses numbagg for faster NaN-aware reductions when present
+  - numbagg
+  - gdal
   - libgdal-hdf5
   - libgdal-netcdf
-  - zarr
+  # extras: aws
+  - s3fs
+  - asf_search
+  - requests
+  - shapely
+  # extras: plot, mintpy
   - matplotlib
+  - mintpy
+  # notebooks/interactive_workflow.ipynb (GeoDataFrame.explore)
   - folium
   - mapclassify
-# env
-  - ruff
-  - pre_commit
-  - pydantic
+  # dev
   - mypy
-# specific
-  - asf_search
-  - aiohttp
-  - s3fs
+  - pre_commit
+  - pytest
+  - pytest-cov
+  - pytest-xdist
+  - ruff
+  - types-PyYAML
   - pip:
-      - opera_utils
       - dem_stitcher
       - tile_mate
