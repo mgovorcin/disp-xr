@@ -1,3 +1,8 @@
+# NaNPolicy, create_rebased_displacement, rebase_timeseries and _ensure_chunks
+# are adapted from opera-utils (https://github.com/opera-adt/opera-utils,
+# src/opera_utils/disp/_rebase.py and _utils.py; source commit not recorded),
+# Copyright (c) 2022 California Institute of Technology, BSD-3-Clause.
+# See THIRD_PARTY_NOTICES.md.
 import logging
 from collections.abc import Sequence
 from datetime import datetime

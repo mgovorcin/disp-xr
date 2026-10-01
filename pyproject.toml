@@ -171,6 +171,10 @@ test = { features = ["test"], solve-group = "default" }
 docs = { features = ["docs"], solve-group = "default" }
 dev = { features = ["test", "aws", "plot", "mintpy", "notebooks"], solve-group = "default" }
 
+[tool.setuptools]
+# Ship third-party license texts for ported code (THIRD_PARTY_NOTICES.md).
+license-files = ["LICENSE", "LICENSES/*"]
+
 [tool.setuptools_scm]
 # https://github.com/pypa/setuptools_scm#configuration-parameters
 write_to = "src/disp_xr/_version.py"
