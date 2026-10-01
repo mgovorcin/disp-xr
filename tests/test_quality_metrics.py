@@ -61,8 +61,14 @@ def test_get_counts_counts_along_first_axis():
     )
 
 
-def test_get_stack_stat_is_eager(epochs):
-    # Characterizes current behavior; T10 makes it lazy.
+def test_get_stack_stat_is_lazy(epochs):
     mean = quality_metrics.get_stack_stat(epochs.temporal_coherence, "mean")
-    assert isinstance(mean.data, np.ndarray)
     assert isinstance(mean, xr.DataArray)
+    assert not isinstance(mean.data, np.ndarray)
+
+
+def test_get_value_percentage_returns_dataarray(epochs):
+    pct = quality_metrics.get_value_percentage(
+        epochs.recommended_mask.chunk({"time": -1}), value=0
+    )
+    assert isinstance(pct, xr.DataArray)

@@ -21,8 +21,7 @@ def test_get_disp_info_one_row_per_granule(two_ministacks, stack_dir):
 
 def test_get_disp_info_columns(stack_dir):
     df = product.get_disp_info(stack_dir)
-    # "polarizarion" is a typo in the current code; T5 renames it.
-    assert {"frame_id", "polarizarion", "version", "path", "date1", "date2"} <= set(
+    assert {"frame_id", "polarization", "version", "path", "date1", "date2"} <= set(
         df.columns
     )
 
