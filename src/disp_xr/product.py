@@ -15,10 +15,11 @@ from __future__ import annotations
 
 import logging
 import re
+import warnings
 from collections.abc import Iterable
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import List, Optional, Union
+from typing import Optional, Union
 
 import pandas as pd
 from packaging.specifiers import SpecifierSet
@@ -349,10 +350,12 @@ def get_disp_info(
 ) -> pd.DataFrame:
     """Return the granule table in the original disp-xr column layout.
 
-    Kept for :func:`disp_xr.stack.combine_disp_product` and existing notebooks;
-    new code should use :func:`find_products`. Built on :func:`find_products`, so
-    duplicates resolve per date pair (highest version, then latest production)
-    and ``min_version`` keeps versions at or above it.
+    Built on :func:`find_products`, so duplicates resolve per date pair
+    (highest version, then latest production) and ``min_version`` keeps
+    versions at or above it.
+
+    .. deprecated::
+        Use :func:`find_products`, then ``stack_disp(open_disp(df))``.
 
     Parameters
     ----------
@@ -367,6 +370,11 @@ def get_disp_info(
         One row per granule, sorted by ``date12``.
 
     """
+    warnings.warn(
+        "get_disp_info is deprecated; use find_products",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     df = find_products(products_path, min_version=min_version)
     logger.info(f"Found OPERA DISP: {len(df)} products")
     out = pd.DataFrame(
@@ -392,12 +400,6 @@ def get_disp_info(
     out["date12"] = out["date1"] + "_" + out["date2"]
     logger.info(f" Number of reference dates: {out['date1'].nunique()}")
     return out.sort_values(by="date12", ignore_index=True)
-
-
-def _get_reference_dates(df: pd.DataFrame) -> Union[pd.DataFrame, List]:
-    substacks = df.groupby(["date1", "date2"]).apply(lambda x: x, include_groups=False)
-    reference_dates = substacks.index.get_level_values(0).unique()
-    return substacks, reference_dates
 
 
 def _layout(path: str, layers: tuple[str, ...]) -> tuple:
