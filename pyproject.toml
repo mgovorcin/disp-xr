@@ -257,12 +257,10 @@ plugins = ["pydantic.mypy"]
 testpaths = ["tests", "src/disp_xr"]
 # Doctests run on the package. Modules that need an optional extra or a
 # dependency being removed are skipped until their plan task rewrites them:
-# export/mintpy (mintpy extra, T14), its deprecated alias mintpy, search and its alias
+# search and its alias
 # download (aws extra), timeseries/_jax_solver (jax extra).
 addopts = """
   --doctest-modules
-  --ignore=src/disp_xr/export/mintpy.py
-  --ignore=src/disp_xr/mintpy.py
   --ignore=src/disp_xr/search.py
   --ignore=src/disp_xr/download.py
   --ignore=src/disp_xr/timeseries/_jax_solver.py

@@ -1,4 +1,4 @@
-"""Deprecated: moved to :mod:`disp_xr.export.mintpy` (needs the mintpy extra)."""
+"""Deprecated: moved to :mod:`disp_xr.export.mintpy`."""
 
 import importlib
 import warnings

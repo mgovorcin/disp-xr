@@ -1,6 +1,6 @@
 # disp-xr project index
 
-**Last indexed:** 2026-10-02 · `main` on `origin` = `mgovorcin/disp-xr`; branch `feat/export` (T14.1, T14.2, T14.2a, T14.4) on top
+**Last indexed:** 2026-10-02 · `main` on `origin` = `mgovorcin/disp-xr`; branch `feat/export` (T14.1–T14.5) on top
 
 How and when this file is rebuilt: see "Project Index (cyclical indexing)" in [CLAUDE.md](../CLAUDE.md).
 
@@ -54,7 +54,7 @@ Still open in M0: T1.4b (name maintainers), T3.4 badge and T3.5 branch protectio
 | F9 Spatial models | T19, T24, T33 | Not started |
 | F10 GNSS | T25 | Not started |
 | F11 Multi-frame | T36 | Not started |
-| F12 Export | T14 | GeoTIFF, Zarr v3, NetCDF done; MintPy (T14.3) and Icechunk (T14.2b, T14.2c) open |
+| F12 Export | T14 | GeoTIFF, Zarr v3, NetCDF, MintPy done; Icechunk (T14.2b) and virtual stores (T14.2c) open |
 | F13 Plot | T17 | Not started |
 | F14 CLI | T15 | Entry point broken |
 | F15 Plate motion | T13.5 | Done: `plate_motion_los`, `remove_plate_motion` (ITRF2014-PMM) |
@@ -95,7 +95,7 @@ Still open in M0: T1.4b (name maintainers), T3.4 badge and T3.5 branch protectio
 | `export/raster.py` (was `io.py`) | F12 | `to_geotiff` (COG), legacy rasterio helpers | T14.1 |
 | `export/zarr.py` | F12, C1 | `to_zarr`, `to_netcdf`, chunk/shard scheme, `round_mantissa` | T14.2 |
 | `export/_provenance.py` | NFR Provenance, Metadata | Provenance and CF flag attributes | T14.4 |
-| `export/mintpy.py` (was `mintpy.py`) | F12 | Old writer; bugs 4–6 | T14.3 |
+| `export/mintpy.py` (was `mintpy.py`) | F12 | `to_mintpy`: timeseries, quality masks, geometry (h5py only) | T14.3 |
 | `open.py` | F2 | `open_disp`, `open_disp_tree` | T7 (chaining on top) |
 | `_chunks.py`, `_remote.py`, `_credentials.py` | F2, C1 | Chunk presets; remote access (ported) | — |
 | `search.py` (was `download.py`) | F16 | Ported CMR search, session seam, NISAR short name; bug 9 fixed | T5.2 (NISAR spec) |
@@ -103,7 +103,7 @@ Still open in M0: T1.4b (name maintainers), T3.4 badge and T3.5 branch protectio
 | `config.py` | API rules | `donfig` settings, `DISP_XR_*` overrides | — |
 | `cli/__init__.py` | F14 | Empty `disp_xr` group; entry point works | T15 |
 | `timeseries/` | F8, S1, S4 | From `timeseries_fitting`; jax optional | T20, T32 |
-| `utils.py` | — | `get_chunks_indices` plus deprecated aliases | T14.3 |
+| `utils.py` | — | Deprecated aliases only | T38 |
 | `quality_metrics.py`, `io.py`, `mintpy.py`, `static_layers.py`, `download.py` | — | Deprecated aliases | T38 |
 | `log/` | Infrastructure | Unchanged | — |
 
@@ -153,6 +153,7 @@ Still open in M0: T1.4b (name maintainers), T3.4 badge and T3.5 branch protectio
 | Date | Trigger | Changes |
 | --- | --- | --- |
 | 2026-09-30 | First index | Created from `specs.md`, `todo.md`, `code_review.md` and the source on `main` |
+| 2026-10-02 | T14.3, T14.5 finished | `to_mintpy` rewritten on xarray (upstream bug 6 fixed, spec constants, block writes, MintPy azimuth convention); `utils.get_chunks_indices` deleted |
 | 2026-10-02 | T14.1, T14.2, T14.2a, T14.4 finished | GeoTIFF (COG), Zarr v3 (shards, zstd, explicit fill values, `proj:`/`spatial:`) and NetCDF writers with provenance; `open_disp` records input granules |
 | 2026-10-02 | T13 finished | `correct` subtracts product or external corrections once and refuses DISP-NISAR ionosphere and chained data; plate motion from the ITRF2014-PMM paper; `geometry.match_grid` shared by static layers and corrections |
 | 2026-10-02 | T12.1–T12.4 finished | `open_static` on DISP-S1-STATIC (new product found in CMR), CSLC-STATIC stitcher without GDAL, LOS helpers; last `opera_utils` import removed with its ruff and doctest exemptions; T12.5 waits for DISP-NI-STATIC |

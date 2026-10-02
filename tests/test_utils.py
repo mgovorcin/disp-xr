@@ -65,13 +65,6 @@ def test_get_extent_from_geotransform(two_ministacks):
     assert x1 - x0 == 64 * 30 and y0 - y1 == 64 * 30
 
 
-def test_get_chunks_indices_covers_every_chunk(two_ministacks):
-    ds = xr.open_dataset(two_ministacks.paths[0], engine="h5netcdf").chunk(
-        {"time": -1, "y": 32, "x": 32}
-    )
-    assert len(utils.get_chunks_indices(ds)) == 4
-
-
 def test_get_extent_is_deprecated_in_favor_of_rio_bounds(two_ministacks):
     import rioxarray  # noqa: F401
 
