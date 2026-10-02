@@ -3,6 +3,22 @@
 
 Analysis tools using [`xarray`](xarray.dev) for OPERA Surface Displacement from Sentinel-1 (DISP-S1) and Surface Displacement from NISAR (DISP-NISAR).
 
+## Quick start
+
+```python
+import disp_xr as dxr
+
+df = dxr.find_products("path/to/granules/")   # or "s3://bucket/prefix/"
+ds = dxr.open_disp(df, corrections=True)       # lazy (time, y, x), CRS attached
+ds = dxr.stack_disp(ds)                        # displacement from the first date
+
+ds.displacement.isel(x=4000, y=3000).plot()    # one pixel's time series
+```
+
+`open_disp` returns displacement as stored in the granules, relative to each
+ministack's reference date; `stack_disp` chains the ministacks. See
+`docs/specs.md` for the plan and `CHANGELOG.md` for what has changed.
+
 ## Development setup
 
 ### Prerequisite installs
