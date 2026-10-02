@@ -1,6 +1,6 @@
 # disp-xr project index
 
-**Last indexed:** 2026-10-02 · branch `chore/release-v0.1` (on `feat/chain-ministacks`, on `feat/open-disp`, on `feat/product-registry`, on `refactor/package-layout`, on `feature/t1-packaging`, on `main` `ce0d105`); nothing pushed
+**Last indexed:** 2026-10-02 · `main` on `origin` = `mgovorcin/disp-xr`; branch `feat/accessor` (T9) on top
 
 How and when this file is rebuilt: see "Project Index (cyclical indexing)" in [CLAUDE.md](../CLAUDE.md).
 
@@ -24,7 +24,7 @@ The PRD also lives as a shared doc; `specs.md` is its copy in the repo and must 
 | Milestone | Tasks | Done |
 | --- | --- | --- |
 | M0 Foundation (v0.1) | T1–T8 | 5 / 8 (T2, T4, T5, T6, T7 done; T1 open only for T1.4b; T3 open for T3.4–T3.5) |
-| M1 Core API (v0.2) | T9–T18 | 0 / 10 |
+| M1 Core API (v0.2) | T9–T18 | 1 / 10 (T9) |
 | M2 Analysis (v0.3) | T19–T34 | 0 / 16 |
 | M3 Release (v1.0) | T35–T39 | 0 / 5 |
 
@@ -78,7 +78,7 @@ Still open in M0: T1.4b (name maintainers), T3.4 badge and T3.5 branch protectio
 | NFR Metadata, Provenance | T14.2a, T14.4 | Not started |
 | NFR Benchmarks, Performance, Memory | T37 | Not started |
 | NFR Docs | T16 | Not started |
-| API rules (config, history, order) | T4.9, T9, T15.2 | Not started |
+| API rules (config, history, order) | T4.9, T9, T15.2 | Config and history done; processing order in T15.2 |
 
 ## Modules (branch `refactor/package-layout`, `src/disp_xr`)
 
@@ -95,6 +95,7 @@ Still open in M0: T1.4b (name maintainers), T3.4 badge and T3.5 branch protectio
 | `open.py` | F2 | `open_disp`, `open_disp_tree` | T7 (chaining on top) |
 | `_chunks.py`, `_remote.py`, `_credentials.py` | F2, C1 | Chunk presets; remote access (ported) | — |
 | `search.py` (was `download.py`) | F16 | Ported CMR search, session seam, NISAR short name; bug 9 fixed | T5.2 (NISAR spec) |
+| `accessor.py`, `_history.py`, `units.py`, `validate.py` | API rules | `.disp` accessor, operation history, unit conversion, validation | — |
 | `config.py` | API rules | `donfig` settings, `DISP_XR_*` overrides | — |
 | `cli/__init__.py` | F14 | Empty `disp_xr` group; entry point works | T15 |
 | `timeseries/` | F8, S1, S4 | From `timeseries_fitting`; jax optional | T20, T32 |
@@ -149,6 +150,7 @@ Still open in M0: T1.4b (name maintainers), T3.4 badge and T3.5 branch protectio
 | Date | Trigger | Changes |
 | --- | --- | --- |
 | 2026-09-30 | First index | Created from `specs.md`, `todo.md`, `code_review.md` and the source on `main` |
+| 2026-10-02 | T9 finished; migrated | Repo moved to `mgovorcin/disp-xr` (private), first CI run green; `.disp` accessor, history, units, validation; `stack_disp` keeps one time chunk per layer |
 | 2026-10-02 | T8 prepared | Changelog and quick start; tag and milestone dates wait for a merged `main` and named maintainers |
 | 2026-10-02 | T7 finished | Crossover offsets by date instead of previous epoch; `get_value_percentage` fixed for coordinates carried by `open_disp` output |
 | 2026-10-02 | T6 finished | Real-frame timing drove the 1024-pixel read block and the one-file-per-production check; T6.5b moved to T14.2c |

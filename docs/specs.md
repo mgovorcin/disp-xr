@@ -301,7 +301,7 @@ M0 comes first because nothing else is safe to refactor without tests. Each diam
 ## Open questions
 
 - [x] Scope of 1.0: DISP-S1 only, or must DISP-NISAR be supported at launch? Decided: both.
-- [ ] Accessor name: `.disp`, or something less likely to clash?
+- [x] Accessor name: `.disp`, or something less likely to clash? Decided: `.disp` (no installed library uses it; a test guards against clashes).
 - [x] Should verde be a hard dependency, or should estimators follow its API without importing it? Decided: no dependency; disp-xr implements its own fit/predict estimators, using verde only as a design reference.
 - [ ] GNSS source: UNR only, or pluggable (UNR, NGL, local CSV)?
 - [x] Keep MintPy export in core, or move it to an optional extra? Decided: `mintpy` extra.

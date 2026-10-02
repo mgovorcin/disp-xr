@@ -199,15 +199,15 @@ Goal: the everyday DISP workflow (open, mask, re-reference, correct, export, plo
 
 ### T9. Accessor and history skeleton
 
-- [ ] **T9. Accessor and history skeleton** — Depends on: T7, T8 · PRD: API design principles
+- [x] **T9. Accessor and history skeleton** — Depends on: T7, T8 · PRD: API design principles
   - Context: the accessor follows rioxarray `.rio`. API rules: never mutate inputs, record operations in `attrs["history"]`, stay lazy, keep coordinates and CRS, and use meters internally.
   - Done when: `ds.disp` exists on Dataset and DataArray. A no-op operation round-trips with history recorded, CRS kept and no compute.
-  - [ ] T9.1 Settle the accessor name (PRD open question). Check for clashes with installed accessors; default `.disp`. Record the decision in the PRD and check the open question.
-  - [ ] T9.2 Implement `register_dataset_accessor` / `register_dataarray_accessor` classes that delegate to module functions. No logic lives in the accessor.
-  - [ ] T9.3 Write `_history.record(obj, op_name, **params)`, which appends a JSON line with disp-xr version, op and params to `attrs["history"]`. Wire it as a decorator for public ops. Keep `long_name`, `units` and `grid_mapping` on every result (PRD API rules: CF metadata). Follow the xclim pattern: public ops are plain functions wrapped by one decorator that checks units, sets the CF attributes and appends history.
-  - [ ] T9.4 Add a units helper: read `units` attrs, convert to meters on open, and `to_units("mm")` for output.
-  - [ ] T9.5 Add `validate_disp(ds)`, which checks the required dims, coords and CRS and raises a clear error. Call it at the start of each op. Validate by component, as xarray-schema does: dims, dtype, CRS and chunks (warn when `time` is split across chunks before a per-pixel op). Keep grid and CRS access behind one helper in `geometry.py`, so a raster index (rasterix, xproj) can replace it later.
-  - [ ] T9.6 Add tests: immutability (input unchanged), history content, CRS kept, laziness.
+  - [x] T9.1 Settle the accessor name (PRD open question). Check for clashes with installed accessors; default `.disp`. Record the decision in the PRD and check the open question. Done: `.disp`; no installed accessor uses the name, and a test fails if registering it ever triggers xarray's override warning. Recorded in the PRD.
+  - [x] T9.2 Implement `register_dataset_accessor` / `register_dataarray_accessor` classes that delegate to module functions. No logic lives in the accessor. Done (`a305a7c`): `stack`, `to_units`, `validate`, `history`, `grid`; methods for later tasks are added with them.
+  - [x] T9.3 Write `_history.record(obj, op_name, **params)`, which appends a JSON line with disp-xr version, op and params to `attrs["history"]`. Wire it as a decorator for public ops. Keep `long_name`, `units` and `grid_mapping` on every result (PRD API rules: CF metadata). Follow the xclim pattern: public ops are plain functions wrapped by one decorator that checks units, sets the CF attributes and appends history. Done (`0f6adb7`): JSON lines without timestamps, so outputs stay reproducible; `open_disp`, `stack_disp` and `to_units` are recorded. CF attributes are kept by each operation.
+  - [x] T9.4 Add a units helper: read `units` attrs, convert to meters on open, and `to_units("mm")` for output. Done (`f161a40`): `to_units` for m, cm, mm; DISP already stores meters, so nothing is converted on open.
+  - [x] T9.5 Add `validate_disp(ds)`, which checks the required dims, coords and CRS and raises a clear error. Call it at the start of each op. Validate by component, as xarray-schema does: dims, dtype, CRS and chunks (warn when `time` is split across chunks before a per-pixel op). Keep grid and CRS access behind one helper in `geometry.py`, so a raster index (rasterix, xproj) can replace it later. Done (`b862cc0`), plus `geometry.grid` as the single grid/CRS reader.
+  - [x] T9.6 Add tests: immutability (input unchanged), history content, CRS kept, laziness. Done: immutability, history, CRS, laziness (a scheduler that fails if called) and equivalence with the module functions.
 
 ### T10. Quality layers and masking
 
