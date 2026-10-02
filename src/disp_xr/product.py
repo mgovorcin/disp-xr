@@ -33,7 +33,9 @@ __all__ = [
     "PRODUCTS",
     "DispGranule",
     "ProductSpec",
+    "MixedProductionError",
     "UnsupportedProductVersionError",
+    "check_granules",
     "find_products",
     "get_disp_info",
     "group_ministacks",
@@ -58,6 +60,10 @@ CORRECTION_LAYERS = ("ionospheric_delay", "solid_earth_tide", "perpendicular_bas
 
 class UnsupportedProductVersionError(ValueError):
     """A granule has a product version disp-xr does not support."""
+
+
+class MixedProductionError(ValueError):
+    """Granules of one frame differ in dtype or encoding and cannot be combined."""
 
 
 @dataclass(frozen=True)
@@ -384,3 +390,76 @@ def _get_reference_dates(df: pd.DataFrame) -> Union[pd.DataFrame, List]:
     substacks = df.groupby(["date1", "date2"]).apply(lambda x: x, include_groups=False)
     reference_dates = substacks.index.get_level_values(0).unique()
     return substacks, reference_dates
+
+
+def _layout(path: str, layers: tuple[str, ...]) -> tuple:
+    with h5py.File(path, "r") as f:
+        return tuple(
+            (
+                name,
+                str(f[name].dtype),
+                f[name].chunks,
+                f[name].compression,
+                f[name].compression_opts,
+                f[name].shuffle,
+            )
+            for name in layers
+            if name in f
+        )
+
+
+def check_granules(df: pd.DataFrame) -> pd.DataFrame:
+    """Check that all granules share one dtype and encoding per layer.
+
+    DISP productions differ: the 2026 DISP-S1 production stores displacement as
+    float64, the 2025 one as float32. Such granules cannot be stacked or
+    virtualized together, so they are refused rather than cast.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Output of :func:`find_products`, local files only.
+
+    Returns
+    -------
+    pd.DataFrame
+        ``df`` with a ``layout`` column (an integer id; 0 when all agree).
+
+    Raises
+    ------
+    MixedProductionError
+        If more than one layout is found. The message lists each group with
+        its displacement dtype, product versions and production dates, so the
+        caller can select one production.
+
+    """
+    layers_by_product = {
+        name: spec.displacement_layers + spec.quality_layers
+        for name, spec in PRODUCTS.items()
+    }
+    layouts = [
+        _layout(p, layers_by_product[prod])
+        for p, prod in df[["path", "product"]].values
+    ]
+    ids = {layout: i for i, layout in enumerate(dict.fromkeys(layouts))}
+    out = df.assign(layout=[ids[layout] for layout in layouts])
+    if len(ids) > 1:
+        lines = []
+        for layout, i in ids.items():
+            group = out[out["layout"] == i]
+            dtype = {name: dt for name, dt, *_ in layout}.get("displacement")
+            productions = sorted(
+                {
+                    "unknown" if pd.isna(t) else f"{t:%Y-%m-%d}"
+                    for t in group["production_time"]
+                }
+            )
+            lines.append(
+                f"  {len(group)} granules: displacement {dtype}, versions"
+                f" {sorted(set(group['version']))}, produced {productions}"
+            )
+        raise MixedProductionError(
+            "Granules differ in dtype or encoding; select one production:\n"
+            + "\n".join(lines)
+        )
+    return out

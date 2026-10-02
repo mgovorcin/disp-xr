@@ -168,3 +168,22 @@ def test_group_ministacks(two_ministacks, stack_dir):
     groups = group_ministacks(find_products(stack_dir))
     assert list(groups) == list(two_ministacks.reference_times.unique())
     assert [len(g) for g in groups.values()] == [5, 5]
+
+
+# --- check_granules (plan task T5.8) ------------------------------------------
+
+from disp_xr.product import MixedProductionError, check_granules  # noqa: E402
+
+
+def test_check_granules_accepts_one_production(stack_dir):
+    df = check_granules(find_products(stack_dir))
+    assert set(df["layout"]) == {0}
+
+
+def test_check_granules_refuses_mixed_productions(disp_stacks):
+    df = find_products(disp_stacks["mixed_dtype"].paths[0].parent)
+    with pytest.raises(MixedProductionError) as err:
+        check_granules(df)
+    message = str(err.value)
+    assert "displacement float32" in message and "displacement float64" in message
+    assert "2025-04-12" in message and "2026-09-20" in message
