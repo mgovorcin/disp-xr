@@ -8,17 +8,48 @@ import logging
 import re
 import warnings
 from pathlib import Path
-from typing import Optional, Tuple, Union
+from typing import NamedTuple, Optional, Tuple, Union
 
 import h5py
 import numpy as np
+import rioxarray  # noqa: F401  (registers the .rio accessor)
 import xarray as xr
 import yaml  # type: ignore
-from pyproj import Transformer
+from affine import Affine
+from pyproj import CRS, Transformer
 
 logger = logging.getLogger(__name__)
 
-__all__ = ["get_burst_ids", "get_extent", "latlon_to_utm", "utm_to_latlon"]
+__all__ = [
+    "Grid",
+    "get_burst_ids",
+    "get_extent",
+    "grid",
+    "latlon_to_utm",
+    "utm_to_latlon",
+]
+
+
+class Grid(NamedTuple):
+    """CRS, affine transform and ``(y, x)`` shape of a raster grid."""
+
+    crs: Optional[CRS]
+    transform: Affine
+    shape: tuple[int, int]
+
+
+def grid(obj: Union[xr.Dataset, xr.DataArray]) -> Grid:
+    """Return the grid of a DISP dataset.
+
+    All grid and CRS access in disp-xr goes through this function, so a raster
+    index (for example rasterix) can replace rioxarray in one place.
+    """
+    crs = obj.rio.crs
+    return Grid(
+        crs=CRS.from_user_input(crs) if crs is not None else None,
+        transform=obj.rio.transform(),
+        shape=(obj.sizes["y"], obj.sizes["x"]),
+    )
 
 
 def latlon_to_utm(lat: float, lon: float, utm_epsg: int) -> Tuple[float, float]:
