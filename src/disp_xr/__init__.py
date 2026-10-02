@@ -8,7 +8,14 @@ from . import accessor as _accessor  # noqa: F401  (registers .disp)
 from ._version import __version__
 from .config import config
 from .corrections import correct, remove_plate_motion
-from .export import to_geotiff, to_mintpy, to_netcdf, to_zarr
+from .export import (
+    open_icechunk,
+    to_geotiff,
+    to_icechunk,
+    to_mintpy,
+    to_netcdf,
+    to_zarr,
+)
 from .geometry.los import enu_to_los
 from .geometry.static import open_static
 from .open import open_disp, open_disp_tree
@@ -31,12 +38,14 @@ __all__ = [
     "mask",
     "open_disp",
     "open_disp_tree",
+    "open_icechunk",
     "open_static",
     "quality_summary",
     "remove_plate_motion",
     "rereference",
     "stack_disp",
     "to_geotiff",
+    "to_icechunk",
     "to_mintpy",
     "to_netcdf",
     "to_zarr",

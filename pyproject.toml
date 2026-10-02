@@ -158,6 +158,13 @@ requests = "*"
 s3fs = "*"
 shapely = "*"
 
+# Mirrors the cloud extra; the conda virtualizarr carries no extras metadata.
+[tool.pixi.feature.cloud.dependencies]
+h5py = "*"
+icechunk = ">=2.0.3"
+obstore = "*"
+virtualizarr = ">=2.4"
+
 [tool.pixi.feature.plot.dependencies]
 matplotlib = "*"
 
@@ -185,7 +192,9 @@ test-py313 = { features = ["test", "py313"], solve-group = "py313" }
 test-py314 = { features = ["test", "py314"], solve-group = "py314" }
 test = { features = ["test"], solve-group = "default" }
 docs = { features = ["docs"], solve-group = "default" }
-dev = { features = ["test", "aws", "plot", "mintpy", "notebooks"], solve-group = "default" }
+# Icechunk and VirtualiZarr (cloud extra); CI runs its tests in one job.
+test-cloud = { features = ["test", "cloud"], solve-group = "default" }
+dev = { features = ["test", "aws", "cloud", "plot", "mintpy", "notebooks"], solve-group = "default" }
 
 [tool.setuptools]
 # Ship third-party license texts for ported code (THIRD_PARTY_NOTICES.md).

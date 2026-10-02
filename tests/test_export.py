@@ -24,7 +24,7 @@ def _equal_values(a, b):
 # --- chunk scheme ----------------------------------------------------------------
 
 
-@pytest.mark.parametrize("preset", ["timeseries", "maps"])
+@pytest.mark.parametrize("preset", ["timeseries", "maps", "ministack"])
 def test_shards_are_whole_multiples_of_chunks(preset):
     import dask.array as darr
 
@@ -32,13 +32,18 @@ def test_shards_are_whole_multiples_of_chunks(preset):
     big = xr.Dataset(
         {"d": (("time", "y", "x"), darr.zeros((300, 7000, 9000), dtype="f4"))}
     )
+    if preset == "ministack":
+        big = big.isel(time=slice(0, 15))
     chunks, shards = chunk_scheme(big, preset)
+    if preset == "ministack":
+        assert chunks == {"time": 15, "y": 512, "x": 512}
+        assert shards == {"time": 15, "y": 1024, "x": 1024}
     for dim in ("y", "x"):
         assert shards[dim] % chunks[dim] == 0
     if preset == "timeseries":
         assert chunks == {"time": 300, "y": 64, "x": 64}
         assert shards == {"time": 300, "y": 256, "x": 256}
-    else:
+    elif preset == "maps":
         assert chunks == {"time": 1, "y": 1024, "x": 1024}
         assert shards["y"] == 5120  # 4864 rounded to five 1024 chunks
     inner_mb = np.prod(list(chunks.values())) * 4 / 1e6

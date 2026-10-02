@@ -20,7 +20,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        environment: [test-py312, test-py313, test-py314]
+        environment: [test-py312, test-py313, test-py314, test-cloud]
     steps:
       - uses: actions/checkout@v7
         with:

@@ -1,6 +1,6 @@
 # disp-xr project index
 
-**Last indexed:** 2026-10-02 · `main` on `origin` = `mgovorcin/disp-xr`; branch `feat/export` (T14.1–T14.5) on top
+**Last indexed:** 2026-10-02 · `main` on `origin` = `mgovorcin/disp-xr`, through T14.2b (Icechunk export)
 
 How and when this file is rebuilt: see "Project Index (cyclical indexing)" in [CLAUDE.md](../CLAUDE.md).
 
@@ -54,7 +54,7 @@ Still open in M0: T1.4b (name maintainers), T3.4 badge and T3.5 branch protectio
 | F9 Spatial models | T19, T24, T33 | Not started |
 | F10 GNSS | T25 | Not started |
 | F11 Multi-frame | T36 | Not started |
-| F12 Export | T14 | GeoTIFF, Zarr v3, NetCDF, MintPy done; Icechunk (T14.2b) and virtual stores (T14.2c) open |
+| F12 Export | T14 | GeoTIFF, Zarr v3, NetCDF, MintPy, Icechunk done; virtual stores (T14.2c) open |
 | F13 Plot | T17 | Not started |
 | F14 CLI | T15 | Entry point broken |
 | F15 Plate motion | T13.5 | Done: `plate_motion_los`, `remove_plate_motion` (ITRF2014-PMM) |
@@ -64,7 +64,7 @@ Still open in M0: T1.4b (name maintainers), T3.4 badge and T3.5 branch protectio
 | S3 Temporal denoising | T30, T31 | Prototype outside repo (`00_tools/tests/temporal_denoising`) |
 | S4 Residual analysis | T32 | Residual statistics on branch |
 | C1 Zarr v3 output | T14.2, T14.2a | Not started |
-| C2 Icechunk store (opt-in) | T14.2b | Not started |
+| C2 Icechunk store (opt-in) | T14.2b | Done: `to_icechunk` / `open_icechunk`, one commit per write, append along time, tags, snapshot id in provenance |
 | C3 Virtual datasets (opt-in) | T5.8, T14.2c | `check_granules` done; virtual store not started (moved from T6.5b) |
 | C4 Multiscale pyramids | T27.7 | Not started |
 | C5 Map serving example | T37.5 | Not started |
@@ -93,7 +93,8 @@ Still open in M0: T1.4b (name maintainers), T3.4 badge and T3.5 branch protectio
 | `corrections.py` | F6, F15 | `correct`, `remove_plate_motion`, ITRF2014-PMM poles | T13 |
 | `geometry/los.py` | F7 | `enu_to_los`, incidence/azimuth, slant range | T12.2, T12.5 |
 | `export/raster.py` (was `io.py`) | F12 | `to_geotiff` (COG), legacy rasterio helpers | T14.1 |
-| `export/zarr.py` | F12, C1 | `to_zarr`, `to_netcdf`, chunk/shard scheme, `round_mantissa` | T14.2 |
+| `export/zarr.py` | F12, C1 | `to_zarr`, `to_netcdf`, chunk/shard scheme (presets `timeseries`, `maps`, `ministack`), `round_mantissa` | T14.2, T14.2b |
+| `export/icechunk.py` | F12, C2 | `to_icechunk`, `open_icechunk` (`cloud` extra, imported lazily) | T14.2b |
 | `export/_provenance.py` | NFR Provenance, Metadata | Provenance and CF flag attributes | T14.4 |
 | `export/mintpy.py` (was `mintpy.py`) | F12 | `to_mintpy`: timeseries, quality masks, geometry (h5py only) | T14.3 |
 | `open.py` | F2 | `open_disp`, `open_disp_tree` | T7 (chaining on top) |
@@ -153,6 +154,7 @@ Still open in M0: T1.4b (name maintainers), T3.4 badge and T3.5 branch protectio
 | Date | Trigger | Changes |
 | --- | --- | --- |
 | 2026-09-30 | First index | Created from `specs.md`, `todo.md`, `code_review.md` and the source on `main` |
+| 2026-10-02 | T14.2b finished | `to_icechunk` / `open_icechunk` with append checks, tags and branches; `"ministack"` chunk preset; pixi `cloud` feature (icechunk 2.2, VirtualiZarr 2.7) and `test-cloud` CI job |
 | 2026-10-02 | T14.3, T14.5 finished | `to_mintpy` rewritten on xarray (upstream bug 6 fixed, spec constants, block writes, MintPy azimuth convention); `utils.get_chunks_indices` deleted |
 | 2026-10-02 | T14.1, T14.2, T14.2a, T14.4 finished | GeoTIFF (COG), Zarr v3 (shards, zstd, explicit fill values, `proj:`/`spatial:`) and NetCDF writers with provenance; `open_disp` records input granules |
 | 2026-10-02 | T13 finished | `correct` subtracts product or external corrections once and refuses DISP-NISAR ionosphere and chained data; plate motion from the ITRF2014-PMM paper; `geometry.match_grid` shared by static layers and corrections |
