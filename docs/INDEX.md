@@ -1,6 +1,6 @@
 # disp-xr project index
 
-**Last indexed:** 2026-10-02 · `main` on `origin` = `mgovorcin/disp-xr`, through T14.2c (virtual stores; T14 done)
+**Last indexed:** 2026-10-02 · `main` on `origin` = `mgovorcin/disp-xr`, through T15 (CLI)
 
 How and when this file is rebuilt: see "Project Index (cyclical indexing)" in [CLAUDE.md](../CLAUDE.md).
 
@@ -24,7 +24,7 @@ The PRD also lives as a shared doc; `specs.md` is its copy in the repo and must 
 | Milestone | Tasks | Done |
 | --- | --- | --- |
 | M0 Foundation (v0.1) | T1–T8 | 5 / 8 (T2, T4, T5, T6, T7 done; T1 open only for T1.4b; T3 open for T3.4–T3.5) |
-| M1 Core API (v0.2) | T9–T18 | 5 / 10 (T9, T10, T11, T13, T14; T12 open only for T12.5) |
+| M1 Core API (v0.2) | T9–T18 | 6 / 10 (T9, T10, T11, T13, T14, T15; T12 open only for T12.5) |
 | M2 Analysis (v0.3) | T19–T34 | 0 / 16 |
 | M3 Release (v1.0) | T35–T39 | 0 / 5 |
 
@@ -56,7 +56,7 @@ Still open in M0: T1.4b (name maintainers), T3.4 badge and T3.5 branch protectio
 | F11 Multi-frame | T36 | Not started |
 | F12 Export | T14 | Done: GeoTIFF, Zarr v3, NetCDF, MintPy, Icechunk, virtual stores |
 | F13 Plot | T17 | Not started |
-| F14 CLI | T15 | Entry point broken |
+| F14 CLI | T15 | Done: `info`, `stack`, `export`, `geometry`, `search`, `virtual` |
 | F15 Plate motion | T13.5 | Done: `plate_motion_los`, `remove_plate_motion` (ITRF2014-PMM) |
 | F16 Search | T4.5 | Exists, S1 only (`download.py`) |
 | S1 Colored-noise velocity | T20, T21, T22, T23 | OLS only, on branch |
@@ -103,7 +103,7 @@ Still open in M0: T1.4b (name maintainers), T3.4 badge and T3.5 branch protectio
 | `search.py` (was `download.py`) | F16 | Ported CMR search, session seam, NISAR short name; bug 9 fixed | T5.2 (NISAR spec) |
 | `accessor.py`, `_history.py`, `units.py`, `validate.py` | API rules | `.disp` accessor, operation history, unit conversion, validation | — |
 | `config.py` | API rules | `donfig` settings, `DISP_XR_*` overrides | — |
-| `cli/__init__.py` | F14 | Empty `disp_xr` group; entry point works | T15 |
+| `cli/__init__.py` | F14, F16 | `disp_xr` commands wrapping library functions | T15 |
 | `timeseries/` | F8, S1, S4 | From `timeseries_fitting`; jax optional | T20, T32 |
 | `utils.py` | — | Deprecated aliases only | T38 |
 | `quality_metrics.py`, `io.py`, `mintpy.py`, `static_layers.py`, `download.py` | — | Deprecated aliases | T38 |
@@ -155,6 +155,7 @@ Still open in M0: T1.4b (name maintainers), T3.4 badge and T3.5 branch protectio
 | Date | Trigger | Changes |
 | --- | --- | --- |
 | 2026-09-30 | First index | Created from `specs.md`, `todo.md`, `code_review.md` and the source on `main` |
+| 2026-10-02 | T15 finished | `disp_xr info`, `stack`, `export`, `geometry`, `search`, `virtual` with one-line user errors; logging config fixed (formatter class name); `stack_disp(start=)` accepts a plain date |
 | 2026-10-02 | T14.2c finished; T14 done | Virtual frames in Icechunk (`virtual.py`): one commit per ministack, container per directory or bucket, validation against h5py; M1 status row corrected (was 1 / 10, now 5 / 10) |
 | 2026-10-02 | T14.2b finished | `to_icechunk` / `open_icechunk` with append checks, tags and branches; `"ministack"` chunk preset; pixi `cloud` feature (icechunk 2.2, VirtualiZarr 2.7) and `test-cloud` CI job |
 | 2026-10-02 | T14.3, T14.5 finished | `to_mintpy` rewritten on xarray (upstream bug 6 fixed, spec constants, block writes, MintPy azimuth convention); `utils.get_chunks_indices` deleted |

@@ -7,7 +7,7 @@
             "datefmt": "%Y-%m-%dT%H:%M:%S%z"
         },
         "json": {
-            "()": "disp_xr.log.json_formatter.JsonFormatter",
+            "()": "disp_xr.log.json_formatter.JSONFormatter",
             "fmt_keys": {
                 "timestamp": "timestamp",
                 "message": "message",
