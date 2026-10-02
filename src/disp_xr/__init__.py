@@ -4,11 +4,14 @@ Import as ``import disp_xr as dxr``. Functions are added to the top-level
 namespace as their plan tasks land (see docs/todo.md).
 """
 
+from . import accessor as _accessor  # noqa: F401  (registers .disp)
 from ._version import __version__
 from .config import config
 from .open import open_disp, open_disp_tree
 from .product import find_products, get_disp_info
 from .stack import NaNPolicy, combine_disp_product, stack_disp
+from .units import to_units
+from .validate import validate_disp
 
 __all__ = [
     "NaNPolicy",
@@ -20,4 +23,6 @@ __all__ = [
     "open_disp",
     "open_disp_tree",
     "stack_disp",
+    "to_units",
+    "validate_disp",
 ]
