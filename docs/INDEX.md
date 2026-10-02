@@ -1,6 +1,6 @@
 # disp-xr project index
 
-**Last indexed:** 2026-10-02 · branch `feat/product-registry` (on `refactor/package-layout`, on `feature/t1-packaging`, on `main` `ce0d105`); nothing pushed
+**Last indexed:** 2026-10-02 · branch `feat/open-disp` (on `feat/product-registry`, on `refactor/package-layout`, on `feature/t1-packaging`, on `main` `ce0d105`); nothing pushed
 
 How and when this file is rebuilt: see "Project Index (cyclical indexing)" in [CLAUDE.md](../CLAUDE.md).
 
@@ -23,25 +23,26 @@ The PRD also lives as a shared doc; `specs.md` is its copy in the repo and must 
 
 | Milestone | Tasks | Done |
 | --- | --- | --- |
-| M0 Foundation (v0.1) | T1–T8 | 3 / 8 (T2, T4, T5 done; T1 open only for T1.4b; T3 open for T3.4–T3.5) |
+| M0 Foundation (v0.1) | T1–T8 | 4 / 8 (T2, T4, T5, T6 done; T1 open only for T1.4b; T3 open for T3.4–T3.5) |
 | M1 Core API (v0.2) | T9–T18 | 0 / 10 |
 | M2 Analysis (v0.3) | T19–T34 | 0 / 16 |
 | M3 Release (v1.0) | T35–T39 | 0 / 5 |
 
-Three local branches, stacked, not pushed:
+Four local branches, stacked, not pushed:
 
 - `feature/t1-packaging`: annotation fix, T1 (packaging, pixi), T2 (tests), T3 (CI), planning docs.
-- `feat/product-registry` (on top): T5. `ProductSpec` registry (DISP-S1; DISP-NISAR provisional), `DispGranule` parsing from names or metadata, `find_products`, `group_ministacks`, `check_granules`; `get_disp_info` rebuilt on it (bugs 1 and 8 fixed).
+- `feat/open-disp` (on top): T6. `open_disp` and `open_disp_tree` (lazy, CRS attached, integer layers keep dtype, mixed productions refused), chunk presets from a byte target, remote access over S3/HTTPS/fsspec with Earthdata and ASF credentials (ported), faster `check_granules`.
+- `feat/product-registry`: T5. `ProductSpec` registry (DISP-S1; DISP-NISAR provisional), `DispGranule` parsing from names or metadata, `find_products`, `group_ministacks`, `check_granules`; `get_disp_info` rebuilt on it (bugs 1 and 8 fixed).
 - `refactor/package-layout`: T4. Merges `origin/timeseries_fitting`, makes jax optional, moves modules to the new layout behind deprecated aliases, fixes the CLI entry point, adds the top-level API, opera-utils attribution, the search port (with the bug 9 fix) and `disp_xr.config`.
 
-Still open in M0: T1.4b (name maintainers), T3.4 badge and T3.5 branch protection (GitHub admin), then T6 to T8. Tests: 83 passed, 3 strict xfails for open bugs (3 twice, 7).
+Still open in M0: T1.4b (name maintainers), T3.4 badge and T3.5 branch protection (GitHub admin), then T7 and T8. Tests: 131 passed, 3 strict xfails for open bugs (3 twice, 7).
 
 ## Requirements to tasks
 
 | Requirement | Tasks | Status |
 | --- | --- | --- |
 | F1 Discover | T5 | Done on `feat/product-registry` |
-| F2 Open | T6 | Exists, local only (`stack.py`) |
+| F2 Open | T6 | Done on `feat/open-disp` (local and remote) |
 | F3 Stack | T7 | Exists, buggy (`stack.py`); to be replaced by a port |
 | F4 Mask | T10 | Partial (`quality_metrics.py`) |
 | F5 Reference | T11 | Partial (`utils.find_reference_point`) |
@@ -62,11 +63,11 @@ Still open in M0: T1.4b (name maintainers), T3.4 badge and T3.5 branch protectio
 | S4 Residual analysis | T32 | Residual statistics on branch |
 | C1 Zarr v3 output | T14.2, T14.2a | Not started |
 | C2 Icechunk store (opt-in) | T14.2b | Not started |
-| C3 Virtual datasets (opt-in) | T5.8, T6.5b | Not started |
+| C3 Virtual datasets (opt-in) | T5.8, T14.2c | `check_granules` done; virtual store not started (moved from T6.5b) |
 | C4 Multiscale pyramids | T27.7 | Not started |
 | C5 Map serving example | T37.5 | Not started |
 | C6 Batch builds and benchmarks | T37.3b, T37.4 | Not started |
-| X DataTree | T6.4b, T36.1b | Not started |
+| X DataTree | T6.4b, T36.1b | `open_disp_tree` done |
 | X flox grouped reductions | T10.3, T23.2, T32.1 | Not started |
 | X apply_ufunc kernels | T7.2, T20.3, T22.3 | Not started |
 | NFR Packaging, Licensing | T1, T4.7, T38 | In progress (T1) |
@@ -89,6 +90,8 @@ Still open in M0: T1.4b (name maintainers), T3.4 badge and T3.5 branch protectio
 | `geometry/static.py` (was `static_layers.py`) | F7 | Static-layer download; still imports opera_utils | T12.1 |
 | `export/raster.py` (was `io.py`) | F12 | rasterio file I/O | T14 |
 | `export/mintpy.py` (was `mintpy.py`) | F12 | Old writer; bugs 4–6 | T14.3 |
+| `open.py` | F2 | `open_disp`, `open_disp_tree` | T7 (chaining on top) |
+| `_chunks.py`, `_remote.py`, `_credentials.py` | F2, C1 | Chunk presets; remote access (ported) | — |
 | `search.py` (was `download.py`) | F16 | Ported CMR search, session seam, NISAR short name; bug 9 fixed | T5.2 (NISAR spec) |
 | `config.py` | API rules | `donfig` settings, `DISP_XR_*` overrides | — |
 | `cli/__init__.py` | F14 | Empty `disp_xr` group; entry point works | T15 |
@@ -144,6 +147,7 @@ Still open in M0: T1.4b (name maintainers), T3.4 badge and T3.5 branch protectio
 | Date | Trigger | Changes |
 | --- | --- | --- |
 | 2026-09-30 | First index | Created from `specs.md`, `todo.md`, `code_review.md` and the source on `main` |
+| 2026-10-02 | T6 finished | Real-frame timing drove the 1024-pixel read block and the one-file-per-production check; T6.5b moved to T14.2c |
 | 2026-10-02 | T5 finished | Product registry and parser checked on real F44055, F39355 and DISP-NISAR golden data; DISP-NISAR spec provisional (no official granule); `get_disp_info` deprecation moved to T7 |
 | 2026-10-02 | T4 finished | 13 commits on `refactor/package-layout`; plan: T4.1 creates modules when filled, `geometry` is a package, T4.8 deletions moved to T10.3 and T14.3; new bug 9 (search frame filter) found and fixed; T1.4 done |
 | 2026-10-01 | T3 mostly finished | CI workflow, per-Python pixi environments, banned-import rule; T3.4 badge and T3.5 branch protection left for repo admins |
