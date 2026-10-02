@@ -29,6 +29,7 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 
+from ._history import recorded
 from .log.logging import log_runtime
 
 logger = logging.getLogger(__name__)
@@ -86,6 +87,7 @@ def _chain(
 
 
 @log_runtime
+@recorded
 def stack_disp(
     ds: xr.Dataset,
     *,

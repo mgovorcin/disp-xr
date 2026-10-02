@@ -13,6 +13,7 @@ import rioxarray  # noqa: F401  (registers the .rio accessor)
 import xarray as xr
 
 from ._chunks import ChunkSpec, resolve_chunks
+from ._history import recorded
 from ._remote import is_remote_url, open_file, open_h5
 from .config import config
 from .product import PRODUCTS, check_granules, find_products
@@ -37,6 +38,7 @@ _COMBINE = {
 }
 
 
+@recorded
 def open_disp(
     paths: PathsLike,
     *,
