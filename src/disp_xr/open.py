@@ -127,6 +127,8 @@ def open_disp(
         product=product,
         frame_id=int(df["frame_id"].iloc[0]),
         product_versions=sorted(set(df["version"])),
+        # Provenance for exports: granule names, not paths (paths are local).
+        input_granules=[Path(str(f)).name for f in files],
     )
     logger.info(f"Opened {len(files)} {product} granules, frame {ds.attrs['frame_id']}")
     return ds

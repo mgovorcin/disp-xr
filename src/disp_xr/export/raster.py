@@ -7,6 +7,7 @@ from typing import Any, Dict, NamedTuple, Tuple, Union
 
 import numpy as np
 import rasterio
+import xarray as xr
 from rasterio.crs import CRS
 from rasterio.transform import Affine, from_bounds
 from rasterio.warp import Resampling, reproject
@@ -204,3 +205,81 @@ def reproject_raster(
             dst_crs=dst_crs,
             resampling=resampling_mode,
         )
+
+
+def to_geotiff(
+    da: xr.DataArray,
+    path: Union[str, Path],
+    *,
+    per_epoch: bool = False,
+    compress: str = "DEFLATE",
+) -> list[Path]:
+    """Write a layer as Cloud Optimized GeoTIFF (with overviews).
+
+    Parameters
+    ----------
+    da : xr.DataArray
+        A ``(y, x)`` layer with a CRS, or ``(time, y, x)`` with ``per_epoch``.
+    path : str or Path
+        Output file. With ``per_epoch``, one file per epoch named
+        ``<stem>_<YYYYMMDD>.tif`` next to it.
+    per_epoch : bool
+        Write each epoch of a ``(time, y, x)`` layer to its own file.
+    compress : str
+        GDAL compression.
+
+    Returns
+    -------
+    list[Path]
+        Files written.
+
+    Raises
+    ------
+    ValueError
+        If the layer has no CRS, has the wrong dims, or one epoch is larger
+        than ``config["max_load_bytes"]``.
+
+    """
+    import pandas as pd
+    import rioxarray  # noqa: F401  (registers the .rio accessor)
+
+    from .._version import __version__
+    from ..config import config
+
+    path = Path(path)
+    if da.rio.crs is None:
+        raise ValueError("The layer has no CRS; open it with disp_xr.open_disp")
+    if per_epoch:
+        if da.dims != ("time", "y", "x"):
+            raise ValueError(f"per_epoch needs (time, y, x), not {da.dims}")
+        written: list[Path] = []
+        for t in da["time"].values:
+            name = f"{path.stem}_{pd.Timestamp(t):%Y%m%d}{path.suffix or '.tif'}"
+            written += to_geotiff(
+                da.sel(time=t, drop=True), path.with_name(name), compress=compress
+            )
+        return written
+    if da.dims != ("y", "x"):
+        raise ValueError(f"A GeoTIFF layer needs (y, x) dims, not {da.dims}")
+    if da.nbytes > config.get("max_load_bytes"):
+        raise ValueError(
+            f"Layer of {da.nbytes / 1e9:.1f} GB is larger than max_load_bytes"
+        )
+    layer = da.compute()
+    nodata = np.nan if layer.dtype.kind == "f" else layer.attrs.get("_FillValue")
+    attrs = {
+        k: v
+        for k, v in layer.attrs.items()
+        if k not in ("_FillValue", "grid_mapping") and isinstance(v, (str, int, float))
+    }
+    layer = (
+        layer.rio.write_nodata(nodata, encoded=False) if nodata is not None else layer
+    )
+    layer.attrs = attrs
+    layer.rio.to_raster(
+        path,
+        driver="COG",
+        compress=compress,
+        tags={"DISP_XR_VERSION": __version__, "HISTORY": da.attrs.get("history", "")},
+    )
+    return [path]
