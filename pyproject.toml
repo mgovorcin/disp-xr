@@ -175,6 +175,10 @@ virtualizarr = ">=2.4"
 [tool.pixi.feature.plot.dependencies]
 matplotlib = "*"
 
+[tool.pixi.feature.interactive.dependencies]
+datashader = "*"
+hvplot = "*"
+
 [tool.pixi.feature.mintpy.dependencies]
 mintpy = "*"
 
@@ -198,10 +202,10 @@ test-py312 = { features = ["test", "py312"], solve-group = "py312" }
 test-py313 = { features = ["test", "py313"], solve-group = "py313" }
 test-py314 = { features = ["test", "py314"], solve-group = "py314" }
 test = { features = ["test"], solve-group = "default" }
-docs = { features = ["docs"], solve-group = "default" }
+docs = { features = ["docs", "interactive"], solve-group = "default" }
 # Icechunk and VirtualiZarr (cloud extra); CI runs its tests in one job.
 test-cloud = { features = ["test", "cloud"], solve-group = "default" }
-dev = { features = ["test", "aws", "cloud", "plot", "mintpy", "notebooks"], solve-group = "default" }
+dev = { features = ["test", "aws", "cloud", "plot", "mintpy", "notebooks", "interactive"], solve-group = "default" }
 
 [tool.setuptools]
 # Ship third-party license texts for ported code (THIRD_PARTY_NOTICES.md).
