@@ -115,3 +115,30 @@ def test_granule_on_another_grid_raises(two_ministacks, tmp_path):
         f["x"][...] = f["x"][...] + 30.0
     with pytest.raises(ValueError, match="cannot align|cannot be aligned|exact"):
         open_disp(tmp_path)
+
+
+# --- open_disp_tree (plan task T6.4b) -----------------------------------------
+
+from disp_xr.open import open_disp_tree  # noqa: E402
+
+
+def test_tree_nodes(stack_dir):
+    tree = open_disp_tree(stack_dir)
+    assert set(tree.children) == {"corrections", "identification", "metadata"}
+    assert "displacement" in tree.ds and "ionospheric_delay" not in tree.ds
+    assert {"ionospheric_delay", "solid_earth_tide"} <= set(tree["corrections"].ds)
+
+
+def test_tree_identification_attrs(stack_dir):
+    tree = open_disp_tree(stack_dir)
+    ident = tree["identification"].attrs
+    assert ident["frame_id"] == 11116
+    assert ident["product_version"] == "1.0"
+    assert ident["acquisition_mode"] == "IW"
+    assert "static_layers_files" in tree["metadata"].attrs["pge_runconfig"]
+
+
+def test_tree_is_lazy(stack_dir):
+    with dask.config.set(scheduler=_no_compute):
+        tree = open_disp_tree(stack_dir)
+    assert isinstance(tree["corrections"].ds.solid_earth_tide.data, dask.array.Array)

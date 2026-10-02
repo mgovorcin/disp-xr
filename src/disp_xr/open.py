@@ -7,6 +7,7 @@ from collections.abc import Iterable, Sequence
 from pathlib import Path
 from typing import Optional, Union
 
+import h5py
 import pandas as pd
 import rioxarray  # noqa: F401  (registers the .rio accessor)
 import xarray as xr
@@ -17,7 +18,7 @@ from .product import PRODUCTS, check_granules, find_products
 
 logger = logging.getLogger(__name__)
 
-__all__ = ["open_disp"]
+__all__ = ["open_disp", "open_disp_tree"]
 
 PathsLike = Union[str, Path, Iterable[Union[str, Path]], pd.DataFrame]
 
@@ -141,3 +142,62 @@ def _open(files: list, drop: list[str], group: Optional[str]) -> xr.Dataset:
         chunks={"y": block, "x": block},
         **_COMBINE,
     )
+
+
+def open_disp_tree(
+    paths: PathsLike,
+    *,
+    layers: Optional[Sequence[str]] = None,
+    chunks: ChunkSpec = "timeseries",
+    frame_id: Optional[int] = None,
+    min_version: Optional[str] = None,
+    check: bool = True,
+) -> xr.DataTree:
+    """Open a frame as a DataTree that mirrors the granule groups.
+
+    Nodes: the root holds the displacement and quality layers (as
+    :func:`open_disp`), ``/corrections`` the correction layers, and
+    ``/identification`` and ``/metadata`` hold the first granule's scalar
+    values as attributes (xarray cannot decode their byte strings). Values that
+    change per granule, such as the dates, are in the ``time`` and
+    ``reference_time`` coordinates.
+
+    Parameters
+    ----------
+    paths, layers, chunks, frame_id, min_version, check
+        As for :func:`open_disp`.
+
+    Returns
+    -------
+    xr.DataTree
+
+    """
+    df = (
+        paths
+        if isinstance(paths, pd.DataFrame)
+        else find_products(paths, frame_id=frame_id, min_version=min_version)
+    )
+    ds = open_disp(df, layers=layers, corrections=True, chunks=chunks, check=check)
+    (product,) = df["product"].unique()
+    correction_names = [v for v in PRODUCTS[product].correction_layers if v in ds]
+    first = df["path"].iloc[0]
+    return xr.DataTree.from_dict(
+        {
+            "/": ds.drop_vars(correction_names),
+            "/corrections": ds[correction_names],
+            "/identification": xr.Dataset(attrs=_scalar_attrs(first, "identification")),
+            "/metadata": xr.Dataset(attrs=_scalar_attrs(first, "metadata")),
+        }
+    )
+
+
+def _scalar_attrs(path: str, group: str) -> dict:
+    out: dict = {}
+    with h5py.File(path, "r") as f:
+        if group not in f:
+            return out
+        for name, item in f[group].items():
+            if isinstance(item, h5py.Dataset) and item.shape == ():
+                value = item[()]
+                out[name] = value.decode() if isinstance(value, bytes) else value.item()
+    return out
