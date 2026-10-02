@@ -229,3 +229,8 @@ def test_create_rebased_displacement_alias():
             ds.displacement, ds.reference_time.values
         )
     np.testing.assert_array_equal(out.values[:, 0, 0], [1, 2, 3, 4])
+
+
+def test_zero_epoch_keeps_single_time_chunk(opened):
+    out = stack_disp(opened)
+    assert all(len(v.chunks[0]) == 1 for v in out.data_vars.values())

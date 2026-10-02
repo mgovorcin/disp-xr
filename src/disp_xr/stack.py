@@ -179,6 +179,10 @@ def _prepend_zero_epoch(ds: xr.Dataset, first: np.datetime64) -> xr.Dataset:
             fill[name] = np.nan
     new_times = np.concatenate([[first], ds["time"].values])
     out = ds.reindex(time=new_times, fill_value=fill)
+    # Keep layers whose time axis was one chunk in one chunk after the prepend.
+    for name, var in ds.data_vars.items():
+        if var.chunks is not None and len(var.chunks[var.dims.index("time")]) == 1:
+            out[name] = out[name].chunk({"time": -1})
     refs = out["reference_time"].values.copy()
     refs[0] = first
     out = out.assign_coords(reference_time=("time", refs))
