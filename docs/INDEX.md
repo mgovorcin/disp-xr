@@ -1,6 +1,6 @@
 # disp-xr project index
 
-**Last indexed:** 2026-10-02 · `main` on `origin` = `mgovorcin/disp-xr`; branch `feat/quality-mask` (T10) on top
+**Last indexed:** 2026-10-02 · `main` on `origin` = `mgovorcin/disp-xr`; branch `feat/rereference` (T11) on top
 
 How and when this file is rebuilt: see "Project Index (cyclical indexing)" in [CLAUDE.md](../CLAUDE.md).
 
@@ -37,7 +37,7 @@ Six local branches, stacked, not pushed:
 - `feat/product-registry`: T5. `ProductSpec` registry (DISP-S1; DISP-NISAR provisional), `DispGranule` parsing from names or metadata, `find_products`, `group_ministacks`, `check_granules`; `get_disp_info` rebuilt on it (bugs 1 and 8 fixed).
 - `refactor/package-layout`: T4. Merges `origin/timeseries_fitting`, makes jax optional, moves modules to the new layout behind deprecated aliases, fixes the CLI entry point, adds the top-level API, opera-utils attribution, the search port (with the bug 9 fix) and `disp_xr.config`.
 
-Still open in M0: T1.4b (name maintainers), T3.4 badge and T3.5 branch protection (GitHub admin), then T8 (release v0.1: needs a merged, pushed `main` and a tag). Tests: 155 passed, 1 strict xfail (bug 7).
+Still open in M0: T1.4b (name maintainers), T3.4 badge and T3.5 branch protection (GitHub admin), then T8 (release v0.1: needs a merged, pushed `main` and a tag). Bug 7 fixed in T11.
 
 ## Requirements to tasks
 
@@ -47,7 +47,7 @@ Still open in M0: T1.4b (name maintainers), T3.4 badge and T3.5 branch protectio
 | F2 Open | T6 | Done on `feat/open-disp` (local and remote) |
 | F3 Stack | T7 | Done on `feat/chain-ministacks` |
 | F4 Mask | T10 | Done: `mask`, `valid_mask`, `quality_summary` |
-| F5 Reference | T11 | Partial (`utils.find_reference_point`) |
+| F5 Reference | T11 | Done: `rereference` (point, median, border, high_coherence, area, auto) |
 | F6 Correct | T13 | Not started |
 | F7 Geometry | T12 | Exists (`static_layers.py`), imports opera_utils |
 | F8 Time series | T20 | On branch `timeseries_fitting` |
@@ -87,7 +87,7 @@ Still open in M0: T1.4b (name maintainers), T3.4 badge and T3.5 branch protectio
 | `product.py` | F1 | `ProductSpec`, `DispGranule`, `find_products`, `group_ministacks`, `check_granules`; `get_disp_info` kept for the stack | T7 (deprecate `get_disp_info`) |
 | `stack.py` | F3 | `stack_disp`, `NaNPolicy`, `MissingCrossoverError`; deprecated wrappers | T38 (remove wrappers) |
 | `quality.py` (was `quality_metrics.py`) | F4 | Masks, presets, quality summary, lazy statistics | T10 |
-| `reference.py` (from `utils.py`) | F5 | `find_reference_point`; bug 7 | T11 |
+| `reference.py` (from `utils.py`) | F5 | `rereference`, `get_reference_values`, `find_stable_point`; bug 7 fixed | T11 |
 | `geometry/__init__.py` (from `utils.py`) | F7 | Coordinate helpers, `get_burst_ids` | T12 |
 | `geometry/static.py` (was `static_layers.py`) | F7 | Static-layer download; still imports opera_utils | T12.1 |
 | `export/raster.py` (was `io.py`) | F12 | rasterio file I/O | T14 |
@@ -150,6 +150,7 @@ Still open in M0: T1.4b (name maintainers), T3.4 badge and T3.5 branch protectio
 | Date | Trigger | Changes |
 | --- | --- | --- |
 | 2026-09-30 | First index | Created from `specs.md`, `todo.md`, `code_review.md` and the source on `main` |
+| 2026-10-02 | T11 finished | `rereference` with ported point/median/border/high_coherence (upstream bug 5 fixed), area by bbox or polygon, deterministic `auto`; `geometry.lonlat_to_rowcol`; bug 7 fixed |
 | 2026-10-02 | T10 finished | `mask` / `valid_mask` presets `recommended` and `strict`, `quality_summary` (per pixel or per ministack), `.disp.mask` and `.disp.quality_summary`; ported `combine_quality_masks` |
 | 2026-10-02 | T9 finished; migrated | Repo moved to `mgovorcin/disp-xr` (private), first CI run green; `.disp` accessor, history, units, validation; `stack_disp` keeps one time chunk per layer |
 | 2026-10-02 | T8 prepared | Changelog and quick start; tag and milestone dates wait for a merged `main` and named maintainers |

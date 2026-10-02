@@ -10,6 +10,7 @@ from .config import config
 from .open import open_disp, open_disp_tree
 from .product import find_products, get_disp_info
 from .quality import mask, quality_summary, valid_mask
+from .reference import rereference
 from .stack import NaNPolicy, combine_disp_product, stack_disp
 from .units import to_units
 from .validate import validate_disp
@@ -25,6 +26,7 @@ __all__ = [
     "open_disp",
     "open_disp_tree",
     "quality_summary",
+    "rereference",
     "stack_disp",
     "to_units",
     "valid_mask",

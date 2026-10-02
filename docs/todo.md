@@ -221,13 +221,13 @@ Goal: the everyday DISP workflow (open, mask, re-reference, correct, export, plo
 
 ### T11. Re-referencing
 
-- [ ] **T11. Re-referencing** — Depends on: T10 · PRD: F5
+- [x] **T11. Re-referencing** — Depends on: T10 · PRD: F5
   - Context: the per-epoch reference methods none, point, median, border and high_coherence are ported from opera_utils `get_reference_values` into `reference.py` ([porting.md](porting.md)). disp-xr adds area polygons and a deterministic `"auto"` pick. The old `find_reference_point` uses `random.choice` (bug 7). Re-referencing subtracts the reference value at every epoch.
   - Done when: re-referencing to a point (lon/lat or y/x), an area median (bbox or polygon) or `"auto"` works lazily. Auto is deterministic, and fixture tests show the reference pixel is exactly zero.
-  - [ ] T11.1 Port `ReferenceMethod` and `get_reference_values`, and implement `rereference(ds, method="point" | "median" | "border" | "high_coherence" | "area" | "auto", ...)` on them. Fix the upstream gaps (porting.md, bug 5): bounds-check the point, make the median honor the good-pixel mask, and require a mask for high_coherence. Convert lon/lat with `pyproj` and `ds.rio.transform()`, and raise `OutOfBoundsError` if the point is outside the frame or masked. Port `test_disp_reference.py`.
-  - [ ] T11.2 Implement area mode: `rereference(ds, bbox=...)` or `geometry=...` (shapely), using the weighted median of valid pixels per epoch.
-  - [ ] T11.3 Implement `"auto"`: a deterministic pick by center of mass of the high-quality candidates (ported from opera_utils `find_reference_point`), scored on PS fraction, harmonic-mean coherence and zero phase jumps. Return the chosen point in attrs.
-  - [ ] T11.4 Add accessor wiring, history and tests (point, area, auto, masked-point error).
+  - [x] T11.1 Port `ReferenceMethod` and `get_reference_values`, and implement `rereference(ds, method="point" | "median" | "border" | "high_coherence" | "area" | "auto", ...)` on them. Fix the upstream gaps (porting.md, bug 5): bounds-check the point, make the median honor the good-pixel mask, and require a mask for high_coherence. Convert lon/lat with `pyproj` and `ds.rio.transform()`, and raise `OutOfBoundsError` if the point is outside the frame or masked. Port `test_disp_reference.py`.
+  - [x] T11.2 Implement area mode: `rereference(ds, bbox=...)` or `geometry=...` (shapely), using the weighted median of valid pixels per epoch. Done unweighted: the median of pixels inside the area and `good_pixels`; quality weights arrive with T26.
+  - [x] T11.3 Implement `"auto"`: a deterministic pick by center of mass of the high-quality candidates (ported from opera_utils `find_reference_point`), scored on PS fraction, harmonic-mean coherence and zero phase jumps. Return the chosen point in attrs. Done as `find_stable_point`: candidates are never masked and have no residual of half pi or more; the coherence threshold steps down from 0.95; PS candidates are preferred. The legacy `find_reference_point` keeps its signature and now uses the same center-of-mass pick.
+  - [x] T11.4 Add accessor wiring, history and tests (point, area, auto, masked-point error).
 
 ### T12. Geometry and static layers
 

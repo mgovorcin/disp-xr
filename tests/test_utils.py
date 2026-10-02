@@ -37,11 +37,8 @@ def test_find_reference_point_raises_without_candidates(ps_grid):
         utils.find_reference_point(np.full((8, 8), 100.0), pct_ps)
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="Bug 7 (code_review.md): the pick is random, so it changes run to run",
-)
 def test_find_reference_point_is_deterministic(ps_grid):
+    """Regression: bug 7, the pick was random."""
     random.seed(0)
     first = utils.find_reference_point(*ps_grid)
     random.seed(5)

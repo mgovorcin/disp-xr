@@ -22,10 +22,12 @@ logger = logging.getLogger(__name__)
 
 __all__ = [
     "Grid",
+    "OutOfBoundsError",
     "get_burst_ids",
     "get_extent",
     "grid",
     "latlon_to_utm",
+    "lonlat_to_rowcol",
     "utm_to_latlon",
 ]
 
@@ -50,6 +52,36 @@ def grid(obj: Union[xr.Dataset, xr.DataArray]) -> Grid:
         transform=obj.rio.transform(),
         shape=(obj.sizes["y"], obj.sizes["x"]),
     )
+
+
+class OutOfBoundsError(ValueError):
+    """A point lies outside the raster grid."""
+
+
+def lonlat_to_rowcol(
+    obj: Union[xr.Dataset, xr.DataArray], lon: float, lat: float
+) -> Tuple[int, int]:
+    """Return the ``(row, col)`` of the pixel that contains a lon/lat point.
+
+    Raises
+    ------
+    OutOfBoundsError
+        If the point is outside the grid.
+
+    """
+    g = grid(obj)
+    if g.crs is None:
+        raise ValueError("The dataset has no CRS; cannot convert lon/lat")
+    x, y = Transformer.from_crs("EPSG:4326", g.crs, always_xy=True).transform(lon, lat)
+    col, row = ~g.transform * (x, y)
+    # floor, not round: the transform maps pixel corners, so (0.7, 0.7) is
+    # inside pixel (0, 0).
+    row, col = int(np.floor(row)), int(np.floor(col))
+    if not (0 <= row < g.shape[0] and 0 <= col < g.shape[1]):
+        raise OutOfBoundsError(
+            f"Point (lon={lon}, lat={lat}) is outside the {g.shape} grid"
+        )
+    return row, col
 
 
 def latlon_to_utm(lat: float, lon: float, utm_epsg: int) -> Tuple[float, float]:

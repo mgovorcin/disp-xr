@@ -22,6 +22,7 @@ import xarray as xr
 from ._history import history
 from .geometry import Grid, grid
 from .quality import mask, quality_summary
+from .reference import rereference
 from .stack import stack_disp
 from .units import to_units
 from .validate import validate_disp
@@ -70,6 +71,10 @@ class DispDatasetAccessor(_Common):
     def mask(self, preset: str | None = "recommended", **criteria: Any) -> xr.Dataset:
         """Mask displacement by quality (see :func:`disp_xr.quality.mask`)."""
         return mask(self._obj, preset, **criteria)
+
+    def rereference(self, method: str = "auto", **kwargs: Any) -> xr.Dataset:
+        """Re-reference displacement (see :func:`disp_xr.reference.rereference`)."""
+        return rereference(self._obj, method, **kwargs)
 
     def quality_summary(self, **kwargs: Any) -> xr.Dataset:
         """Per-pixel quality summary (see :func:`disp_xr.quality.quality_summary`)."""
