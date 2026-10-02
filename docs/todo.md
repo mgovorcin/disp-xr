@@ -267,15 +267,15 @@ Goal: the everyday DISP workflow (open, mask, re-reference, correct, export, plo
 
 ### T15. Command-line interface
 
-- [ ] **T15. Command-line interface** — Depends on: T11, T14 · PRD: F14
+- [x] **T15. Command-line interface** — Depends on: T11, T14 · PRD: F14
   - Context: the `disp_xr` entry point already points to `disp_xr.cli:cli_app` (click). The CLI covers batch runs and export. It wraps library functions and contains no logic.
   - Done when: `disp_xr info`, `disp_xr stack` and `disp_xr export` work on fixtures and are covered by `click.testing.CliRunner` tests.
-  - [ ] T15.1 `disp_xr info PATH`: product table summary (frames, dates, versions, duplicates).
-  - [ ] T15.2 `disp_xr stack PATH --mask strict --reference auto --out out.zarr`: open, apply corrections, mask, chain, re-reference, write, in the fixed processing order of the PRD.
-  - [ ] T15.3 `disp_xr export PATH --format geotiff|zarr|netcdf|mintpy`.
-  - [ ] T15.4 `disp_xr geometry PATH --out static.zarr`: a new command that wraps `dxr.open_static` (the old `cli/geometry.py` had no commands and was replaced in T4.6).
-  - [ ] T15.4b `disp_xr search --frame F --start ... --end ...`: wraps `dxr.search` (PRD F16) and prints or saves the granule table.
-  - [ ] T15.5 Add CLI tests and `--help` text checks.
+  - [x] T15.1 `disp_xr info PATH`: product table summary (frames, dates, versions, duplicates). Done; `--json` and `--table granules.csv`.
+  - [x] T15.2 `disp_xr stack PATH --mask strict --reference auto --out out.zarr`: open, apply corrections, mask, chain, re-reference, write, in the fixed processing order of the PRD. Done; output format from the suffix (`.zarr`, `.nc`); `--corrections product` (default) skips corrections the product already applied (DISP-NISAR ionosphere). `stack_disp(start=)` now accepts a plain date for a reference time with a time of day.
+  - [x] T15.3 `disp_xr export PATH --format geotiff|zarr|netcdf|mintpy`. Done; PATH is a store from `stack` or granules (chained only).
+  - [x] T15.4 `disp_xr geometry PATH --out static.zarr`: a new command that wraps `dxr.open_static` (the old `cli/geometry.py` had no commands and was replaced in T4.6).
+  - [x] T15.4b `disp_xr search --frame F --start ... --end ...`: wraps `dxr.search` (PRD F16) and prints or saves the granule table. Done as `--frame-id`; `search` is `disp_xr.search.search` (not in the top-level namespace).
+  - [x] T15.5 Add CLI tests and `--help` text checks. Done (`tests/test_cli.py`). Also added `disp_xr virtual` (T14.2c). Fixed on the way: `log-config.json` named `JsonFormatter` for the `JSONFormatter` class, so `setup_logging`, and with it every CLI command, always failed.
 
 ### T16. Documentation site
 

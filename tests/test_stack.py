@@ -147,6 +147,13 @@ def test_start_at_second_ministack(two_ministacks, opened):
     np.testing.assert_allclose(out.displacement.values[1:], expected, atol=1e-6)
 
 
+def test_start_as_calendar_date(two_ministacks, opened):
+    # Reference times carry the time of day; the date alone is enough.
+    second = pd.Timestamp(two_ministacks.reference_times.unique()[1])
+    out = stack_disp(opened, start=f"{second:%Y-%m-%d}")
+    xr.testing.assert_equal(out, stack_disp(opened, start=second))  # history differs
+
+
 def test_start_must_be_a_reference_date(opened):
     with pytest.raises(ValueError, match="start must be a ministack reference date"):
         stack_disp(opened, start="2020-02-06")

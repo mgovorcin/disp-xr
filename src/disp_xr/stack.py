@@ -133,12 +133,19 @@ def stack_disp(
     nan_policy = NaNPolicy(nan_policy)
     refs_all = np.unique(ds["reference_time"].values)
     if start is not None:
-        start = np.datetime64(pd.Timestamp(start), "ns")
+        start = start_ns = np.datetime64(pd.Timestamp(start), "ns")
         if start not in refs_all:
-            raise ValueError(
-                f"start must be a ministack reference date; choose one of "
-                f"{[str(pd.Timestamp(r).date()) for r in refs_all]}"
-            )
+            # Reference times carry the acquisition time of day; a plain date
+            # names the reference acquired on that day.
+            same_day = refs_all[
+                refs_all.astype("datetime64[D]") == start_ns.astype("datetime64[D]")
+            ]
+            if len(same_day) != 1:
+                raise ValueError(
+                    f"start must be a ministack reference date; choose one of "
+                    f"{[str(pd.Timestamp(r).date()) for r in refs_all]}"
+                )
+            start = same_day[0]
         ds = ds.sel(time=ds["reference_time"].values >= start)
     if end is not None:
         ds = ds.sel(time=ds["time"].values <= np.datetime64(pd.Timestamp(end), "ns"))
