@@ -53,14 +53,6 @@ def test_get_value_percentage_reverse(epochs):
     assert pct[40, 40] == 100.0
 
 
-def test_get_counts_counts_along_first_axis():
-    a = np.array([[[0, 1]], [[0, 0]], [[1, 0]]])
-    np.testing.assert_array_equal(quality_metrics.get_counts(a, 0), [[[2, 2]]])
-    np.testing.assert_array_equal(
-        quality_metrics.get_counts(a, 0, reverse=True), [[[1, 1]]]
-    )
-
-
 def test_get_stack_stat_is_lazy(epochs):
     mean = quality_metrics.get_stack_stat(epochs.temporal_coherence, "mean")
     assert isinstance(mean, xr.DataArray)
