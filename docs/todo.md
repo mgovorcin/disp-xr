@@ -242,14 +242,14 @@ Goal: the everyday DISP workflow (open, mask, re-reference, correct, export, plo
 
 ### T13. Corrections
 
-- [ ] **T13. Corrections** — Depends on: T9 · PRD: F6, F15
+- [x] **T13. Corrections** — Depends on: T9 · PRD: F6, F15
   - Context: DISP granules ship correction layers in the `/corrections` group (opened in T6.3). Which layers exist must be checked on a real granule (T2.2), not assumed. Troposphere may come from an external product, so the API accepts a user DataArray. DISP-NISAR displacement already has the ionospheric delay applied, so the spec marks that layer `pre_applied` and `correct` refuses it.
   - Done when: `dxr.correct(ds, ["ionosphere", "solid_earth_tide"])` subtracts the layers present in the product, a user-supplied troposphere DataArray can be subtracted after grid and time alignment, and missing layers raise a clear error.
-  - [ ] T13.1 List the correction layers per spec in `ProductSpec` (from T2.2 and the NISAR spec).
-  - [ ] T13.2 Implement `correct(ds, which, external=None)`, with grid alignment for external layers by `reproject_match` and time alignment by exact match or a documented interpolation.
-  - [ ] T13.3 Record applied corrections in history and in a `corrections_applied` attr so a correction is never applied twice. Refuse a layer the spec marks `pre_applied`, with a clear message.
-  - [ ] T13.4 Add accessor wiring and tests.
-  - [ ] T13.5 Plate motion (PRD F15): `plate_motion_los(static, plate)` computes rigid plate velocity from the ITRF2014 plate motion model (Altamimi et al. 2017) and projects it to LOS with T12. Implement it from the paper, not from opera_utils or MintPy code (GPL lineage, see [porting.md](porting.md)). Test `geodetic_to_ecef` against pyproj and one plate velocity against a published value.
+  - [x] T13.1 List the correction layers per spec in `ProductSpec` (from T2.2 and the NISAR spec).
+  - [x] T13.2 Implement `correct(ds, which, external=None)`, with grid alignment for external layers by `reproject_match` and time alignment by exact match or a documented interpolation. Done with exact date match only (missing dates raise); `external_kind="absolute"` turns per-date values into differences against each epoch's reference date. `correct` refuses chained data, since the layers are relative to each granule's reference.
+  - [x] T13.3 Record applied corrections in history and in a `corrections_applied` attr so a correction is never applied twice. Refuse a layer the spec marks `pre_applied`, with a clear message.
+  - [x] T13.4 Add accessor wiring and tests.
+  - [x] T13.5 Plate motion (PRD F15): `plate_motion_los(static, plate)` computes rigid plate velocity from the ITRF2014 plate motion model (Altamimi et al. 2017) and projects it to LOS with T12. Implement it from the paper, not from opera_utils or MintPy code (GPL lineage, see [porting.md](porting.md)). Test `geodetic_to_ecef` against pyproj and one plate velocity against a published value. Done, plus `remove_plate_motion(ds, static, plate)`, which works before or after chaining. The origin rate bias is not added.
 
 ### T14. Export
 

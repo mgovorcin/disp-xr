@@ -58,6 +58,8 @@ QUALITY_LAYERS = (
     "shp_counts",
 )
 CORRECTION_LAYERS = ("ionospheric_delay", "solid_earth_tide", "perpendicular_baseline")
+# Layers that are subtracted from displacement; perpendicular_baseline is not.
+APPLICABLE_CORRECTIONS = ("ionospheric_delay", "solid_earth_tide")
 
 
 class UnsupportedProductVersionError(ValueError):
@@ -91,6 +93,8 @@ class ProductSpec:
     displacement_layers: tuple[str, ...] = DISPLACEMENT_LAYERS
     quality_layers: tuple[str, ...] = QUALITY_LAYERS
     correction_layers: tuple[str, ...] = CORRECTION_LAYERS
+    applicable_corrections: tuple[str, ...] = APPLICABLE_CORRECTIONS
+    """Correction layers that :func:`disp_xr.correct` subtracts from displacement."""
     validated: bool = False
 
 

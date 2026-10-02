@@ -84,7 +84,7 @@ The `timeseries_fitting` branch already holds unattributed copies of these in `s
 
 | opera_utils source | Verdict | disp-xr target | Changes |
 | --- | --- | --- | --- |
-| `disp/plate_motion.py` | Rewrite from the paper | `corrections.py` | Not copied (GPL lineage); see upstream bugs 7–8 |
+| `disp/plate_motion.py` | Rewrite from the paper | `corrections.py` | Done (T13.5): written from Altamimi et al. (2017); ECEF tested against pyproj, so upstream bugs 7–8 do not apply |
 
 ### Not ported
 

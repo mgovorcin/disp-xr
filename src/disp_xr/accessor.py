@@ -20,6 +20,7 @@ from typing import Any, Union
 import xarray as xr
 
 from ._history import history
+from .corrections import correct, remove_plate_motion
 from .geometry import Grid, grid
 from .quality import mask, quality_summary
 from .reference import rereference
@@ -71,6 +72,14 @@ class DispDatasetAccessor(_Common):
     def mask(self, preset: str | None = "recommended", **criteria: Any) -> xr.Dataset:
         """Mask displacement by quality (see :func:`disp_xr.quality.mask`)."""
         return mask(self._obj, preset, **criteria)
+
+    def correct(self, *args: Any, **kwargs: Any) -> xr.Dataset:
+        """Subtract corrections (see :func:`disp_xr.corrections.correct`)."""
+        return correct(self._obj, *args, **kwargs)
+
+    def remove_plate_motion(self, static: xr.Dataset, plate: str) -> xr.Dataset:
+        """Remove rigid plate motion (see :func:`disp_xr.remove_plate_motion`)."""
+        return remove_plate_motion(self._obj, static, plate)
 
     def rereference(self, method: str = "auto", **kwargs: Any) -> xr.Dataset:
         """Re-reference displacement (see :func:`disp_xr.reference.rereference`)."""
