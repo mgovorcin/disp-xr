@@ -6349,11 +6349,12 @@ packages:
   requires_python: '>=3.11'
 - pypi: ./
   name: disp-xr
-  version: 0.0.post1.dev35+g3c432ff24.d20261001
-  sha256: 7442539bec0768d58171407877337989ba7d8e359298a3bbfcdffc80e53486ed
+  version: 0.0.post1.dev37+g5bd79cf3a.d20261002
+  sha256: 682609f9bd75ec8133711cfd499bac8e81efc8675cd7fd4aedea6cdc8740a555
   requires_dist:
   - click>=7.0
   - dask
+  - donfig>=0.8
   - zarr>=3.1.6
   - flox
   - fsspec

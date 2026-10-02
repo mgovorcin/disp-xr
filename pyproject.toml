@@ -24,6 +24,8 @@ dynamic = ["version"]
 dependencies = [
   "click>=7.0",
   "dask",
+  # Runtime settings (disp_xr.config); zarr also uses it.
+  "donfig>=0.8",
   # Nested groups need >=3.1.6: earlier versions silently drop arrays.
   "zarr>=3.1.6",
   "flox",
@@ -92,6 +94,7 @@ pip = ">=21.3"
 git = "*"
 click = ">=7.0"
 dask = "*"
+donfig = ">=0.8"
 zarr = ">=3.1.6"
 flox = "*"
 fsspec = "*"

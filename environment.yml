@@ -9,6 +9,7 @@ dependencies:
   # core (mirrors [project.dependencies] in pyproject.toml)
   - click>=7.0
   - dask
+  - donfig>=0.8
   - zarr>=3.1.6
   - flox
   - fsspec
