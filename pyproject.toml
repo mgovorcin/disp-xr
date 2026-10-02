@@ -131,6 +131,8 @@ cov = "pytest --cov=disp_xr --cov-report=term-missing"
 
 [tool.pixi.feature.test.dependencies]
 cf_xarray = "*"
+# plot extra, so the quick-look smoke tests run in every test environment
+matplotlib-base = "*"
 # aws extra, so tests cover disp_xr.search and remote access
 aiohttp = "*"
 requests = "*"

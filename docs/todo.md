@@ -293,10 +293,10 @@ Goal: the everyday DISP workflow (open, mask, re-reference, correct, export, plo
 - [ ] **T17. Quick-look plotting** — Depends on: T9 · PRD: F13
   - Context: plotting is behind the `plot` extra and is one of the two places allowed to compute (with export).
   - Done when: `ds.disp.plot_map(time=...)` and `ds.disp.plot_point(lon, lat)` produce labeled figures in meters or mm. Image-free smoke tests pass on the Agg backend.
-  - [ ] T17.1 `plot_map(da, time=None, cmap=..., units="mm")`: velocity or an epoch, with a symmetric color scale and the CRS in the axis labels.
-  - [ ] T17.2 `plot_point(ds, lon, lat, buffer_m=0)`: time series with reference-change markers.
-  - [ ] T17.3 Add accessor wiring, smoke tests and a gallery example.
-  - [ ] T17.4 Gallery page for interactive full-frame browsing with hvplot and datashader (`interactive` extra); nothing in core imports them.
+  - [x] T17.1 `plot_map(da, time=None, cmap=..., units="mm")`: velocity or an epoch, with a symmetric color scale and the CRS in the axis labels. Done in `plot.py`: nearest epoch (default last), limits at the 98th percentile of `|value|` unless `vmax` is given, a blue-gray-red diverging map from the reference palette, block averaging above `max_pixels` (2000) per side.
+  - [x] T17.2 `plot_point(ds, lon, lat, buffer_m=0)`: time series with reference-change markers. Done; also `row=`/`col=`; `buffer_m` takes the median of a square window.
+  - [x] T17.3 Add accessor wiring, smoke tests and a gallery example. Done: `.disp.plot_map` / `.disp.plot_point` on Dataset and DataArray, `tests/test_plot.py` (Agg), `docs/gallery/quicklook.py`. matplotlib-base is now in the pixi `test` feature so CI runs the smoke tests; core `import disp_xr` still works without it.
+  - [ ] T17.4 Gallery page for interactive full-frame browsing with hvplot and datashader (`interactive` extra); nothing in core imports them. Waits for the documentation site (T16).
 
 ### T18. Release v0.2 and API review
 
