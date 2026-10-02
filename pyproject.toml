@@ -273,5 +273,7 @@ filterwarnings = [
   "ignore:h5py is running against HDF5.*:UserWarning",
   # netCDF4 wheels built against an older numpy ABI warn on import; harmless.
   "ignore:numpy.ndarray size changed:RuntimeWarning",
+  # rioxarray multiplies affine transforms with `*`; affine plans to deprecate it.
+  "ignore:Use `@` matmul instead of `\\*` mul operator:PendingDeprecationWarning",
   "ignore:Exception ignored in.* <_io.FileIO.*:pytest.PytestUnraisableExceptionWarning"
 ]

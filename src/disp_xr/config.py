@@ -22,6 +22,12 @@ DEFAULTS = {
     "chunks": {
         # Target uncompressed size of one dask chunk (and Zarr shard), in MB.
         "target_mb": 100,
+        # Spatial block read from each granule before rechunking to a preset.
+        # Measured on a 209-granule frame: whole layers open in 15 s but make
+        # a one-pixel series read every full layer (247 s); 256 (the HDF5
+        # chunk) builds a graph of millions of tasks (87 s to open); 1024 opens
+        # in 19 s and reads a pixel series in 6 s.
+        "read_block": 1024,
     },
     # Largest array, in bytes, that export and plotting load into memory.
     "max_load_bytes": 2 * 1024**3,

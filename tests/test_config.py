@@ -16,6 +16,7 @@ def test_defaults():
     assert config.get("chunks.target_mb") == DEFAULTS["chunks"]["target_mb"]
     assert config.get("max_load_bytes") == 2 * 1024**3
     assert config.get("threads") is None
+    assert config.get("chunks.read_block") == 1024
 
 
 def test_environment_override(monkeypatch):

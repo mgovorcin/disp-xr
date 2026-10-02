@@ -1,0 +1,143 @@
+"""Open a frame of DISP granules as one lazy ``(time, y, x)`` dataset."""
+
+from __future__ import annotations
+
+import logging
+from collections.abc import Iterable, Sequence
+from pathlib import Path
+from typing import Optional, Union
+
+import pandas as pd
+import rioxarray  # noqa: F401  (registers the .rio accessor)
+import xarray as xr
+
+from ._chunks import ChunkSpec, resolve_chunks
+from .config import config
+from .product import PRODUCTS, check_granules, find_products
+
+logger = logging.getLogger(__name__)
+
+__all__ = ["open_disp"]
+
+PathsLike = Union[str, Path, Iterable[Union[str, Path]], pd.DataFrame]
+
+# Each DISP layer is (y, x) in the file and gains the time dimension on
+# concatenation. join="exact" makes a granule on a different grid an error
+# instead of NaN padding; compat="override" takes scalar metadata from the
+# first granule.
+_COMBINE = {
+    "combine": "nested",
+    "concat_dim": "time",
+    "data_vars": "all",
+    "coords": "minimal",
+    "compat": "override",
+    "join": "exact",
+}
+
+
+def open_disp(
+    paths: PathsLike,
+    *,
+    layers: Optional[Sequence[str]] = None,
+    corrections: bool = False,
+    chunks: ChunkSpec = "timeseries",
+    frame_id: Optional[int] = None,
+    min_version: Optional[str] = None,
+    check: bool = True,
+) -> xr.Dataset:
+    """Open DISP granules of one frame as a lazy dataset.
+
+    Displacement is returned as stored: relative to each granule's reference
+    date (``reference_time``). Chaining across ministacks is a separate step.
+
+    Parameters
+    ----------
+    paths : str, Path, iterable of paths, or DataFrame
+        A directory, files, or the output of
+        :func:`disp_xr.product.find_products`.
+    layers : sequence of str, optional
+        Layers to keep. Defaults to all displacement and quality layers.
+    corrections : bool
+        Also open the ``/corrections`` group layers.
+    chunks : {"timeseries", "maps"} or dict
+        Dask chunks: a preset sized from ``config["chunks.target_mb"]`` or an
+        explicit ``{"time", "y", "x"}`` dict (``-1`` means the whole axis).
+    frame_id : int, optional
+        Frame to keep when ``paths`` holds several.
+    min_version : str, optional
+        Lowest product version to keep.
+    check : bool
+        Refuse granules of mixed productions (see
+        :func:`disp_xr.product.check_granules`).
+
+    Returns
+    -------
+    xr.Dataset
+        Dims ``(time, y, x)``; coordinates ``time``, ``reference_time``, ``x``,
+        ``y`` and ``spatial_ref``; one variable per layer, each with
+        ``grid_mapping``. No pixel is read until computed. Layers keep their
+        stored dtype: float layers use NaN for no data, integer layers (masks,
+        labels, counts) keep the product's nodata value, given in their
+        ``_FillValue`` attribute.
+
+    Raises
+    ------
+    ValueError
+        If a requested layer does not exist in the product.
+
+    """
+    df = (
+        paths
+        if isinstance(paths, pd.DataFrame)
+        else find_products(paths, frame_id=frame_id, min_version=min_version)
+    )
+    if check:
+        check_granules(df)
+    (product,) = df["product"].unique()
+    spec = PRODUCTS[product]
+    available = spec.displacement_layers + spec.quality_layers
+    keep = tuple(layers) if layers is not None else available
+    unknown = set(keep) - set(available)
+    if unknown:
+        raise ValueError(f"Unknown {product} layers: {sorted(unknown)}")
+
+    files = list(df["path"])
+    ds = _open(files, drop=[v for v in available if v not in keep], group=None)
+    if corrections:
+        corr = _open(files, drop=[], group="corrections")
+        corr = corr[[v for v in spec.correction_layers if v in corr]]
+        ds = xr.merge([ds, corr], join="exact", compat="override")
+
+    ds = ds.set_coords("reference_time")
+    first = ds[keep[0]] if keep else next(iter(ds.data_vars.values()))
+    ds = ds.chunk(
+        resolve_chunks(
+            chunks, (ds.sizes["time"], ds.sizes["y"], ds.sizes["x"]), first.dtype
+        )
+    )
+    # Small, and needed eagerly to group ministacks.
+    ds["reference_time"] = ds["reference_time"].compute(scheduler="synchronous")
+    for name in ds.data_vars:
+        ds[name].attrs.setdefault("grid_mapping", "spatial_ref")
+    ds.attrs.update(
+        product=product,
+        frame_id=int(df["frame_id"].iloc[0]),
+        product_versions=sorted(set(df["version"])),
+    )
+    logger.info(f"Opened {len(files)} {product} granules, frame {ds.attrs['frame_id']}")
+    return ds
+
+
+def _open(files: list, drop: list[str], group: Optional[str]) -> xr.Dataset:
+    block = config.get("chunks.read_block")
+    return xr.open_mfdataset(
+        files,
+        engine="h5netcdf",
+        group=group,
+        decode_coords="all",
+        # Keep integer layers integer; float layers already store NaN as fill.
+        mask_and_scale=False,
+        drop_variables=drop,
+        chunks={"y": block, "x": block},
+        **_COMBINE,
+    )
