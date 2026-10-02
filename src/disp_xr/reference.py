@@ -273,11 +273,18 @@ def rereference(
     ds : xr.Dataset
         DISP dataset, usually after :func:`disp_xr.stack_disp`.
     method : str or ReferenceMethod
-        ``"point"`` (``row``/``col`` or ``lon``/``lat``), ``"median"``,
-        ``"border"``, ``"high_coherence"`` (needs ``good_pixels``), ``"area"``
-        (``bbox`` as ``(west, south, east, north)`` degrees, or a shapely
-        ``geometry`` in lon/lat; needs shapely, in the ``aws`` extra) or
-        ``"auto"`` (:func:`find_stable_point`).
+        ``"point"``, ``"median"``, ``"border"``, ``"high_coherence"`` (needs
+        ``good_pixels``), ``"area"`` or ``"auto"`` (:func:`find_stable_point`).
+    row, col : int, optional
+        Pixel for ``point``.
+    lon, lat : float, optional
+        Point in degrees for ``point``, used when ``row``/``col`` are not given.
+    bbox : sequence of float, optional
+        ``(west, south, east, north)`` in degrees for ``area``.
+    geometry : shapely geometry, optional
+        Polygon in lon/lat for ``area``. ``area`` needs shapely (``aws`` extra).
+    border_pixels : int
+        Border width for ``border``.
     good_pixels : xr.DataArray of bool, optional
         Pixels the medians may use, for example
         ``disp_xr.valid_mask(ds, "strict")``.
@@ -329,9 +336,10 @@ def rereference(
         area = _area_mask(ds, bbox, geometry)
         kwargs["good_pixel_mask"] = area if good_pixels is None else area & good_pixels
         method = ReferenceMethod.median
-        record["bbox" if bbox is not None else "geometry"] = (
-            list(bbox) if bbox is not None else geometry.wkt
-        )
+        if bbox is not None:
+            record["bbox"] = list(bbox)
+        else:
+            record["geometry"] = geometry.wkt  # type: ignore[union-attr]
 
     out = ds.copy()
     for name in DISPLACEMENT_LAYERS:
