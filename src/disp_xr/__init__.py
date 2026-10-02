@@ -25,10 +25,12 @@ from .reference import rereference
 from .stack import NaNPolicy, combine_disp_product, stack_disp
 from .units import to_units
 from .validate import validate_disp
+from .virtual import build_virtual_frame, open_virtual, validate_virtual
 
 __all__ = [
     "NaNPolicy",
     "__version__",
+    "build_virtual_frame",
     "combine_disp_product",
     "config",
     "correct",
@@ -40,6 +42,7 @@ __all__ = [
     "open_disp_tree",
     "open_icechunk",
     "open_static",
+    "open_virtual",
     "quality_summary",
     "remove_plate_motion",
     "rereference",
@@ -52,4 +55,5 @@ __all__ = [
     "to_units",
     "valid_mask",
     "validate_disp",
+    "validate_virtual",
 ]
