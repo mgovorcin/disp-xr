@@ -174,6 +174,8 @@ def test_geotiff_round_trip(ds, tmp_path):
         assert src.tags()["DISP_XR_VERSION"] == dxr.__version__
         np.testing.assert_array_equal(src.read(1), layer.values)
         assert np.isnan(src.nodata)
+        assert src.profile["compress"] == "deflate" and src.profile["tiled"]
+    assert not list(tmp_path.glob(".*staging*"))
 
 
 def test_geotiff_integer_nodata(ds, tmp_path):

@@ -276,10 +276,22 @@ def to_geotiff(
         layer.rio.write_nodata(nodata, encoded=False) if nodata is not None else layer
     )
     layer.attrs = attrs
-    layer.rio.to_raster(
-        path,
-        driver="COG",
-        compress=compress,
-        tags={"DISP_XR_VERSION": __version__, "HISTORY": da.attrs.get("history", "")},
-    )
+    # Write a tiled GTiff, then let GDAL CreateCopy make the COG: writing to
+    # the COG driver directly truncates floats to integers with rasterio 1.5.1
+    # and GDAL 3.13.
+    import rasterio.shutil
+
+    staging = path.with_name(f".{path.stem}.staging.tif")
+    try:
+        layer.rio.to_raster(
+            staging,
+            tiled=True,
+            tags={
+                "DISP_XR_VERSION": __version__,
+                "HISTORY": da.attrs.get("history", ""),
+            },
+        )
+        rasterio.shutil.copy(staging, path, driver="COG", compress=compress)
+    finally:
+        staging.unlink(missing_ok=True)
     return [path]
