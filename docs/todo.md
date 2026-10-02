@@ -211,13 +211,13 @@ Goal: the everyday DISP workflow (open, mask, re-reference, correct, export, plo
 
 ### T10. Quality layers and masking
 
-- [ ] **T10. Quality layers and masking** — Depends on: T9 · PRD: F4
+- [x] **T10. Quality layers and masking** — Depends on: T9 · PRD: F4
   - Context: `quality.py` holds `get_stack_stat` and `get_value_percentage`, rewritten lazily (`get_counts` and `get_template` were deleted in T4.8), and the mask helpers ported from opera_utils `combine_quality_masks` and `create_reliability_mask` ([porting.md](porting.md)). Masking uses `recommended_mask`, `temporal_coherence`, `connected_component_labels` (0 = unwrapping failed) and `water_mask`. Some layers are per epoch, others per ministack. In the fixed processing order, masking runs per product before chaining, so it must work on unchained data.
   - Done when: `dxr.mask(ds, "recommended")` and `dxr.mask(ds, temporal_coherence=0.6, connected_components=True, water=True)` return masked displacement. Tests check the exact pixels removed in fixtures.
-  - [ ] T10.1 Port `combine_quality_masks` and implement `mask(ds, preset=None, **thresholds)` on it, with presets `"recommended"` (product mask only) and `"strict"` (recommended + coherence + connected components + water). Port the upstream mask tests.
-  - [ ] T10.2 Handle per-epoch versus static layers by broadcasting on `time` correctly. Document which layers are which.
-  - [ ] T10.3 Add `quality_summary(ds)`, which returns per-pixel percentages (time masked, PS fraction), the harmonic-mean temporal coherence and the reliability fraction (ported `create_reliability_mask`) as a lazy `xr.Dataset`. Per-ministack summaries use `groupby("reference_time")` through flox, with no Python loop (PRD X: flox). Percentages divide by the valid-epoch count. Delete `get_template` and `get_counts` here (moved from T4.8).
-  - [ ] T10.4 Add accessor wiring, history and tests (fixture low-coherence patch and water strip removed exactly).
+  - [x] T10.1 Port `combine_quality_masks` and implement `mask(ds, preset=None, **thresholds)` on it, with presets `"recommended"` (product mask only) and `"strict"` (recommended + coherence + connected components + water). Port the upstream mask tests. Done differently: `combine_quality_masks` is ported as-is (strict `>`, any reduction), but `mask` builds on `valid_mask`, which uses `>=` thresholds, AND-reduces, and fails integer no-data pixels; the default preset is `"recommended"`.
+  - [x] T10.2 Handle per-epoch versus static layers by broadcasting on `time` correctly. Document which layers are which. All 11 layers are per epoch in both products, so no broadcasting is needed; the zero epoch prepended by `stack_disp` stays unmasked.
+  - [x] T10.3 Add `quality_summary(ds)`, which returns per-pixel percentages (time masked, PS fraction), the harmonic-mean temporal coherence and the reliability fraction (ported `create_reliability_mask`) as a lazy `xr.Dataset`. Per-ministack summaries use `groupby("reference_time")` through flox, with no Python loop (PRD X: flox). Percentages divide by the valid-epoch count. Delete `get_template` and `get_counts` here (moved from T4.8).
+  - [x] T10.4 Add accessor wiring, history and tests (fixture low-coherence patch and water strip removed exactly).
 
 ### T11. Re-referencing
 

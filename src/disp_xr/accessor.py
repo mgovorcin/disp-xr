@@ -21,6 +21,7 @@ import xarray as xr
 
 from ._history import history
 from .geometry import Grid, grid
+from .quality import mask, quality_summary
 from .stack import stack_disp
 from .units import to_units
 from .validate import validate_disp
@@ -65,6 +66,14 @@ class DispDatasetAccessor(_Common):
     def stack(self, **kwargs: Any) -> xr.Dataset:
         """Chain ministacks (see :func:`disp_xr.stack_disp`)."""
         return stack_disp(self._obj, **kwargs)
+
+    def mask(self, preset: str | None = "recommended", **criteria: Any) -> xr.Dataset:
+        """Mask displacement by quality (see :func:`disp_xr.quality.mask`)."""
+        return mask(self._obj, preset, **criteria)
+
+    def quality_summary(self, **kwargs: Any) -> xr.Dataset:
+        """Per-pixel quality summary (see :func:`disp_xr.quality.quality_summary`)."""
+        return quality_summary(self._obj, **kwargs)
 
 
 @xr.register_dataarray_accessor("disp")

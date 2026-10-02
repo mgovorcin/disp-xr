@@ -1,6 +1,6 @@
 # disp-xr project index
 
-**Last indexed:** 2026-10-02 · `main` on `origin` = `mgovorcin/disp-xr`; branch `feat/accessor` (T9) on top
+**Last indexed:** 2026-10-02 · `main` on `origin` = `mgovorcin/disp-xr`; branch `feat/quality-mask` (T10) on top
 
 How and when this file is rebuilt: see "Project Index (cyclical indexing)" in [CLAUDE.md](../CLAUDE.md).
 
@@ -46,7 +46,7 @@ Still open in M0: T1.4b (name maintainers), T3.4 badge and T3.5 branch protectio
 | F1 Discover | T5 | Done on `feat/product-registry` |
 | F2 Open | T6 | Done on `feat/open-disp` (local and remote) |
 | F3 Stack | T7 | Done on `feat/chain-ministacks` |
-| F4 Mask | T10 | Partial (`quality_metrics.py`) |
+| F4 Mask | T10 | Done: `mask`, `valid_mask`, `quality_summary` |
 | F5 Reference | T11 | Partial (`utils.find_reference_point`) |
 | F6 Correct | T13 | Not started |
 | F7 Geometry | T12 | Exists (`static_layers.py`), imports opera_utils |
@@ -70,7 +70,7 @@ Still open in M0: T1.4b (name maintainers), T3.4 badge and T3.5 branch protectio
 | C5 Map serving example | T37.5 | Not started |
 | C6 Batch builds and benchmarks | T37.3b, T37.4 | Not started |
 | X DataTree | T6.4b, T36.1b | `open_disp_tree` done |
-| X flox grouped reductions | T10.3, T23.2, T32.1 | Not started |
+| X flox grouped reductions | T10.3, T23.2, T32.1 | Started (T10.3 `by_ministack`) |
 | X apply_ufunc kernels | T7.2, T20.3, T22.3 | Not started |
 | NFR Packaging, Licensing | T1, T4.7, T38 | In progress (T1) |
 | NFR Testing, typing | T2, T3 | T2 done; T3 written, not yet run on GitHub |
@@ -86,7 +86,7 @@ Still open in M0: T1.4b (name maintainers), T3.4 badge and T3.5 branch protectio
 | --- | --- | --- | --- |
 | `product.py` | F1 | `ProductSpec`, `DispGranule`, `find_products`, `group_ministacks`, `check_granules`; `get_disp_info` kept for the stack | T7 (deprecate `get_disp_info`) |
 | `stack.py` | F3 | `stack_disp`, `NaNPolicy`, `MissingCrossoverError`; deprecated wrappers | T38 (remove wrappers) |
-| `quality.py` (was `quality_metrics.py`) | F4 | Lazy statistics | T10 |
+| `quality.py` (was `quality_metrics.py`) | F4 | Masks, presets, quality summary, lazy statistics | T10 |
 | `reference.py` (from `utils.py`) | F5 | `find_reference_point`; bug 7 | T11 |
 | `geometry/__init__.py` (from `utils.py`) | F7 | Coordinate helpers, `get_burst_ids` | T12 |
 | `geometry/static.py` (was `static_layers.py`) | F7 | Static-layer download; still imports opera_utils | T12.1 |
@@ -150,6 +150,7 @@ Still open in M0: T1.4b (name maintainers), T3.4 badge and T3.5 branch protectio
 | Date | Trigger | Changes |
 | --- | --- | --- |
 | 2026-09-30 | First index | Created from `specs.md`, `todo.md`, `code_review.md` and the source on `main` |
+| 2026-10-02 | T10 finished | `mask` / `valid_mask` presets `recommended` and `strict`, `quality_summary` (per pixel or per ministack), `.disp.mask` and `.disp.quality_summary`; ported `combine_quality_masks` |
 | 2026-10-02 | T9 finished; migrated | Repo moved to `mgovorcin/disp-xr` (private), first CI run green; `.disp` accessor, history, units, validation; `stack_disp` keeps one time chunk per layer |
 | 2026-10-02 | T8 prepared | Changelog and quick start; tag and milestone dates wait for a merged `main` and named maintainers |
 | 2026-10-02 | T7 finished | Crossover offsets by date instead of previous epoch; `get_value_percentage` fixed for coordinates carried by `open_disp` output |

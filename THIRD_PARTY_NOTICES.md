@@ -18,6 +18,7 @@ Every ported file carries a header naming its source. Ported code, by disp-xr fi
 | `src/disp_xr/_chunks.py` | `clamp_chunks` | `src/opera_utils/disp/_utils.py` (`_clamp_chunk_dict`) | `dff4b45` |
 | `src/disp_xr/_credentials.py` | `ASFEndpoint`, `AWSCredentials`, `get_temporary_aws_credentials`, `get_earthdata_username_password` | `src/opera_utils/credentials.py` | `dff4b45` |
 | `src/disp_xr/_remote.py` | `is_remote_url`, `get_filesystem`, `open_file`, `open_h5` | `src/opera_utils/_remote.py` | `dff4b45` |
+| `src/disp_xr/quality.py` | `combine_quality_masks` | `src/opera_utils/disp/_reformat.py` | `dff4b45` |
 | `src/disp_xr/stack.py` | `NaNPolicy` and the ministack-chaining approach (rewritten: offsets taken from the crossover epoch by date) | `src/opera_utils/disp/_rebase.py` | `dff4b45` |
 
 New ports name the opera-utils commit they were taken from (`dff4b45` for the
