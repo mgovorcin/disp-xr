@@ -3,6 +3,7 @@ from typing import Dict, List, Optional
 import numpy as np
 import xarray as xr
 
+from .._chunks import time_contiguous
 from ._design_matrix import (
     create_design_matrix,
     get_coefficient_names,
@@ -195,13 +196,19 @@ def fit_timeseries_block(
     # Then add reference_index for actual fitting
     fitting_kwargs = {**coefficient_kwargs, "reference_index": reference_index}
 
+    # Each block is fitted on its own, so it must hold whole time series.
+    ds = time_contiguous(ds)
+    # map_blocks needs every output coordinate in the template; keep only the
+    # dimension coordinates and put the CRS back afterwards.
+    crs = ds.coords["spatial_ref"] if "spatial_ref" in ds.coords else None
+    ds = ds.drop_vars([c for c in ds.coords if c not in ds.dims])
     template = create_fit_template(len(coeff_names), ds.y, ds.x, coeff_names)
     template = template.chunk({"y": ds.chunks[1], "x": ds.chunks[2]})
 
-    # Apply map_blocks
-    return ds.map_blocks(
+    fit = ds.map_blocks(
         fit_timeseries, kwargs={"weights": weights, **fitting_kwargs}, template=template
     )
+    return fit if crs is None else fit.assign_coords(spatial_ref=crs)
 
 
 def get_predicted(coeffs: xr.DataArray, obs_dates: np.ndarray) -> xr.DataArray:

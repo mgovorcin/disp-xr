@@ -74,6 +74,7 @@ def validate_disp(
         if split:
             warnings.warn(
                 f"time is split across chunks in {split}; per-pixel operations will "
-                "rechunk. Open with chunks='timeseries' to avoid it.",
+                "rechunk each time. Before several of them, rechunk once with "
+                "disp_xr.rechunk(obj, 'timeseries').",
                 stacklevel=2,
             )

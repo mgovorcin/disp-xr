@@ -28,7 +28,7 @@ import pandas as pd
 import xarray as xr
 
 from .._version import __version__
-from ..config import config
+from ..config import bounded_threads, config
 from ..geometry import grid
 from ..geometry.los import slant_range
 from ..product import PRODUCTS
@@ -126,6 +126,7 @@ def _mintpy_azimuth(azimuth_clockwise: xr.DataArray) -> xr.DataArray:
     return az - np.round(az / 360.0) * 360.0
 
 
+@bounded_threads
 def to_mintpy(
     ds: xr.Dataset,
     outdir: Union[str, Path],

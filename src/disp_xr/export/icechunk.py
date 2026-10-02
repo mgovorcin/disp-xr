@@ -22,6 +22,7 @@ from typing import TYPE_CHECKING, Any, Literal, Optional, Union
 import numpy as np
 import xarray as xr
 
+from ..config import bounded_threads
 from .zarr import Preset, _prepare, _with_zarr_conventions, zarr_encoding
 
 if TYPE_CHECKING:
@@ -126,6 +127,7 @@ def _commit_metadata(ds: xr.Dataset) -> dict[str, Any]:
     }
 
 
+@bounded_threads
 def to_icechunk(
     ds: xr.Dataset,
     repo: RepoLike,

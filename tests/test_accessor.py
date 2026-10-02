@@ -46,7 +46,12 @@ def test_chain_is_lazy(ds):
         raise AssertionError("the accessor computed")
 
     with dask.config.set(scheduler=fail):
-        out = ds.disp.stack().disp.to_units("mm").disp.validate(per_pixel=True)
+        out = (
+            ds.disp.stack()
+            .disp.to_units("mm")
+            .disp.rechunk("timeseries")
+            .disp.validate(per_pixel=True)
+        )
     assert isinstance(out.displacement.data, dask.array.Array)
 
 

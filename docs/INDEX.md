@@ -1,6 +1,6 @@
 # disp-xr project index
 
-**Last indexed:** 2026-10-02 · `main` on `origin` = `mgovorcin/disp-xr`, through T17.3 (quick-look plots)
+**Last indexed:** 2026-10-02 · `main` on `origin` = `mgovorcin/disp-xr`, through T6.7 (chunking per operation)
 
 How and when this file is rebuilt: see "Project Index (cyclical indexing)" in [CLAUDE.md](../CLAUDE.md).
 
@@ -114,6 +114,7 @@ Still open in M0: T1.4b (name maintainers), T3.4 badge and T3.5 branch protectio
 
 | Date | Decision |
 | --- | --- |
+| 2026-10-02 | `open_disp` keeps the file layout (`chunks="native"`); each operation gets the chunks it needs (chaining keeps chunks, per-pixel functions rechunk themselves, `dxr.rechunk` for explicit control); disp-xr computes with at most 32 dask threads by default |
 | 2026-09-30 | 1.0 supports DISP-S1 and DISP-NISAR |
 | 2026-09-30 | verde is a design reference only; disp-xr has its own fit/predict estimators |
 | 2026-09-30 | Package belongs to OPERA Cal/Val |
@@ -156,6 +157,7 @@ Still open in M0: T1.4b (name maintainers), T3.4 badge and T3.5 branch protectio
 | Date | Trigger | Changes |
 | --- | --- | --- |
 | 2026-09-30 | First index | Created from `specs.md`, `todo.md`, `code_review.md` and the source on `main` |
+| 2026-10-02 | T6.7 added and finished | Native default chunks, chunk-preserving `stack_disp`, `rechunk`/`time_contiguous`, bounded dask threads for plots and exports; fit fixed for split time chunks and `open_disp` coordinates; decision logged |
 | 2026-10-02 | T17.1–T17.3 finished | `plot.py` (`plot_map`, `plot_point`, diverging colormap), accessor wiring, Agg smoke tests, gallery script; matplotlib-base in the pixi `test` feature; T17.4 waits for T16 |
 | 2026-10-02 | T15 finished | `disp_xr info`, `stack`, `export`, `geometry`, `search`, `virtual` with one-line user errors; logging config fixed (formatter class name); `stack_disp(start=)` accepts a plain date |
 | 2026-10-02 | T14.2c finished; T14 done | Virtual frames in Icechunk (`virtual.py`): one commit per ministack, container per directory or bucket, validation against h5py; M1 status row corrected (was 1 / 10, now 5 / 10) |

@@ -44,7 +44,7 @@ def open_disp(
     *,
     layers: Optional[Sequence[str]] = None,
     corrections: bool = False,
-    chunks: ChunkSpec = "timeseries",
+    chunks: ChunkSpec = "native",
     frame_id: Optional[int] = None,
     min_version: Optional[str] = None,
     check: bool = True,
@@ -63,9 +63,13 @@ def open_disp(
         Layers to keep. Defaults to all displacement and quality layers.
     corrections : bool
         Also open the ``/corrections`` group layers.
-    chunks : {"timeseries", "maps"} or dict
-        Dask chunks: a preset sized from ``config["chunks.target_mb"]`` or an
-        explicit ``{"time", "y", "x"}`` dict (``-1`` means the whole axis).
+    chunks : {"native", "timeseries", "maps"} or dict
+        Dask chunks. ``"native"`` (default) keeps the file layout, one epoch
+        and one read block per chunk, so any selection reads only what it
+        needs; functions that work along time rechunk for themselves.
+        ``"timeseries"`` and ``"maps"`` are sized from
+        ``config["chunks.target_mb"]``; a dict gives ``{"time", "y", "x"}``
+        sizes (``-1`` means the whole axis). See :func:`disp_xr.rechunk`.
     frame_id : int, optional
         Frame to keep when ``paths`` holds several.
     min_version : str, optional
@@ -155,7 +159,7 @@ def open_disp_tree(
     paths: PathsLike,
     *,
     layers: Optional[Sequence[str]] = None,
-    chunks: ChunkSpec = "timeseries",
+    chunks: ChunkSpec = "native",
     frame_id: Optional[int] = None,
     min_version: Optional[str] = None,
     check: bool = True,

@@ -2,12 +2,21 @@
 
 Chunks are sized from a byte target (``config["chunks.target_mb"]``), not a
 fixed shape, and aligned to the 256 x 256 HDF5 chunks of DISP granules so a dask
-chunk never reads part of a file chunk. Two presets:
+chunk never reads part of a file chunk. Three presets:
 
+``"native"`` (the :func:`disp_xr.open_disp` default)
+    One epoch and one read block (``config["chunks.read_block"]``, 1,024 x
+    1,024) per chunk: the layout of the files. Every selection reads only the
+    epochs and blocks it needs, so maps, points and chaining stay cheap.
 ``"timeseries"``
     The whole time axis in each chunk, for per-pixel work (fits, filters).
+    Functions that need it rechunk to it themselves (:func:`time_contiguous`).
 ``"maps"``
-    One epoch per chunk, for maps and exports.
+    One epoch per chunk, sized to the byte target, for whole-map work.
+
+:func:`rechunk` switches a dataset between them when one kind of access will be
+repeated, for example ``ds.disp.rechunk("timeseries")`` before many point reads
+of a store that fits in memory.
 
 Clamping is adapted from opera-utils (src/opera_utils/disp/_utils.py,
 ``_clamp_chunk_dict``, commit dff4b45), Copyright (c) 2022 California Institute
@@ -18,7 +27,7 @@ from __future__ import annotations
 
 import math
 from collections.abc import Mapping
-from typing import Literal, Union
+from typing import Any, Literal, Union
 
 import numpy as np
 
@@ -28,7 +37,8 @@ from .config import config
 FILE_CHUNK = 256
 MIN_CHUNK = 32
 
-Preset = Literal["timeseries", "maps"]
+Preset = Literal["native", "timeseries", "maps"]
+PRESETS = ("native", "timeseries", "maps")
 ChunkSpec = Union[Preset, Mapping[str, int], None]
 
 
@@ -46,8 +56,9 @@ def suggest_chunks(
         ``(time, y, x)`` size of the stack.
     dtype : numpy dtype
         Data type, for the byte count.
-    layout : {"timeseries", "maps"}
-        Whole time axis per chunk, or one epoch per chunk.
+    layout : {"native", "timeseries", "maps"}
+        File layout (one epoch, one read block), whole time axis per chunk,
+        or one epoch per chunk.
     target_mb : float, optional
         Target chunk size in MB; defaults to ``config["chunks.target_mb"]``.
 
@@ -62,11 +73,16 @@ def suggest_chunks(
     {'time': 300, 'y': 256, 'x': 256}
     >>> suggest_chunks((300, 7000, 9000), "float32", "maps")
     {'time': 1, 'y': 4864, 'x': 4864}
+    >>> suggest_chunks((300, 7000, 9000), "float32", "native")
+    {'time': 1, 'y': 1024, 'x': 1024}
 
     """
     nt, ny, nx = shape
-    if layout not in ("timeseries", "maps"):
-        raise ValueError(f"layout must be 'timeseries' or 'maps', not {layout!r}")
+    if layout not in PRESETS:
+        raise ValueError(f"layout must be one of {PRESETS}, not {layout!r}")
+    if layout == "native":
+        block = int(config.get("chunks.read_block"))
+        return clamp_chunks({"time": 1, "y": block, "x": block}, shape)
     target = (target_mb or config.get("chunks.target_mb")) * 1e6
     itemsize = np.dtype(dtype).itemsize
     depth = nt if layout == "timeseries" else 1
@@ -90,7 +106,55 @@ def clamp_chunks(
 def resolve_chunks(
     chunks: ChunkSpec, shape: tuple[int, int, int], dtype: np.dtype | str
 ) -> dict[str, int]:
-    """Turn a preset name, a dict or None (``"timeseries"``) into chunk sizes."""
+    """Turn a preset name, a dict or None (``"native"``) into chunk sizes."""
     if chunks is None or isinstance(chunks, str):
-        return suggest_chunks(shape, dtype, chunks or "timeseries")
+        return suggest_chunks(shape, dtype, chunks or "native")  # type: ignore[arg-type]
     return clamp_chunks(chunks, shape)
+
+
+def _stack_shape(obj: Any) -> tuple[tuple[int, int, int], np.dtype]:
+    sizes = obj.sizes
+    shape = (sizes.get("time", 1), sizes.get("y", 1), sizes.get("x", 1))
+    arrays = [obj] if not hasattr(obj, "data_vars") else list(obj.data_vars.values())
+    floats = [a.dtype for a in arrays if a.dtype.kind == "f"] or [np.dtype("float32")]
+    return shape, max(floats, key=lambda d: d.itemsize)
+
+
+def rechunk(obj: Any, chunks: ChunkSpec = "timeseries") -> Any:
+    """Return ``obj`` (Dataset or DataArray) with dask chunks for one kind of work.
+
+    Parameters
+    ----------
+    obj : xr.Dataset or xr.DataArray
+        DISP data with ``time``, ``y``, ``x`` dimensions (any subset).
+    chunks : {"native", "timeseries", "maps"} or dict
+        A preset (see the module docstring) or explicit ``{"time", "y", "x"}``
+        sizes, ``-1`` for a whole axis.
+
+    Returns
+    -------
+    Same type as ``obj``, lazily rechunked. Nothing is read.
+
+    Examples
+    --------
+    >>> import xarray as xr, numpy as np
+    >>> da = xr.DataArray(np.zeros((4, 8, 8)), dims=("time", "y", "x")).chunk(1)
+    >>> rechunk(da, "timeseries").chunks[0]
+    (4,)
+
+    """
+    shape, dtype = _stack_shape(obj)
+    spec = resolve_chunks(chunks, shape, dtype)
+    return obj.chunk({d: n for d, n in spec.items() if d in obj.dims})
+
+
+def time_contiguous(obj: Any) -> Any:
+    """Return ``obj`` with the whole time axis in each chunk, for per-pixel work.
+
+    Unchanged if it is not a dask array or ``time`` is already one chunk;
+    otherwise rechunked with the ``"timeseries"`` preset.
+    """
+    chunks = getattr(obj, "chunksizes", None) or {}
+    if "time" not in chunks or len(chunks["time"]) == 1:
+        return obj
+    return rechunk(obj, "timeseries")

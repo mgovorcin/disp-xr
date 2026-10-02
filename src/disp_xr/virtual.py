@@ -35,6 +35,7 @@ import xarray as xr
 
 from ._credentials import AWSCredentials
 from ._remote import is_remote_url, open_h5
+from .config import bounded_threads
 from .export._provenance import with_provenance
 from .export.icechunk import (
     _check_append,
@@ -241,6 +242,7 @@ def _open_granules(
         )
 
 
+@bounded_threads
 def build_virtual_frame(
     granules: GranulesLike,
     repo: RepoLike,
@@ -377,6 +379,7 @@ def _same(a: np.ndarray, b: np.ndarray) -> bool:
     return bool(np.array_equal(a, b, equal_nan=a.dtype.kind == "f"))
 
 
+@bounded_threads
 def validate_virtual(
     repo: RepoLike,
     granules: GranulesLike,

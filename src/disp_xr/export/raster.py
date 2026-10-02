@@ -12,6 +12,8 @@ from rasterio.crs import CRS
 from rasterio.transform import Affine, from_bounds
 from rasterio.warp import Resampling, reproject
 
+from ..config import bounded_threads
+
 
 class GeoInfo(NamedTuple):
     """Named tuple to store geospatial metadata."""
@@ -207,6 +209,7 @@ def reproject_raster(
         )
 
 
+@bounded_threads
 def to_geotiff(
     da: xr.DataArray,
     path: Union[str, Path],

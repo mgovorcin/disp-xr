@@ -19,6 +19,7 @@ from typing import Any, Optional, Union
 
 import xarray as xr
 
+from ._chunks import ChunkSpec, rechunk
 from ._history import history
 from .corrections import correct, remove_plate_motion
 from .geometry import Grid, grid
@@ -48,6 +49,10 @@ class _Common:
     def to_units(self, unit: str) -> Any:
         """Convert length variables to ``unit`` (see :func:`disp_xr.units.to_units`)."""
         return to_units(self._obj, unit)
+
+    def rechunk(self, chunks: ChunkSpec = "timeseries") -> Any:
+        """Rechunk for one kind of work (see :func:`disp_xr.rechunk`)."""
+        return rechunk(self._obj, chunks)
 
     def plot_map(self, time: Any = None, **kwargs: Any) -> Any:
         """Map one epoch (see :func:`disp_xr.plot.plot_map`)."""
