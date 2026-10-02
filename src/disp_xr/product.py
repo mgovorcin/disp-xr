@@ -415,6 +415,9 @@ def check_granules(df: pd.DataFrame) -> pd.DataFrame:
     float64, the 2025 one as float32. Such granules cannot be stacked or
     virtualized together, so they are refused rather than cast.
 
+    One granule per production run is read (a run writes one layout), so the
+    check costs a few file opens per frame.
+
     Parameters
     ----------
     df : pd.DataFrame
@@ -437,9 +440,18 @@ def check_granules(df: pd.DataFrame) -> pd.DataFrame:
         name: spec.displacement_layers + spec.quality_layers
         for name, spec in PRODUCTS.items()
     }
+    # A production run writes one layout, so one file per (product, version,
+    # production time) is enough. Files without a production time in the name
+    # (SAS output) are each read.
+    run = df["production_time"].astype("string").fillna(df["path"])
+    sample = df.assign(_run=run).drop_duplicates(["product", "version", "_run"])
+    layout_of_run = {
+        (prod, ver, r): _layout(path, layers_by_product[prod])
+        for prod, ver, r, path in sample[["product", "version", "_run", "path"]].values
+    }
     layouts = [
-        _layout(p, layers_by_product[prod])
-        for p, prod in df[["path", "product"]].values
+        layout_of_run[(prod, ver, r)]
+        for prod, ver, r in zip(df["product"], df["version"], run)
     ]
     ids = {layout: i for i, layout in enumerate(dict.fromkeys(layouts))}
     out = df.assign(layout=[ids[layout] for layout in layouts])

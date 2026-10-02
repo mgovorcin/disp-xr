@@ -187,3 +187,19 @@ def test_check_granules_refuses_mixed_productions(disp_stacks):
     message = str(err.value)
     assert "displacement float32" in message and "displacement float64" in message
     assert "2025-04-12" in message and "2026-09-20" in message
+
+
+def test_check_granules_reads_one_file_per_production(monkeypatch, disp_stacks):
+    import disp_xr.product as product
+
+    opened: list[str] = []
+    real = product._layout
+    monkeypatch.setattr(
+        product,
+        "_layout",
+        lambda path, layers: opened.append(path) or real(path, layers),
+    )
+    df = find_products(disp_stacks["mixed_dtype"].paths[0].parent)
+    with pytest.raises(MixedProductionError):
+        check_granules(df)
+    assert len(opened) == 2  # one per production, not one per granule
