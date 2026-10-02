@@ -15,13 +15,14 @@ True
 
 from __future__ import annotations
 
-from typing import Any, Union
+from typing import Any, Optional, Union
 
 import xarray as xr
 
 from ._history import history
 from .corrections import correct, remove_plate_motion
 from .geometry import Grid, grid
+from .plot import plot_map, plot_point
 from .quality import mask, quality_summary
 from .reference import rereference
 from .stack import stack_disp
@@ -47,6 +48,16 @@ class _Common:
     def to_units(self, unit: str) -> Any:
         """Convert length variables to ``unit`` (see :func:`disp_xr.units.to_units`)."""
         return to_units(self._obj, unit)
+
+    def plot_map(self, time: Any = None, **kwargs: Any) -> Any:
+        """Map one epoch (see :func:`disp_xr.plot.plot_map`)."""
+        return plot_map(self._obj, time, **kwargs)
+
+    def plot_point(
+        self, lon: Optional[float] = None, lat: Optional[float] = None, **kwargs: Any
+    ) -> Any:
+        """Plot a point time series (see :func:`disp_xr.plot.plot_point`)."""
+        return plot_point(self._obj, lon, lat, **kwargs)
 
     def validate(self, **kwargs: Any) -> Any:
         """Raise if the object is not a usable DISP stack; else return it.
