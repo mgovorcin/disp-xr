@@ -19,6 +19,7 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 
+from .config import bounded_threads
 from .geometry import grid, lonlat_to_rowcol
 from .units import _canonical, to_units
 
@@ -95,6 +96,7 @@ def _date(value: Any) -> str:
     return f"{pd.Timestamp(value):%Y-%m-%d}"
 
 
+@bounded_threads
 def plot_map(
     obj: Union[xr.Dataset, xr.DataArray],
     time: Optional[Any] = None,
@@ -209,6 +211,7 @@ def _pixel_window(
     return window.median(dim=("y", "x"), skipna=True, keep_attrs=True)
 
 
+@bounded_threads
 def plot_point(
     obj: Union[xr.Dataset, xr.DataArray],
     lon: Optional[float] = None,

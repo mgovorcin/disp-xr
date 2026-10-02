@@ -76,7 +76,9 @@ def test_corrections_merge(stack_dir):
 
 
 def test_chunk_presets(stack_dir):
-    assert open_disp(stack_dir).displacement.chunks[0] == (10,)
+    # Default: the file layout, one epoch per chunk (64 x 64 is under a read block).
+    assert open_disp(stack_dir).displacement.chunks == ((1,) * 10, (64,), (64,))
+    assert open_disp(stack_dir, chunks="timeseries").displacement.chunks[0] == (10,)
     assert open_disp(stack_dir, chunks="maps").displacement.chunks[0] == (1,) * 10
     custom = open_disp(stack_dir, chunks={"time": -1, "y": 32, "x": 32})
     assert custom.displacement.chunks[1] == (32, 32)

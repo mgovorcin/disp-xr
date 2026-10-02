@@ -128,8 +128,8 @@ def test_without_zero_epoch(two_ministacks, opened):
     assert out.sizes["time"] == len(two_ministacks.paths)
 
 
-def test_dims_and_chunks(opened):
-    out = stack_disp(opened)
+def test_dims_and_chunks(stack_dir):
+    out = stack_disp(open_disp(stack_dir, chunks="timeseries"))
     assert out.displacement.dims == ("time", "y", "x")
     assert len(out.displacement.chunks[0]) == 1
 
@@ -238,6 +238,49 @@ def test_create_rebased_displacement_alias():
     np.testing.assert_array_equal(out.values[:, 0, 0], [1, 2, 3, 4])
 
 
-def test_zero_epoch_keeps_single_time_chunk(opened):
-    out = stack_disp(opened)
+def test_zero_epoch_keeps_single_time_chunk(stack_dir):
+    out = stack_disp(open_disp(stack_dir, chunks="timeseries"))
     assert all(len(v.chunks[0]) == 1 for v in out.data_vars.values())
+
+
+@pytest.mark.parametrize("policy", ["propagate", "omit"])
+@pytest.mark.parametrize("chunks", ["timeseries", "maps"])
+def test_lazy_chain_matches_reference(disp_stacks, policy, chunks):
+    # The chunk-preserving chain must give the values of the numpy _chain,
+    # including NaN crossovers under both policies.
+    ds = open_disp(disp_stacks["three_ministacks"].paths[0].parent, chunks=chunks)
+    raw = ds.displacement.load()
+    times, refs = ds.time.values, ds.reference_time.values
+    later = [i for i, t in enumerate(times) if t in set(refs) - {refs.min()}]
+    raw[later[0], :5, :5] = np.nan
+    raw[later[1], 3:8, 3:8] = np.nan
+    expected = stack._chain(
+        np.moveaxis(raw.values, 0, -1), times, refs, stack.NaNPolicy(policy)
+    )
+    got = stack._chain_lazy(raw.chunk(ds.displacement.chunksizes), times, refs, policy)
+    np.testing.assert_array_equal(got.values, np.moveaxis(expected, -1, 0))
+    assert got.dtype == raw.dtype
+
+
+def test_one_epoch_reads_only_its_crossovers(stack_dir):
+    from dask.core import flatten
+
+    opened = open_disp(stack_dir, chunks="maps")
+    out = stack_disp(opened)
+    assert len(out.displacement.chunks[0]) == out.sizes["time"]  # chunks kept
+    source = opened.displacement.data.name
+    sel = out.displacement.isel(time=-1).data
+    graph = sel.__dask_graph__().cull(set(flatten(sel.__dask_keys__())))
+    epochs = {k[1] for k in graph.keys() if isinstance(k, tuple) and k[0] == source}
+    assert len(epochs) == 2  # the epoch itself and one crossover
+
+
+def test_fit_gives_the_same_result_for_any_chunks(stack_dir):
+    # fit_timeseries_block maps over blocks; split time chunks used to fit each
+    # block's epochs separately.
+    from disp_xr.timeseries import fit_timeseries_block
+
+    ds = stack_disp(open_disp(stack_dir, chunks="timeseries"))
+    whole = fit_timeseries_block(ds.displacement).compute()
+    split = fit_timeseries_block(ds.disp.rechunk("maps").displacement).compute()
+    xr.testing.assert_allclose(whole, split)

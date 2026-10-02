@@ -28,6 +28,7 @@ import numpy as np
 import xarray as xr
 
 from .._chunks import suggest_chunks
+from ..config import bounded_threads
 from ._provenance import with_provenance
 
 __all__ = ["chunk_scheme", "round_mantissa", "to_netcdf", "to_zarr", "zarr_encoding"]
@@ -205,6 +206,7 @@ def _with_zarr_conventions(ds: xr.Dataset) -> xr.Dataset:
     return out
 
 
+@bounded_threads
 def to_zarr(
     ds: xr.Dataset,
     store: Union[str, Path, Any],
@@ -261,6 +263,7 @@ def to_zarr(
         )
 
 
+@bounded_threads
 def to_netcdf(
     ds: xr.Dataset,
     path: Union[str, Path],

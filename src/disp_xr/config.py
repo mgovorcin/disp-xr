@@ -16,7 +16,13 @@ Examples
 
 """
 
+import functools
+from collections.abc import Callable
+from typing import Any, TypeVar
+
 from donfig import Config
+
+F = TypeVar("F", bound=Callable[..., Any])
 
 DEFAULTS = {
     "chunks": {
@@ -36,6 +42,32 @@ DEFAULTS = {
     "cache": {"dir": None},
     # Threads per worker for compiled kernels; None leaves the library default.
     "threads": None,
+    # Dask threads when disp-xr computes (plots, exports), unless dask's own
+    # num_workers is set. Dask's default is one per core: 224 on the Aurora
+    # nodes, where reading a pixel series from 209 granules needed about 650
+    # memory maps per thread and hit vm.max_map_count (65,530), so thread
+    # creation failed. 32 read the series in 16 s. None uses dask's default.
+    "num_workers": 32,
 }
 
 config = Config("disp_xr", defaults=[DEFAULTS])
+
+
+def bounded_threads(func: F) -> F:
+    """Run ``func`` with at most ``config["num_workers"]`` dask threads.
+
+    Applied to the functions that compute (plots, exports). A ``num_workers``
+    set in dask's own config, or a non-threaded scheduler, takes precedence.
+    """
+
+    @functools.wraps(func)
+    def wrapper(*args: Any, **kwargs: Any) -> Any:
+        import dask
+
+        workers = config.get("num_workers")
+        if workers is None or dask.config.get("num_workers", None) is not None:
+            return func(*args, **kwargs)
+        with dask.config.set(num_workers=int(workers)):
+            return func(*args, **kwargs)
+
+    return wrapper  # type: ignore[return-value]

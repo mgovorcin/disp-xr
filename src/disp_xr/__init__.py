@@ -5,6 +5,7 @@ namespace as their plan tasks land (see docs/todo.md).
 """
 
 from . import accessor as _accessor  # noqa: F401  (registers .disp)
+from ._chunks import rechunk
 from ._version import __version__
 from .config import config
 from .corrections import correct, remove_plate_motion
@@ -44,6 +45,7 @@ __all__ = [
     "open_static",
     "open_virtual",
     "quality_summary",
+    "rechunk",
     "remove_plate_motion",
     "rereference",
     "stack_disp",

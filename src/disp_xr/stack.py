@@ -69,6 +69,37 @@ def _check_crossovers(times: np.ndarray, refs: np.ndarray) -> None:
         )
 
 
+def _chain_lazy(
+    da: xr.DataArray, times: np.ndarray, refs: np.ndarray, nan_policy: str
+) -> xr.DataArray:
+    """Chain ``da`` keeping its chunks: epoch ``t`` reads only itself and crossovers.
+
+    The same arithmetic as :func:`_chain`, written as 2D selections and sums:
+    the offset of a ministack is the chained value at its crossover epoch,
+    and each epoch adds the offset of its own ministack. Nothing spans the
+    time axis, so a one-epoch selection of the result reads one epoch plus
+    one crossover epoch per earlier ministack.
+    """
+    first = refs.min()
+    offsets = {first: xr.zeros_like(da.isel(time=0, drop=True))}
+    for ref in np.unique(refs):
+        if ref == first:
+            continue
+        (i,) = np.flatnonzero(times == ref)[:1]
+        value = da.isel(time=i, drop=True) + offsets[refs[i]]
+        offsets[ref] = value.fillna(0) if nan_policy == NaNPolicy.omit else value
+    order = list(offsets)
+    stacked = xr.concat([offsets[r] for r in order], dim="ministack")
+    index = xr.DataArray([order.index(r) for r in refs], dims="time")
+    per_epoch = stacked.isel(ministack=index)
+    if da.chunks is not None:
+        # Indexing splits time into one chunk per epoch; match the input so
+        # a one-time-chunk layer stays one chunk.
+        per_epoch = per_epoch.chunk({"time": da.chunksizes["time"]})
+    out = da + per_epoch
+    return out.transpose(*da.dims).astype(da.dtype, copy=False)
+
+
 def _chain(
     raw: np.ndarray, times: np.ndarray, refs: np.ndarray, nan_policy: str
 ) -> np.ndarray:
@@ -159,22 +190,17 @@ def stack_disp(
     for name in DISPLACEMENT_LAYERS:
         if name not in ds:
             continue
-        da = ds[name].chunk({"time": -1})
-        chained[name] = xr.apply_ufunc(
-            _chain,
-            da,
-            input_core_dims=[["time"]],
-            output_core_dims=[["time"]],
-            kwargs={"times": times, "refs": refs, "nan_policy": nan_policy},
-            dask="parallelized",
-            output_dtypes=[da.dtype],
-        ).transpose(*da.dims)
+        chained[name] = _chain_lazy(ds[name], times, refs, nan_policy)
         chained[name].attrs = ds[name].attrs
 
     if zero_epoch:
         chained = _prepend_zero_epoch(chained, first)
     chained.attrs["reference_date"] = str(pd.Timestamp(first))
     return chained
+
+
+def _one_time_chunk(var: xr.DataArray) -> bool:
+    return var.chunks is not None and len(var.chunks[var.dims.index("time")]) == 1
 
 
 def _prepend_zero_epoch(ds: xr.Dataset, first: np.datetime64) -> xr.Dataset:
@@ -188,7 +214,7 @@ def _prepend_zero_epoch(ds: xr.Dataset, first: np.datetime64) -> xr.Dataset:
     out = ds.reindex(time=new_times, fill_value=fill)
     # Keep layers whose time axis was one chunk in one chunk after the prepend.
     for name, var in ds.data_vars.items():
-        if var.chunks is not None and len(var.chunks[var.dims.index("time")]) == 1:
+        if _one_time_chunk(var):
             out[name] = out[name].chunk({"time": -1})
     refs = out["reference_time"].values.copy()
     refs[0] = first
@@ -199,7 +225,9 @@ def _prepend_zero_epoch(ds: xr.Dataset, first: np.datetime64) -> xr.Dataset:
             out[name] = xr.concat(
                 [zero.expand_dims(time=[first]), out[name].isel(time=slice(1, None))],
                 dim="time",
-            ).chunk({"time": -1})
+            )
+            if _one_time_chunk(ds[name]):
+                out[name] = out[name].chunk({"time": -1})
             out[name].attrs = ds[name].attrs
     return out
 

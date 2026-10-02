@@ -188,6 +188,7 @@ Rules
 - Velocity fits use the raw series. A denoised series is tagged in its attributes, and the fit functions refuse it unless told otherwise.
 - Metadata follows CF: every data variable has `grid_mapping`, `units` and `long_name`; mask and label layers carry `flag_values` and `flag_meanings`.
 - Runtime settings (default chunks, memory limit, thread counts, quality thresholds) live in one `disp_xr.config` object with `DISP_XR_*` environment overrides, so batch jobs are configured without code changes.
+- Data opens in the layout of the files (one epoch, one read block per chunk), and each operation gets the chunks it needs: selections read only what they touch, chaining keeps the input chunks, and per-pixel functions rechunk to whole time series themselves. `disp_xr.rechunk` switches layouts explicitly when one kind of access repeats.
 - Every public function has a NumPyDoc docstring with a runnable example, as the repo's `CLAUDE.md` already requires.
 
 ## Architecture and dependencies

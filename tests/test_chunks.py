@@ -56,6 +56,52 @@ def test_clamp_and_minus_one():
 
 def test_resolve_accepts_preset_dict_or_none():
     shape = (300, 7000, 9000)
-    assert resolve_chunks(None, shape, np.float32) == suggest_chunks(shape)
+    assert resolve_chunks(None, shape, np.float32) == suggest_chunks(
+        shape, layout="native"
+    )
     assert resolve_chunks("maps", shape, np.float32)["time"] == 1
     assert resolve_chunks({"y": 100}, shape, np.float32)["y"] == 100
+
+
+def test_native_preset_is_the_file_layout():
+    from disp_xr.config import config
+
+    block = config.get("chunks.read_block")
+    assert suggest_chunks((300, 7000, 9000), layout="native") == {
+        "time": 1,
+        "y": block,
+        "x": block,
+    }
+
+
+def test_rechunk_and_time_contiguous(stack_dir):
+    import disp_xr as dxr
+    from disp_xr._chunks import time_contiguous
+
+    ds = dxr.open_disp(stack_dir)
+    assert ds.displacement.chunks[0] == (1,) * 10
+    ts = dxr.rechunk(ds, "timeseries")
+    assert ts.displacement.chunks[0] == (10,)
+    assert ds.disp.rechunk({"time": 5}).displacement.chunks[0] == (5, 5)
+    assert time_contiguous(ds.displacement).chunks[0] == (10,)
+    whole = ts.displacement
+    assert time_contiguous(whole) is whole  # already one time chunk
+    assert time_contiguous(ds.displacement.load()).chunks is None  # not dask
+
+
+def test_bounded_threads():
+    import dask
+
+    from disp_xr.config import bounded_threads, config
+
+    @bounded_threads
+    def workers():
+        return dask.config.get("num_workers", None)
+
+    assert workers() == config.get("num_workers")
+    with config.set({"num_workers": 4}):
+        assert workers() == 4
+    with config.set({"num_workers": None}):
+        assert workers() is None
+    with dask.config.set(num_workers=7):  # the user's own setting wins
+        assert workers() == 7
