@@ -17,6 +17,7 @@ import xarray as xr
 import yaml  # type: ignore
 from affine import Affine
 from pyproj import CRS, Transformer
+from rasterio.warp import Resampling
 
 logger = logging.getLogger(__name__)
 
@@ -28,6 +29,7 @@ __all__ = [
     "grid",
     "latlon_to_utm",
     "lonlat_to_rowcol",
+    "match_grid",
     "utm_to_latlon",
 ]
 
@@ -52,6 +54,28 @@ def grid(obj: Union[xr.Dataset, xr.DataArray]) -> Grid:
         transform=obj.rio.transform(),
         shape=(obj.sizes["y"], obj.sizes["x"]),
     )
+
+
+def match_grid(
+    da: xr.DataArray,
+    like: Union[xr.Dataset, xr.DataArray],
+    resampling: Resampling = Resampling.bilinear,
+) -> xr.DataArray:
+    """Put ``da`` on the ``(y, x)`` grid of ``like``.
+
+    When both share a CRS and the pixel centers of ``like`` are pixel centers
+    of ``da`` (the same frame, or a subset of it), the pixels are selected,
+    which stays lazy and exact. Otherwise ``da`` is resampled with
+    ``rio.reproject_match``.
+    """
+    if da.rio.crs == like.rio.crs:
+        dx = abs(float(like.x[1] - like.x[0])) if like.sizes["x"] > 1 else 1.0
+        try:
+            out = da.sel(x=like.x, y=like.y, method="nearest", tolerance=dx / 100)
+            return out.assign_coords(x=like.x, y=like.y)
+        except KeyError:
+            pass
+    return da.rio.reproject_match(like, resampling=resampling)
 
 
 class OutOfBoundsError(ValueError):

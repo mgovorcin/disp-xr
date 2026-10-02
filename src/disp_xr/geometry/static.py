@@ -37,7 +37,7 @@ from ..export.raster import (
     reproject_raster,
     write_geotiff,
 )
-from . import get_burst_ids
+from . import get_burst_ids, match_grid
 from .los import los_to_incidence_azimuth, los_up
 
 logger = logging.getLogger(__name__)
@@ -172,18 +172,6 @@ def _local_static(directory: Path, frame_id: int) -> dict[str, Path]:
     return found
 
 
-def _align(da: xr.DataArray, like: xr.Dataset, resampling: Resampling) -> xr.DataArray:
-    """Put ``da`` on the grid of ``like``: select a subgrid, else resample."""
-    if da.rio.crs == like.rio.crs:
-        dx = abs(float(like.x[1] - like.x[0])) if like.sizes["x"] > 1 else 1.0
-        try:
-            out = da.sel(x=like.x, y=like.y, method="nearest", tolerance=dx / 100)
-            return out.assign_coords(x=like.x, y=like.y)
-        except KeyError:
-            pass
-    return da.rio.reproject_match(like, resampling=resampling)
-
-
 def _read_static(paths: Mapping[str, Path], like: xr.Dataset) -> xr.Dataset:
     block = config.get("chunks.read_block")
     chunks = {"y": block, "x": block}
@@ -197,14 +185,14 @@ def _read_static(paths: Mapping[str, Path], like: xr.Dataset) -> xr.Dataset:
         )
         for band, name in enumerate(LOS_BANDS, start=1):
             component = los.sel(band=band, drop=True)
-            layers[name] = _align(
+            layers[name] = match_grid(
                 component.where(component != 0), like, Resampling.bilinear
             ).astype("float32")
     if "dem" in paths:
         dem = xr.open_dataarray(paths["dem"], engine="rasterio", chunks=chunks).sel(
             band=1, drop=True
         )
-        layers["dem"] = _align(dem, like, Resampling.bilinear)
+        layers["dem"] = match_grid(dem, like, Resampling.bilinear)
     if "layover_shadow_mask" in paths:
         mask = xr.open_dataarray(
             paths["layover_shadow_mask"],
@@ -212,7 +200,7 @@ def _read_static(paths: Mapping[str, Path], like: xr.Dataset) -> xr.Dataset:
             chunks=chunks,
             mask_and_scale=False,
         ).sel(band=1, drop=True)
-        layers["layover_shadow_mask"] = _align(mask, like, Resampling.nearest)
+        layers["layover_shadow_mask"] = match_grid(mask, like, Resampling.nearest)
         layers["layover_shadow_mask"].attrs.update(
             _FillValue=255,
             description="0 not masked, 1 shadow, 2 layover, 3 layover and shadow",
