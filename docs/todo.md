@@ -188,7 +188,7 @@ Goal: make the existing code safe to change. That means installable, tested, in 
   - Context: gate "CI green, tests pass". This first tagged release lets early users install the package.
   - Done when: tag `v0.1.0` exists, CI is green on the tag, and a short changelog is published.
   - [x] T8.1 Add `CHANGELOG.md` (Keep a Changelog format) and fill in v0.1.0. Done on `chore/release-v0.1` (`c3b5763`); dated when tagged.
-  - [ ] T8.2 Configure `.github/release.yml` categories and tag `v0.1.0` (setuptools_scm picks it up). Waiting: the tag belongs on `main` after the stacked branches are reviewed, merged and pushed.
+  - [ ] T8.2 Configure `.github/release.yml` categories and tag `v0.1.0` (setuptools_scm picks it up). `release.yml` done (T18 preparation). Waiting: the tag, on `1c04c1c` (the last `main` commit of M0, before T9), pushed by a maintainer.
   - [x] T8.3 Update the README quick start to `dxr.find_products`, `dxr.open_disp` and chaining. Done (`c3b5763`); the snippet was run on a fixture stack.
   - [ ] T8.4 Set target dates for M1–M3 with the maintainers (PRD open question) and record them in the PRD. Waiting: needs the maintainers (T1.4b).
 
@@ -304,9 +304,9 @@ Goal: the everyday DISP workflow (open, mask, re-reference, correct, export, plo
 - [ ] **T18. Release v0.2 and API review** — Depends on: T10, T11, T12, T13, T15, T16, T17 · PRD: Milestones (M1 gate)
   - Context: gate "API reviewed by users". Names change cheaply now and expensively after M2.
   - Done when: tag `v0.2.0` exists, at least 3 Cal/Val users have run the getting-started flow on their own frames, their feedback is triaged into issues, and the core names are frozen.
-  - [ ] T18.1 Tag `v0.2.0`, update the changelog and publish the docs.
-  - [ ] T18.2 Run the API review: share the getting-started page and collect feedback in one issue per topic.
-  - [ ] T18.3 Apply the agreed renames (with deprecation shims) and record the frozen core API in `docs/api_policy.md`.
+  - [ ] T18.1 Tag `v0.2.0`, update the changelog and publish the docs. Prepared: the changelog has an Unreleased section ready to date, `.github/release.yml` groups release notes by label. Waiting: the review below, the tag, and ReadTheDocs.
+  - [ ] T18.2 Run the API review: share the getting-started page and collect feedback in one issue per topic. Prepared: `docs/api_review.md` (public API, settled decisions, seven open questions, each to become an issue) and `docs/try-it.md` (a 30-minute guide for users on their own frames). Already fixed: an internal parameter in `to_geotiff`'s signature; deprecated names out of `__all__`. Waiting: at least 3 Cal/Val users.
+  - [ ] T18.3 Apply the agreed renames (with deprecation shims) and record the frozen core API in `docs/api_policy.md`. Prepared: `docs/api_policy.md` draft (what is public, deprecation rules); the frozen list waits for the review.
 
 ---
 

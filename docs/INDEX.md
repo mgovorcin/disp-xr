@@ -1,6 +1,6 @@
 # disp-xr project index
 
-**Last indexed:** 2026-10-02 · `main` on `origin` = `mgovorcin/disp-xr`, through T17.4 (interactive gallery; T17 done)
+**Last indexed:** 2026-10-02 · `main` on `origin` = `mgovorcin/disp-xr`, through T18 preparation (API review materials)
 
 How and when this file is rebuilt: see "Project Index (cyclical indexing)" in `CLAUDE.md` at the repository root.
 
@@ -13,6 +13,9 @@ How and when this file is rebuilt: see "Project Index (cyclical indexing)" in `C
 | [code_review.md](code_review.md) | What exists: keep / refactor / drop per module, 7 bugs, the `timeseries_fitting` branch | 161 |
 | [porting.md](porting.md) | What is ported from opera_utils, where it goes, license terms, upstream bugs to fix | 132 |
 | [references.md](references.md) | Outside practices followed and their sources: earth-mover repositories, Zarr docs, xarray ecosystem | 206 |
+| [api_review.md](api_review.md) | v0.2 API review: public API, settled decisions, open questions | — |
+| [api_policy.md](api_policy.md) | What is public, deprecation rules, frozen names (draft until v0.2) | — |
+| [try-it.md](try-it.md) | Guide for Cal/Val users trying disp-xr on their own frame | — |
 | [check_plan.py](check_plan.py) | Mechanical check of `todo.md` (run in every indexing cycle) | — |
 | [img/](img/) | `architecture.png`, `roadmap.png`, exported from the PRD doc | — |
 | `CLAUDE.md` (repository root) | Coding rules and the indexing cycle | — |
@@ -158,6 +161,7 @@ Still open in M0: T1.4b (name maintainers), T3.4 badge and T3.5 branch protectio
 | Date | Trigger | Changes |
 | --- | --- | --- |
 | 2026-09-30 | First index | Created from `specs.md`, `todo.md`, `code_review.md` and the source on `main` |
+| 2026-10-02 | T18 prepared | `api_review.md` (7 open questions), `try-it.md` (guide for Cal/Val users), `api_policy.md` draft, `.github/release.yml`; private parameter out of `to_geotiff`; deprecated names out of `__all__`. Waiting: users, tags (`v0.1.0` on `1c04c1c`), ReadTheDocs |
 | 2026-10-02 | T17.4 finished; T17 done | Interactive gallery page (hvplot, datashader); pixi `interactive` feature in `docs` and `dev`; test that core imports neither |
 | 2026-10-02 | T16.1–T16.5 finished | mkdocs site (pages, API reference, 4 executed gallery examples, Development section), strict docs CI job, `.readthedocs.yaml`; `disp_xr.tutorial`; `to_geotiff` takes a Dataset and tags full provenance, `--format cog`; provenance of reopened stores fixed; CHANGELOG brought up to date; publishing on ReadTheDocs waits for a connected account |
 | 2026-10-02 | T6.7 added and finished | Native default chunks, chunk-preserving `stack_disp`, `rechunk`/`time_contiguous`, bounded dask threads for plots and exports; fit fixed for split time chunks and `open_disp` coordinates; decision logged |

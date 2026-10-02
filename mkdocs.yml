@@ -67,6 +67,7 @@ nav:
   - Getting started: getting-started.md
   - Concepts: concepts.md
   - Command line: cli.md
+  - Try it on your frame: try-it.md
   - Gallery:
       - Quick look at a frame: gallery/quicklook.py
       - Quality layers and masking: gallery/quality_masks.py
@@ -85,6 +86,8 @@ nav:
       - Synthetic data: api/tutorial.md
   - Development:
       - Project index: INDEX.md
+      - API review (v0.2): api_review.md
+      - API policy: api_policy.md
       - Requirements (PRD): specs.md
       - Plan: todo.md
       - Code review: code_review.md
