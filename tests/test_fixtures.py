@@ -118,4 +118,12 @@ def test_unknown_variant_raises(tmp_path):
 
 
 def test_every_variant_is_listed():
-    assert len(VARIANTS) == len(set(VARIANTS)) == 6
+    assert len(VARIANTS) == len(set(VARIANTS)) == 7
+
+
+def test_nisar_granules_use_sas_names_and_nisar_title(disp_stacks):
+    stack = disp_stacks["nisar"]
+    assert stack.paths[0].name == "20200101_20200113.nc"
+    with h5py.File(stack.paths[0]) as f:
+        assert f.attrs["title"] == "OPERA_L3_DISP-NISAR Product"
+        assert f["identification/product_version"][()] == b"0.4"

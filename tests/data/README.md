@@ -24,6 +24,7 @@ Variants (`VARIANTS` in `make_disp.py`):
 | `duplicate` | `two_ministacks` plus an older-version copy of one granule |
 | `mixed_dtype` | second ministack in the 2026 production style (float64 displacement, fixed time epoch) |
 | `two_utm_zones` | two adjacent frames, UTM 10N and 11N |
+| `nisar` | `two_ministacks` as pre-release DISP-NISAR SAS output: `<ref>_<sec>.nc` names, NISAR title, version 0.4 |
 
 Truth in every stack: a linear velocity gradient across x (-2 to +2 cm/yr), a
 5 mm annual sinusoid, a 1 cm step at the middle epoch, and 1 mm Gaussian noise
@@ -31,4 +32,5 @@ Truth in every stack: a linear velocity gradient across x (-2 to +2 cm/yr), a
 `UNWRAP_FAILED`, `WATER_COLUMNS`, `PS_PIXELS`, `CYCLE_PIXELS`), so tests can
 assert exactly which pixels a mask removes.
 
-A DISP-NISAR variant is added once the NISAR layout is recorded (plan task T5.2).
+The `nisar` variant copies the pre-release DISP-NISAR layout recorded in
+`disp_s1_layout.md` (section "DISP-NISAR").

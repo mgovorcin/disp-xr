@@ -51,7 +51,26 @@ Every 2D layer has dims `(y, x)`: there is no time dimension on the layers in th
 
 In frame F44055 (209 granules, 14 ministacks), each ministack holds 14 or 15 secondaries, and the next ministack's reference date equals the last secondary date of the previous ministack.
 
+## DISP-NISAR (pre-release)
+
+Recorded on 2026-10-02 from the SAS golden outputs in
+`03_DISP_NI/Releases/delivery_data_small/golden_output/historical` (frame 26410,
+version 0.4, 11112 x 11328).
+
+- Same layers, dtypes, chunking (256 x 256, gzip 4, shuffle), coordinates and
+  time encoding as the 2025 DISP-S1 production, except
+  `corrections/ionospheric_delay` is float64.
+- Root `title = "OPERA_L3_DISP-NISAR Product"`.
+- Extra group `science/LSAR/identification` (`lookDirection`,
+  `orbitPassDirection`, `trackNumber`).
+- File names are `<reference YYYYMMDD>_<secondary YYYYMMDD>.nc`: the SAS output,
+  before the delivery wrapper renames it. No official OPERA DISP-NISAR name has
+  been seen.
+- `/identification` still carries Sentinel-1 placeholder values in this release
+  (`radar_band = C`, `acquisition_mode = IW`, `radar_wavelength = 0.2419...`), so
+  only `frame_id`, `product_version` and the two datetimes are used.
+
 ## Not recorded yet
 
-- DISP-NISAR layout (plan task T5.2).
+- An official DISP-NISAR granule.
 - Other DISP-S1 product versions.

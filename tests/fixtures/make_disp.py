@@ -50,6 +50,9 @@ class Frame(NamedTuple):
 
 FRAME_10N = Frame(11116, 32610, 499800.0, 4114500.0)
 FRAME_11N = Frame(11117, 32611, 170000.0, 4114500.0)
+FRAME_NISAR = Frame(26410, 32610, 499800.0, 4114500.0)
+NISAR_TITLE = "OPERA_L3_DISP-NISAR Product"
+NISAR_VERSION = "0.4"
 
 
 @dataclass
@@ -178,6 +181,7 @@ def _write_granule(
     frame_id: int,
     version: str,
     style_2026: bool,
+    title: str = "OPERA_L3_DISP-S1 Product",
 ) -> None:
     ny, nx = displacement.shape
     dims = ("y", "x")
@@ -232,7 +236,7 @@ def _write_granule(
     encoding["time"] = {"units": time_units, **time_enc}
     encoding["reference_time"] = {"units": ref_units, **time_enc}
     encoding["x"] = encoding["y"] = {"_FillValue": None}
-    ds.attrs = {"Conventions": "CF-1.8", "title": "OPERA_L3_DISP-S1 Product"}
+    ds.attrs = {"Conventions": "CF-1.8", "title": title}
     ds.to_netcdf(path, engine="h5netcdf", encoding=encoding)
 
     corrections = xr.Dataset(
@@ -303,6 +307,7 @@ def _write_stack(
     frame: Frame,
     drop: tuple[int, ...] = (),
     style_2026_ministacks: tuple[int, ...] = (),
+    nisar: bool = False,
 ) -> DispStack:
     ny, nx = shape
     frame_id, epsg, x0, y0 = frame
@@ -324,16 +329,20 @@ def _write_stack(
             cumulative[position[pd.Timestamp(secondary)]]
             - cumulative[position[pd.Timestamp(reference)]]
         )
-        path = root / disp_filename(
-            reference,
-            secondary,
-            frame_id=frame_id,
-            production=(
-                PRODUCTION_2026
-                if ministack in style_2026_ministacks
-                else PRODUCTION_2025
-            ),
-        )
+        if nisar:
+            # Pre-release DISP-NISAR SAS output is named <ref>_<sec>.nc.
+            path = root / f"{reference:%Y%m%d}_{secondary:%Y%m%d}.nc"
+        else:
+            path = root / disp_filename(
+                reference,
+                secondary,
+                frame_id=frame_id,
+                production=(
+                    PRODUCTION_2026
+                    if ministack in style_2026_ministacks
+                    else PRODUCTION_2025
+                ),
+            )
         _write_granule(
             path,
             reference=reference,
@@ -345,8 +354,9 @@ def _write_stack(
             y=y,
             epsg=epsg,
             frame_id=frame_id,
-            version="1.0",
+            version=NISAR_VERSION if nisar else "1.0",
             style_2026=ministack in style_2026_ministacks,
+            title=NISAR_TITLE if nisar else "OPERA_L3_DISP-S1 Product",
         )
         paths.append(path)
     return DispStack(
@@ -382,6 +392,7 @@ VARIANTS = (
     "with_gaps",
     "duplicate",
     "mixed_dtype",
+    "nisar",
     "two_utm_zones",
 )
 
@@ -410,6 +421,8 @@ def make_disp_stack(
           granule (path in ``extra["duplicate"]``).
         - ``mixed_dtype``: the second ministack is written in the 2026 production
           style (float64 displacement, fixed time epoch).
+        - ``nisar``: ``two_ministacks`` as pre-release DISP-NISAR SAS output
+          (``<ref>_<sec>.nc`` names, NISAR title, version 0.4).
         - ``two_utm_zones``: two adjacent frames, UTM 10N and 11N, in
           ``root/F11116`` and ``root/F11117``; the second stack is in
           ``extra["second_frame"]``.
@@ -433,6 +446,7 @@ def make_disp_stack(
         frame: Frame = FRAME_10N,
         drop: tuple[int, ...] = (),
         style_2026_ministacks: tuple[int, ...] = (),
+        nisar: bool = False,
     ) -> DispStack:
         return _write_stack(
             path,
@@ -443,6 +457,7 @@ def make_disp_stack(
             frame=frame,
             drop=drop,
             style_2026_ministacks=style_2026_ministacks,
+            nisar=nisar,
         )
 
     if variant == "two_ministacks":
@@ -457,6 +472,8 @@ def make_disp_stack(
         return stack
     if variant == "mixed_dtype":
         return write(root, 2, style_2026_ministacks=(1,))
+    if variant == "nisar":
+        return write(root, 2, FRAME_NISAR, nisar=True)
     if variant == "two_utm_zones":
         first = write(root / "F11116", 2)
         first.extra["second_frame"] = write(root / "F11117", 2, FRAME_11N)
