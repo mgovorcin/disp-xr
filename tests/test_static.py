@@ -1,5 +1,7 @@
 """Static layers and LOS geometry (plan task T12)."""
 
+from pathlib import Path
+
 import dask
 import numpy as np
 import pytest
@@ -202,7 +204,7 @@ def test_download_static_once(monkeypatch, tmp_path):
     class FakeFS:
         def get(self, url, path):
             fetched.append(url)
-            open(path, "wb").write(b"tif")
+            Path(path).write_bytes(b"tif")
 
     monkeypatch.setattr(
         static,
@@ -284,8 +286,6 @@ def test_stitch_unknown_layer(ds):
 
 
 def test_no_opera_utils_import():
-    from pathlib import Path
-
     src = Path(static.__file__).parents[1]
     offenders = [
         p
