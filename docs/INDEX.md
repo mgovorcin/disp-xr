@@ -1,6 +1,6 @@
 # disp-xr project index
 
-**Last indexed:** 2026-10-02 · branch `feat/open-disp` (on `feat/product-registry`, on `refactor/package-layout`, on `feature/t1-packaging`, on `main` `ce0d105`); nothing pushed
+**Last indexed:** 2026-10-02 · branch `feat/chain-ministacks` (on `feat/open-disp`, on `feat/product-registry`, on `refactor/package-layout`, on `feature/t1-packaging`, on `main` `ce0d105`); nothing pushed
 
 How and when this file is rebuilt: see "Project Index (cyclical indexing)" in [CLAUDE.md](../CLAUDE.md).
 
@@ -23,19 +23,20 @@ The PRD also lives as a shared doc; `specs.md` is its copy in the repo and must 
 
 | Milestone | Tasks | Done |
 | --- | --- | --- |
-| M0 Foundation (v0.1) | T1–T8 | 4 / 8 (T2, T4, T5, T6 done; T1 open only for T1.4b; T3 open for T3.4–T3.5) |
+| M0 Foundation (v0.1) | T1–T8 | 5 / 8 (T2, T4, T5, T6, T7 done; T1 open only for T1.4b; T3 open for T3.4–T3.5) |
 | M1 Core API (v0.2) | T9–T18 | 0 / 10 |
 | M2 Analysis (v0.3) | T19–T34 | 0 / 16 |
 | M3 Release (v1.0) | T35–T39 | 0 / 5 |
 
-Four local branches, stacked, not pushed:
+Five local branches, stacked, not pushed:
 
 - `feature/t1-packaging`: annotation fix, T1 (packaging, pixi), T2 (tests), T3 (CI), planning docs.
-- `feat/open-disp` (on top): T6. `open_disp` and `open_disp_tree` (lazy, CRS attached, integer layers keep dtype, mixed productions refused), chunk presets from a byte target, remote access over S3/HTTPS/fsspec with Earthdata and ASF credentials (ported), faster `check_granules`.
+- `feat/chain-ministacks` (on top): T7. `stack_disp` chains ministacks from the crossover epoch by date (bug 3 fixed); old entry points (`get_disp_info`, `combine_disp_product`, `rebase_disp`, `create_rebased_displacement`) are deprecated wrappers.
+- `feat/open-disp`: T6. `open_disp` and `open_disp_tree` (lazy, CRS attached, integer layers keep dtype, mixed productions refused), chunk presets from a byte target, remote access over S3/HTTPS/fsspec with Earthdata and ASF credentials (ported), faster `check_granules`.
 - `feat/product-registry`: T5. `ProductSpec` registry (DISP-S1; DISP-NISAR provisional), `DispGranule` parsing from names or metadata, `find_products`, `group_ministacks`, `check_granules`; `get_disp_info` rebuilt on it (bugs 1 and 8 fixed).
 - `refactor/package-layout`: T4. Merges `origin/timeseries_fitting`, makes jax optional, moves modules to the new layout behind deprecated aliases, fixes the CLI entry point, adds the top-level API, opera-utils attribution, the search port (with the bug 9 fix) and `disp_xr.config`.
 
-Still open in M0: T1.4b (name maintainers), T3.4 badge and T3.5 branch protection (GitHub admin), then T7 and T8. Tests: 131 passed, 3 strict xfails for open bugs (3 twice, 7).
+Still open in M0: T1.4b (name maintainers), T3.4 badge and T3.5 branch protection (GitHub admin), then T8 (release v0.1: needs a merged, pushed `main` and a tag). Tests: 155 passed, 1 strict xfail (bug 7).
 
 ## Requirements to tasks
 
@@ -43,7 +44,7 @@ Still open in M0: T1.4b (name maintainers), T3.4 badge and T3.5 branch protectio
 | --- | --- | --- |
 | F1 Discover | T5 | Done on `feat/product-registry` |
 | F2 Open | T6 | Done on `feat/open-disp` (local and remote) |
-| F3 Stack | T7 | Exists, buggy (`stack.py`); to be replaced by a port |
+| F3 Stack | T7 | Done on `feat/chain-ministacks` |
 | F4 Mask | T10 | Partial (`quality_metrics.py`) |
 | F5 Reference | T11 | Partial (`utils.find_reference_point`) |
 | F6 Correct | T13 | Not started |
@@ -83,7 +84,7 @@ Still open in M0: T1.4b (name maintainers), T3.4 badge and T3.5 branch protectio
 | Module | Requirement | State | Next task |
 | --- | --- | --- | --- |
 | `product.py` | F1 | `ProductSpec`, `DispGranule`, `find_products`, `group_ministacks`, `check_granules`; `get_disp_info` kept for the stack | T7 (deprecate `get_disp_info`) |
-| `stack.py` | F2, F3 | Chaining works; bug 3; holds unattributed-source copies of the opera-utils rebasing code (header added) | T6, T7 |
+| `stack.py` | F3 | `stack_disp`, `NaNPolicy`, `MissingCrossoverError`; deprecated wrappers | T38 (remove wrappers) |
 | `quality.py` (was `quality_metrics.py`) | F4 | Lazy statistics | T10 |
 | `reference.py` (from `utils.py`) | F5 | `find_reference_point`; bug 7 | T11 |
 | `geometry/__init__.py` (from `utils.py`) | F7 | Coordinate helpers, `get_burst_ids` | T12 |
@@ -125,7 +126,7 @@ Still open in M0: T1.4b (name maintainers), T3.4 badge and T3.5 branch protectio
 - `geometry/static.py` (and its alias `static_layers`) still imports `opera_utils`, so it fails to import in the new environments; the ruff ban exempts it until T12.1.
 - `pyproject.toml` URLs point to `opera-adt/disp-xr`, the live repo, while the PRD says the package belongs to OPERA Cal/Val. The old `OPERA-Cal-Val/disp_xr_tools` URL redirects to the personal repo `mgovorcin/disp_xr_tools`.
 - `feature/t1-packaging` is not pushed and does not follow the `type/summary` branch naming of the `git-commit-pr` skill; rename it when it becomes a PR.
-- Open bugs with strict xfail tests: 3, 7. Bugs 1, 8 and 9 are fixed. The old notebooks still import the deprecated module names (`download`, `io`, `quality_metrics`, `static_layers`, `utils.*`); they keep working with warnings until T16 rewrites them.
+- Open bug with a strict xfail test: 7. Bugs 1, 3, 8 and 9 are fixed. The old notebooks still import the deprecated module names (`download`, `io`, `quality_metrics`, `static_layers`, `utils.*`); they keep working with warnings until T16 rewrites them.
 - `.claude/skills` is a symlink to `../skills`, which does not exist in this repo; `.claude/` is excluded through `.git/info/exclude`, as in geepers.
 
 ## Not verified
@@ -147,6 +148,7 @@ Still open in M0: T1.4b (name maintainers), T3.4 badge and T3.5 branch protectio
 | Date | Trigger | Changes |
 | --- | --- | --- |
 | 2026-09-30 | First index | Created from `specs.md`, `todo.md`, `code_review.md` and the source on `main` |
+| 2026-10-02 | T7 finished | Crossover offsets by date instead of previous epoch; `get_value_percentage` fixed for coordinates carried by `open_disp` output |
 | 2026-10-02 | T6 finished | Real-frame timing drove the 1024-pixel read block and the one-file-per-production check; T6.5b moved to T14.2c |
 | 2026-10-02 | T5 finished | Product registry and parser checked on real F44055, F39355 and DISP-NISAR golden data; DISP-NISAR spec provisional (no official granule); `get_disp_info` deprecation moved to T7 |
 | 2026-10-02 | T4 finished | 13 commits on `refactor/package-layout`; plan: T4.1 creates modules when filled, `geometry` is a package, T4.8 deletions moved to T10.3 and T14.3; new bug 9 (search frame filter) found and fixed; T1.4 done |

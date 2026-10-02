@@ -171,15 +171,15 @@ Goal: make the existing code safe to change. That means installable, tested, in 
 
 ### T7. Ministack chaining
 
-- [ ] **T7. Ministack chaining** — Depends on: T6 · PRD: F3
+- [x] **T7. Ministack chaining** — Depends on: T6 · PRD: F3
   - Context: displacement in each ministack is relative to that ministack's reference date. The chaining kernel and `NaNPolicy` are ported from opera_utils `_rebase.py`, and the lazy wrapper is reimplemented on `xr.apply_ufunc` ([porting.md](porting.md)). The `timeseries_fitting` branch merged in T4.0 holds unattributed copies (`create_rebased_displacement`, `rebase_timeseries`, `rebase_disp`); this task keeps one implementation. The current `stack.combine_disp_product` also builds the zero first epoch wrongly when `start_date` is set (bug 3 in [code_review.md](code_review.md)).
   - Done when: `dxr.stack_disp(...)` (or `open_disp(..., chain=True)`) returns one cumulative series from the first epoch that matches the T2 truth exactly (up to float tolerance) across one or more reference changes. Masked pixels propagate as NaN.
-  - [ ] T7.1 Write the math in the docstring: cumulative(t) = disp_k(t) + cumulative(ref_k) for t in ministack k.
-  - [ ] T7.2 Port `rebase_timeseries` as a private kernel that keeps the input dtype and checks that each crossover epoch exists. Wrap it with `xr.apply_ufunc(dask="parallelized", input_core_dims=[["time"]])`, reading reference times from `ds.reference_time`. Apply it to displacement and `short_wavelength_displacement` only; quality layers stay per epoch. Delete `rebase_disp` and the duplicate copies from the branch.
-  - [ ] T7.3 Prepend the zero epoch for displacement layers only, dated at the first reference time of the selected ministacks (not of all products), with `reference_time` equal to that time.
-  - [ ] T7.4 Support `start` and `end` filtering at the ministack level, refusing to start mid-ministack unless re-referenced to that epoch (documented).
-  - [ ] T7.5 Port `NaNPolicy` (`propagate` default, `omit`) as a public enum, with a docstring explaining when each applies; test both.
-  - [ ] T7.6 Port the tests from opera_utils `test_disp_rebase.py`, add tests with 1, 2 and 3 reference changes against the T2 truth and a test that the zero epoch has a unique time label (porting.md, upstream bug 3), and update the T2.6 characterization test on purpose.
+  - [x] T7.1 Write the math in the docstring: cumulative(t) = disp_k(t) + cumulative(ref_k) for t in ministack k. Done: module docstring of `stack.py`.
+  - [x] T7.2 Port `rebase_timeseries` as a private kernel that keeps the input dtype and checks that each crossover epoch exists. Wrap it with `xr.apply_ufunc(dask="parallelized", input_core_dims=[["time"]])`, reading reference times from `ds.reference_time`. Apply it to displacement and `short_wavelength_displacement` only; quality layers stay per epoch. Delete `rebase_disp` and the duplicate copies from the branch. Done (`bb82459`), with one change from the port: the offset comes from the epoch whose date is the new reference date, not the previous epoch, and a missing crossover raises `MissingCrossoverError`. `rebase_disp`, `create_rebased_displacement` and `combine_disp_product` are deprecated wrappers (removed in T38); the unattributed copies are gone.
+  - [x] T7.3 Prepend the zero epoch for displacement layers only, dated at the first reference time of the selected ministacks (not of all products), with `reference_time` equal to that time. Done; other layers get their no-data value at the zero epoch, so integer masks stay integer.
+  - [x] T7.4 Support `start` and `end` filtering at the ministack level, refusing to start mid-ministack unless re-referenced to that epoch (documented). Done: `start` must be a ministack reference date (otherwise `ValueError` listing them); `end` drops later epochs.
+  - [x] T7.5 Port `NaNPolicy` (`propagate` default, `omit`) as a public enum, with a docstring explaining when each applies; test both. Done.
+  - [x] T7.6 Port the tests from opera_utils `test_disp_rebase.py`, add tests with 1, 2 and 3 reference changes against the T2 truth and a test that the zero epoch has a unique time label (porting.md, upstream bug 3), and update the T2.6 characterization test on purpose. Done: kernel cases ported with explicit secondary dates, truth tests for 2 and 3 ministacks, unique zero-epoch time, bug 3 regression tests. Checked on real F44055: 210 epochs, zero mismatch against manual chaining.
 
 ### T8. Release v0.1
 
