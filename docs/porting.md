@@ -67,8 +67,8 @@ The `timeseries_fitting` branch already holds unattributed copies of these in `s
 
 | opera_utils source | Verdict | disp-xr target | Changes |
 | --- | --- | --- | --- |
-| `geometry.py` `stitch_geometry_layers`, `Layer`, nodata table | Rewrite | `geometry.py` | Merge the CSLC-STATIC bursts with rioxarray instead of the GDAL stitcher; this removes the only live `opera_utils` import (`static_layers.py:11`) |
-| `geometry.py` LOS up and 3-band LOS helpers | Simplify | `geometry.py` | Computed in `open_static` |
+| `geometry.py` `stitch_geometry_layers`, `Layer`, nodata table | Rewrite | `geometry/static.py` | Merge the CSLC-STATIC bursts with rioxarray instead of the GDAL stitcher; this removes the only live `opera_utils` import (`static_layers.py:11`) |
+| `geometry.py` LOS up and 3-band LOS helpers | Simplify | `geometry/static.py` | Computed in `open_static` |
 | `disp/create_incidence_range.py` incidence and slant range | Rewrite | `geometry.py` | Array functions on the LOS dataset; wavelength and orbit height from `ProductSpec` |
 
 ### Export (T14)

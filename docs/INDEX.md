@@ -1,6 +1,6 @@
 # disp-xr project index
 
-**Last indexed:** 2026-10-01 · branch `feature/t1-packaging` at `2f37c2d` (5 commits on `main` `ce0d105`, not pushed)
+**Last indexed:** 2026-10-02 · branch `refactor/package-layout` (on `feature/t1-packaging`, which is on `main` `ce0d105`); nothing pushed
 
 How and when this file is rebuilt: see "Project Index (cyclical indexing)" in [CLAUDE.md](../CLAUDE.md).
 
@@ -23,12 +23,17 @@ The PRD also lives as a shared doc; `specs.md` is its copy in the repo and must 
 
 | Milestone | Tasks | Done |
 | --- | --- | --- |
-| M0 Foundation (v0.1) | T1–T8 | 1 / 8 (T2 done; T1 6 of 8 and T3 4 of 6 subtasks done) |
+| M0 Foundation (v0.1) | T1–T8 | 2 / 8 (T2, T4 done; T1 open only for T1.4b; T3 open for T3.4–T3.5) |
 | M1 Core API (v0.2) | T9–T18 | 0 / 10 |
 | M2 Analysis (v0.3) | T19–T34 | 0 / 16 |
 | M3 Release (v1.0) | T35–T39 | 0 / 5 |
 
-Work is on branch `feature/t1-packaging`, committed, not pushed: `7dc863c` (annotation fix), `17849f2` (T1), `051abfe` (T2), `2f37c2d` (T3), then this docs commit. T1: static dependencies and extras, aligned Python versions, opera_utils removed from `environment.yml`, pixi environments with a lock file; still open are `license-files` (waits for T4.7) and naming maintainers (T1.4b). T2 is done: `tests/` holds a synthetic DISP-S1 stack factory that copies the real layout, 32 passing tests and 5 strict xfails for known bugs (`pixi run -e test test`, about 16 s). T3: `.github/workflows/test.yml` (pytest on Python 3.12, 3.13, 3.14 through pixi; coverage report; pre-commit job) and a ruff rule that bans `opera_utils` and `verde` imports; the workflow has not run on GitHub yet. Branch protection (T3.5) and a coverage badge need GitHub admin access.
+Two local branches, not pushed:
+
+- `feature/t1-packaging`: annotation fix, T1 (packaging, pixi), T2 (tests), T3 (CI), planning docs.
+- `refactor/package-layout` (on top): T4. Merges `origin/timeseries_fitting`, makes jax optional, moves modules to the new layout behind deprecated aliases, fixes the CLI entry point, adds the top-level API, opera-utils attribution, the search port (with the bug 9 fix) and `disp_xr.config`.
+
+Still open in M0: T1.4b (name maintainers), T3.4 badge and T3.5 branch protection (GitHub admin), then T5 to T8. Tests: 64 passed, 5 strict xfails for known bugs.
 
 ## Requirements to tasks
 
@@ -71,21 +76,25 @@ Work is on branch `feature/t1-packaging`, committed, not pushed: `7dc863c` (anno
 | NFR Docs | T16 | Not started |
 | API rules (config, history, order) | T4.9, T9, T15.2 | Not started |
 
-## Modules (main, `src/disp_xr`)
+## Modules (branch `refactor/package-layout`, `src/disp_xr`)
 
-| Module | Lines | Requirement | Verdict | Tasks |
-| --- | --- | --- | --- | --- |
-| `product.py` | 123 | F1 | Replace with a port | T5 |
-| `stack.py` | 87 | F2, F3 | Rewrite; chaining ported | T6, T7 |
-| `quality_metrics.py` | 179 | F4 | Rewrite lazily | T10 |
-| `utils.py` | 236 | F5, F7 | Split | T4, T11, T12 |
-| `static_layers.py` | 321 | F7 | Keep logic, new I/O, drop the opera_utils import | T12 |
-| `io.py` | 206 | F12 | Replace with rioxarray | T14 |
-| `mintpy.py` | 516 | F12 | Replace with a port | T14 |
-| `download.py` | 245 | F16 | Keep as the search port (`search.py`) | T4.5 |
-| `cli/geometry.py` | 28 | F14 | Rebuild | T4.6, T15 |
-| `log/` | 169 | Infrastructure | Keep | — |
-| `timeseries/` (branch `origin/timeseries_fitting`) | 1,554 | F8, S1, S4 | Keep, merge first | T4.0, T20, T32 |
+| Module | Requirement | State | Next task |
+| --- | --- | --- | --- |
+| `product.py` | F1 | Filename table; bugs 1 and 8 | T5 (port) |
+| `stack.py` | F2, F3 | Chaining works; bug 3; holds unattributed-source copies of the opera-utils rebasing code (header added) | T6, T7 |
+| `quality.py` (was `quality_metrics.py`) | F4 | Lazy statistics | T10 |
+| `reference.py` (from `utils.py`) | F5 | `find_reference_point`; bug 7 | T11 |
+| `geometry/__init__.py` (from `utils.py`) | F7 | Coordinate helpers, `get_burst_ids` | T12 |
+| `geometry/static.py` (was `static_layers.py`) | F7 | Static-layer download; still imports opera_utils | T12.1 |
+| `export/raster.py` (was `io.py`) | F12 | rasterio file I/O | T14 |
+| `export/mintpy.py` (was `mintpy.py`) | F12 | Old writer; bugs 4–6 | T14.3 |
+| `search.py` (was `download.py`) | F16 | Ported CMR search, session seam, NISAR short name; bug 9 fixed | T5.2 (NISAR spec) |
+| `config.py` | API rules | `donfig` settings, `DISP_XR_*` overrides | — |
+| `cli/__init__.py` | F14 | Empty `disp_xr` group; entry point works | T15 |
+| `timeseries/` | F8, S1, S4 | From `timeseries_fitting`; jax optional | T20, T32 |
+| `utils.py` | — | `get_chunks_indices` plus deprecated aliases | T14.3 |
+| `quality_metrics.py`, `io.py`, `mintpy.py`, `static_layers.py`, `download.py` | — | Deprecated aliases | T38 |
+| `log/` | Infrastructure | Unchanged | — |
 
 ## Decisions log
 
@@ -108,11 +117,11 @@ Work is on branch `feature/t1-packaging`, committed, not pushed: `7dc863c` (anno
 
 ## Out of sync
 
-- Local checkouts `01_OPERA/STAKEHOLDER/disp-xr` and `01_OPERA/VLM/disp-xr` are on `timeseries_fitting`; `00_tools/src/disp-xr` is on `main`. The conda envs `disp_xr` and `disp_xr_py311` hold non-editable installs of old commits.
-- `static_layers.py` still imports `opera_utils`, so `import disp_xr.static_layers` fails in the new environments (removed in T12.1). `environment.yml` no longer lists it.
+- Local checkouts `01_OPERA/STAKEHOLDER/disp-xr` and `01_OPERA/VLM/disp-xr` are on `timeseries_fitting`, which `refactor/package-layout` now contains. The conda envs `disp_xr` and `disp_xr_py311` hold non-editable installs of old commits.
+- `geometry/static.py` (and its alias `static_layers`) still imports `opera_utils`, so it fails to import in the new environments; the ruff ban exempts it until T12.1.
 - `pyproject.toml` URLs point to `opera-adt/disp-xr`, the live repo, while the PRD says the package belongs to OPERA Cal/Val. The old `OPERA-Cal-Val/disp_xr_tools` URL redirects to the personal repo `mgovorcin/disp_xr_tools`.
 - `feature/t1-packaging` is not pushed and does not follow the `type/summary` branch naming of the `git-commit-pr` skill; rename it when it becomes a PR.
-- `code_review.md` has a new bug 8 (`get_disp_info` crashes on pandas 3 when versions differ).
+- Open bugs with strict xfail tests: 1, 3, 7, 8. Bug 9 is fixed. The old notebooks still import the deprecated module names (`download`, `io`, `quality_metrics`, `static_layers`, `utils.*`); they keep working with warnings until T16 rewrites them.
 - `.claude/skills` is a symlink to `../skills`, which does not exist in this repo; `.claude/` is excluded through `.git/info/exclude`, as in geepers.
 
 ## Not verified
@@ -134,6 +143,7 @@ Work is on branch `feature/t1-packaging`, committed, not pushed: `7dc863c` (anno
 | Date | Trigger | Changes |
 | --- | --- | --- |
 | 2026-09-30 | First index | Created from `specs.md`, `todo.md`, `code_review.md` and the source on `main` |
+| 2026-10-02 | T4 finished | 13 commits on `refactor/package-layout`; plan: T4.1 creates modules when filled, `geometry` is a package, T4.8 deletions moved to T10.3 and T14.3; new bug 9 (search frame filter) found and fixed; T1.4 done |
 | 2026-10-01 | T3 mostly finished | CI workflow, per-Python pixi environments, banned-import rule; T3.4 badge and T3.5 branch protection left for repo admins |
 | 2026-10-01 | T2 finished | Added `tests/` (fixture factory, layout record from real F44055 and F11116 granules, characterization tests); pytest config with doctests; pixi `cov` task. New in `code_review.md`: bug 8 and four smaller findings |
 | 2026-10-01 | T1 subtasks finished (T1.1–T1.3, T1.5–T1.7) | Ticked in `todo.md`; added T1.7 (pixi); `check_plan.py` accepts ticked boxes. Verified: `mamba env create`, `pip install -e .`, `pip check`, all pre-commit hooks pass; pixi `default`, `test`, `docs`, `dev` environments install and import `disp_xr` |
