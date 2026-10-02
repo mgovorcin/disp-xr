@@ -24,8 +24,8 @@ import numpy as np
 
 from .config import config
 
+# Spatial chunk size of DISP granules (both productions, both sensors).
 FILE_CHUNK = 256
-"""Spatial chunk size of DISP granules (both productions, both sensors)."""
 MIN_CHUNK = 32
 
 Preset = Literal["timeseries", "maps"]
