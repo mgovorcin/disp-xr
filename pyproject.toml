@@ -60,7 +60,15 @@ gnss = ["xvec", "geopandas"]
 mintpy = ["mintpy"]
 plot = ["matplotlib"]
 interactive = ["hvplot", "datashader"]
-aws = ["s3fs", "asf_search", "dem_stitcher", "tile_mate", "requests", "shapely"]
+aws = [
+  "aiohttp",
+  "asf_search",
+  "dem_stitcher",
+  "requests",
+  "s3fs",
+  "shapely",
+  "tile_mate",
+]
 # virtualizarr[icechunk] brings icechunk and obstore; 2.4 is the first release
 # with the HDF parser API used here.
 cloud = ["virtualizarr[hdf,icechunk]>=2.4"]
@@ -123,8 +131,10 @@ cov = "pytest --cov=disp_xr --cov-report=term-missing"
 
 [tool.pixi.feature.test.dependencies]
 cf_xarray = "*"
-# aws extra, so tests cover disp_xr.search
+# aws extra, so tests cover disp_xr.search and remote access
+aiohttp = "*"
 requests = "*"
+s3fs = "*"
 shapely = "*"
 mypy = "*"
 pre-commit = "*"

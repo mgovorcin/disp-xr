@@ -13,6 +13,7 @@ import rioxarray  # noqa: F401  (registers the .rio accessor)
 import xarray as xr
 
 from ._chunks import ChunkSpec, resolve_chunks
+from ._remote import is_remote_url, open_file, open_h5
 from .config import config
 from .product import PRODUCTS, check_granules, find_products
 
@@ -131,8 +132,10 @@ def open_disp(
 
 def _open(files: list, drop: list[str], group: Optional[str]) -> xr.Dataset:
     block = config.get("chunks.read_block")
+    # Remote granules are passed to xarray as fsspec file objects.
+    sources = [open_file(f) if is_remote_url(f) else f for f in files]
     return xr.open_mfdataset(
-        files,
+        sources,
         engine="h5netcdf",
         group=group,
         decode_coords="all",
@@ -193,7 +196,7 @@ def open_disp_tree(
 
 def _scalar_attrs(path: str, group: str) -> dict:
     out: dict = {}
-    with h5py.File(path, "r") as f:
+    with open_h5(path) as f:
         if group not in f:
             return out
         for name, item in f[group].items():

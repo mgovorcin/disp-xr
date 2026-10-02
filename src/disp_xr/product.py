@@ -20,10 +20,11 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import List, Optional, Union
 
-import h5py
 import pandas as pd
 from packaging.specifiers import SpecifierSet
 from packaging.version import Version
+
+from ._remote import is_remote_url, list_granules, open_h5
 
 logger = logging.getLogger(__name__)
 
@@ -189,7 +190,7 @@ class DispGranule:
     @classmethod
     def _from_metadata(cls, path: Union[str, Path]) -> DispGranule:
         try:
-            with h5py.File(path, "r") as f:
+            with open_h5(path) as f:
                 title = _text(f.attrs.get("title", b""))
                 ident = f["identification"]
                 values = {
@@ -223,11 +224,16 @@ def _text(value) -> str:
     return value.decode() if isinstance(value, bytes) else str(value)
 
 
-def _expand(paths: Union[str, Path, Iterable[Union[str, Path]]]) -> list[Path]:
+def _expand(
+    paths: Union[str, Path, Iterable[Union[str, Path]]],
+) -> list[Union[str, Path]]:
     if isinstance(paths, (str, Path)):
+        if is_remote_url(paths):
+            url = str(paths)
+            return [url] if url.endswith(".nc") else list(list_granules(url))
         p = Path(paths)
         return sorted(p.rglob("*.nc")) if p.is_dir() else [p]
-    return [Path(p) for p in paths]
+    return [p if is_remote_url(p) else Path(p) for p in paths]
 
 
 def find_products(
@@ -247,8 +253,10 @@ def find_products(
     Parameters
     ----------
     paths : str, Path or iterable of them
-        A directory (searched recursively for ``*.nc``), one file, or a list of
-        files.
+        A directory or remote prefix (``s3://``, ``https://``, any fsspec URL;
+        searched recursively for ``*.nc``), one file, or a list of files.
+        Remote access needs the ``aws`` extra and credentials (see
+        :mod:`disp_xr._remote`).
     frame_id : int, optional
         Keep only this frame. Required when the granules span several frames.
     min_version : str, optional
@@ -393,7 +401,7 @@ def _get_reference_dates(df: pd.DataFrame) -> Union[pd.DataFrame, List]:
 
 
 def _layout(path: str, layers: tuple[str, ...]) -> tuple:
-    with h5py.File(path, "r") as f:
+    with open_h5(path) as f:
         return tuple(
             (
                 name,
@@ -421,7 +429,7 @@ def check_granules(df: pd.DataFrame) -> pd.DataFrame:
     Parameters
     ----------
     df : pd.DataFrame
-        Output of :func:`find_products`, local files only.
+        Output of :func:`find_products`.
 
     Returns
     -------
