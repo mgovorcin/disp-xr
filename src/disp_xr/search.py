@@ -203,10 +203,14 @@ def search(
         "short_name": short_name,
         "page_size": 2000,
     }
-    # Optionally narrow search by frame id, product version
+    # Optionally narrow search by product version and frame id
     product_filters: list[str] = []
     if product_version:
         product_filters.append(f"float,PRODUCT_VERSION,{product_version}")
+    if frame_id:
+        product_filters.append(f"int,FRAME_NUMBER,{frame_id}")
+    else:
+        warnings.warn("No `frame_id` specified: search may be large", stacklevel=1)
     if product_filters:
         params["attribute[]"] = product_filters
 
@@ -226,11 +230,6 @@ def search(
         end_datetime = datetime(2100, 1, 1, tzinfo=timezone.utc)
     else:
         end_datetime = end_datetime.replace(tzinfo=timezone.utc)
-
-    if frame_id:
-        product_filters.append(f"int,FRAME_NUMBER,{frame_id}")
-    else:
-        warnings.warn("No `frame_id` specified: search may be large", stacklevel=1)
 
     http = session or requests.Session()
     headers: dict[str, str] = {}

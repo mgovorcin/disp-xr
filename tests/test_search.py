@@ -134,11 +134,8 @@ def test_search_without_frame_warns(one_page):
         search.search(session=one_page)
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="Bug 9 (code_review.md): frame filter dropped when product_version=None",
-)
 def test_search_keeps_frame_filter_without_version(one_page):
+    """Regression: bug 9, the frame filter was dropped without a version."""
     search.search(frame_id=11116, product_version=None, session=one_page)
     assert one_page.calls[0]["params"]["attribute[]"] == ["int,FRAME_NUMBER,11116"]
 
