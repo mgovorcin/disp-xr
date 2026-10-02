@@ -18,7 +18,9 @@ from shapely.geometry import Polygon
 
 __all__ = ["search"]
 
-logger = logging.getLogger("opera_utils")
+logger = logging.getLogger(__name__)
+
+DISP_S1_SHORT_NAME = "OPERA_L3_DISP-S1_V1"
 
 DISP_FILE_REGEX = re.compile(
     "OPERA_L3_DISP-"
@@ -165,6 +167,8 @@ def search(
     end_datetime: datetime | None = None,
     url_type: UrlType = UrlType.HTTPS,
     use_uat: bool = False,
+    short_name: str = DISP_S1_SHORT_NAME,
+    session: requests.Session | None = None,
 ) -> pd.DataFrame:
     """Query the CMR for granules matching the given frame ID and product version.
 
@@ -182,17 +186,21 @@ def search(
         The protocol to use for downloading, either "s3" or "https".
     use_uat : bool
         Whether to use the UAT environment instead of main Earthdata endpoint.
+    short_name : str
+        CMR collection short name. Defaults to DISP-S1.
+    session : requests.Session, optional
+        HTTP session to use; a new one is created when omitted.
 
     Returns
     -------
-    list[DispProduct]
-        List of products matching the search criteria
+    pd.DataFrame
+        One row per granule found, filtered to the requested time range.
 
     """
     edl_host = "uat.earthdata" if use_uat else "earthdata"
     search_url = f"https://cmr.{edl_host}.nasa.gov/search/granules.umm_json"
     params: dict[str, int | str | list[str]] = {
-        "short_name": "OPERA_L3_DISP-S1_V1",
+        "short_name": short_name,
         "page_size": 2000,
     }
     # Optionally narrow search by frame id, product version
@@ -224,10 +232,11 @@ def search(
     else:
         warnings.warn("No `frame_id` specified: search may be large", stacklevel=1)
 
+    http = session or requests.Session()
     headers: dict[str, str] = {}
     products: list = []
     while True:
-        response = requests.get(search_url, params=params, headers=headers)
+        response = http.get(search_url, params=params, headers=headers)
         response.raise_for_status()
         data = response.json()
         # Get url and data
