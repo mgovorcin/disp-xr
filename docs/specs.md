@@ -51,7 +51,7 @@ Every row ships by 1.0. Priority gives the build order: P0 first, because later 
 | F4 | Mask | Apply recommended quality masks (recommended_mask, temporal coherence, connected components, water) with tunable thresholds | P0 | `quality_metrics` (partial) |
 | F5 | Reference | Re-reference to a point, an area median, or the auto-selected most stable pixel | P0 | `utils.find_reference_point` |
 | F6 | Correct | Optional corrections: ionosphere and solid-earth tide layers shipped in the product, and a user-supplied troposphere layer. Corrections already applied by the processor (ionosphere in DISP-NISAR) are never applied twice | P1 | none |
-| F7 | Geometry | Static layers: LOS unit vectors, incidence/azimuth, DEM, water mask | P1 | `static_layers` |
+| F7 | Geometry | Static layers: LOS unit vectors, incidence/azimuth, DEM, layover/shadow (DISP-S1-STATIC, or stitched CSLC-S1-STATIC); water mask from the granules | P1 | `static_layers` |
 | F8 | Time series | Velocity and seasonal fits (linear, annual, semiannual, steps) with uncertainties | P0 | Branch `timeseries_fitting` |
 | F9 | Spatial models | Native fit/predict estimators (verde API as reference, no dependency): planar/polynomial trend, GNSS tie (fit DISP minus GNSS, predict correction), gridding of point data | P0 | none |
 | F10 | GNSS | Load GNSS time series (UNR), project to LOS, sample DISP at stations | P0 | none |

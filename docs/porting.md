@@ -67,7 +67,7 @@ The `timeseries_fitting` branch already holds unattributed copies of these in `s
 
 | opera_utils source | Verdict | disp-xr target | Changes |
 | --- | --- | --- | --- |
-| `geometry.py` `stitch_geometry_layers`, `Layer`, nodata table | Rewrite | `geometry/static.py` | Merge the CSLC-STATIC bursts with rioxarray instead of the GDAL stitcher; this removes the only live `opera_utils` import (`static_layers.py:11`) |
+| `geometry.py` `stitch_geometry_layers`, `Layer`, nodata table | Rewrite | `geometry/static.py` | Done (T12): `open_static` reads the frame-level DISP-S1-STATIC product (found in CMR after this plan was written); `stitch_cslc_static` merges CSLC-STATIC bursts with rioxarray for frames without it. The `opera_utils` import is gone |
 | `geometry.py` LOS up and 3-band LOS helpers | Simplify | `geometry/static.py` | Computed in `open_static` |
 | `disp/create_incidence_range.py` incidence and slant range | Rewrite | `geometry.py` | Array functions on the LOS dataset; wavelength and orbit height from `ProductSpec` |
 
@@ -124,7 +124,7 @@ All are synthetic and need no network: `test_disp_rebase.py`, `test_disp_referen
 | --- | --- | --- |
 | Filename mode and polarization | `IW`, `VV` | To confirm on a real granule |
 | CMR short name | `OPERA_L3_DISP-S1_V1` | To confirm |
-| Static geometry source | CSLC-STATIC bursts | DISP-NI-STATIC |
+| Static geometry source | DISP-S1-STATIC per frame (CSLC-STATIC bursts as fallback) | DISP-NI-STATIC (not in CMR yet) |
 | Wavelength, orbit height | 0.0555 m, about 693 km | about 0.238 m, about 747 km |
 | `/corrections/ionospheric_delay` | Separate layer, not applied | Already applied to displacement |
 | ASF S3 credential endpoint | OPERA endpoint | Unverified |

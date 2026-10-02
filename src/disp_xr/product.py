@@ -109,7 +109,7 @@ DISP_S1 = ProductSpec(
     supported_versions=SpecifierSet(">=0.10,<2"),
     wavelength_m=0.05546576,
     orbit_height_m=693_000.0,
-    static_source="CSLC-S1-STATIC",
+    static_source="DISP-S1-STATIC",
     validated=True,
 )
 

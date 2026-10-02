@@ -1,6 +1,6 @@
 # disp-xr project index
 
-**Last indexed:** 2026-10-02 · `main` on `origin` = `mgovorcin/disp-xr`; branch `feat/rereference` (T11) on top
+**Last indexed:** 2026-10-02 · `main` on `origin` = `mgovorcin/disp-xr`; branch `feat/static-layers` (T12.1–T12.4) on top
 
 How and when this file is rebuilt: see "Project Index (cyclical indexing)" in [CLAUDE.md](../CLAUDE.md).
 
@@ -49,7 +49,7 @@ Still open in M0: T1.4b (name maintainers), T3.4 badge and T3.5 branch protectio
 | F4 Mask | T10 | Done: `mask`, `valid_mask`, `quality_summary` |
 | F5 Reference | T11 | Done: `rereference` (point, median, border, high_coherence, area, auto) |
 | F6 Correct | T13 | Not started |
-| F7 Geometry | T12 | Exists (`static_layers.py`), imports opera_utils |
+| F7 Geometry | T12 | DISP-S1 done (`open_static`, `enu_to_los`); DISP-NISAR waits for a DISP-NI-STATIC granule (T12.5) |
 | F8 Time series | T20 | On branch `timeseries_fitting` |
 | F9 Spatial models | T19, T24, T33 | Not started |
 | F10 GNSS | T25 | Not started |
@@ -89,7 +89,8 @@ Still open in M0: T1.4b (name maintainers), T3.4 badge and T3.5 branch protectio
 | `quality.py` (was `quality_metrics.py`) | F4 | Masks, presets, quality summary, lazy statistics | T10 |
 | `reference.py` (from `utils.py`) | F5 | `rereference`, `get_reference_values`, `find_stable_point`; bug 7 fixed | T11 |
 | `geometry/__init__.py` (from `utils.py`) | F7 | Coordinate helpers, `get_burst_ids` | T12 |
-| `geometry/static.py` (was `static_layers.py`) | F7 | Static-layer download; still imports opera_utils | T12.1 |
+| `geometry/static.py` (was `static_layers.py`) | F7 | `open_static`, DISP-S1-STATIC search and cached download, `stitch_cslc_static` | T12 |
+| `geometry/los.py` | F7 | `enu_to_los`, incidence/azimuth, slant range | T12.2, T12.5 |
 | `export/raster.py` (was `io.py`) | F12 | rasterio file I/O | T14 |
 | `export/mintpy.py` (was `mintpy.py`) | F12 | Old writer; bugs 4–6 | T14.3 |
 | `open.py` | F2 | `open_disp`, `open_disp_tree` | T7 (chaining on top) |
@@ -125,7 +126,6 @@ Still open in M0: T1.4b (name maintainers), T3.4 badge and T3.5 branch protectio
 ## Out of sync
 
 - Local checkouts `01_OPERA/STAKEHOLDER/disp-xr` and `01_OPERA/VLM/disp-xr` are on `timeseries_fitting`, which `refactor/package-layout` now contains. The conda envs `disp_xr` and `disp_xr_py311` hold non-editable installs of old commits.
-- `geometry/static.py` (and its alias `static_layers`) still imports `opera_utils`, so it fails to import in the new environments; the ruff ban exempts it until T12.1.
 - disp-xr now lives at `mgovorcin/disp-xr` (migrated 2026-10-02; `upstream` remote is `opera-adt/disp-xr`, which stays at `ce0d105`). The PRD still says the package belongs to OPERA Cal/Val; ownership is to be settled.
 - `feature/t1-packaging` is not pushed and does not follow the `type/summary` branch naming of the `git-commit-pr` skill; rename it when it becomes a PR.
 - Open bug with a strict xfail test: 7. Bugs 1, 3, 8 and 9 are fixed. The old notebooks still import the deprecated module names (`download`, `io`, `quality_metrics`, `static_layers`, `utils.*`); they keep working with warnings until T16 rewrites them.
@@ -150,6 +150,7 @@ Still open in M0: T1.4b (name maintainers), T3.4 badge and T3.5 branch protectio
 | Date | Trigger | Changes |
 | --- | --- | --- |
 | 2026-09-30 | First index | Created from `specs.md`, `todo.md`, `code_review.md` and the source on `main` |
+| 2026-10-02 | T12.1–T12.4 finished | `open_static` on DISP-S1-STATIC (new product found in CMR), CSLC-STATIC stitcher without GDAL, LOS helpers; last `opera_utils` import removed with its ruff and doctest exemptions; T12.5 waits for DISP-NI-STATIC |
 | 2026-10-02 | T11 finished | `rereference` with ported point/median/border/high_coherence (upstream bug 5 fixed), area by bbox or polygon, deterministic `auto`; `geometry.lonlat_to_rowcol`; bug 7 fixed |
 | 2026-10-02 | T10 finished | `mask` / `valid_mask` presets `recommended` and `strict`, `quality_summary` (per pixel or per ministack), `.disp.mask` and `.disp.quality_summary`; ported `combine_quality_masks` |
 | 2026-10-02 | T9 finished; migrated | Repo moved to `mgovorcin/disp-xr` (private), first CI run green; `.disp` accessor, history, units, validation; `stack_disp` keeps one time chunk per layer |

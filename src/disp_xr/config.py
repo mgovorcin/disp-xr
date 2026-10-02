@@ -31,6 +31,9 @@ DEFAULTS = {
     },
     # Largest array, in bytes, that export and plotting load into memory.
     "max_load_bytes": 2 * 1024**3,
+    # Downloaded static layers; None means $XDG_CACHE_HOME/disp_xr or
+    # ~/.cache/disp_xr.
+    "cache": {"dir": None},
     # Threads per worker for compiled kernels; None leaves the library default.
     "threads": None,
 }

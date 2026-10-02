@@ -70,6 +70,27 @@ version 0.4, 11112 x 11328).
   (`radar_band = C`, `acquisition_mode = IW`, `radar_wavelength = 0.2419...`), so
   only `frame_id`, `product_version` and the two datetimes are used.
 
+## DISP-S1-STATIC
+
+Recorded on 2026-10-02 from `OPERA_L3_DISP-S1-STATIC_F11116_20140403_S1A_v1.0`
+(CMR collection `OPERA_L3_DISP-S1-STATIC_V1`, 1445 frames at that date).
+
+- One granule per frame, three GeoTIFFs named
+  `OPERA_L3_DISP-S1-STATIC_F<frame:5>_<validity YYYYMMDD>_<platform>_v<version>_<layer>.tif`.
+- Same CRS, shape and transform as the frame's DISP granules (F11116: EPSG
+  32610, 6898 x 9618, corner 499800, 4114500, 30 m). Deflate, 128 x 128 blocks
+  (256 x 256 for the mask). Tags carry `FRAME_ID`, `ORBIT_DIRECTION`,
+  `TRACK_NUMBER`, `PRODUCT_VERSION`.
+
+| File | Bands, dtype | nodata | Values |
+| --- | --- | --- | --- |
+| `line_of_sight_enu` | 3, float32 | 0 | East, north, up of the ground-to-satellite LOS unit vector (F11116, descending: east 0.50 to 0.71, up 0.69 to 0.86) |
+| `dem` | 1, float32 | none | Copernicus GLO-30, metres (tag `dem_egm_model = EGM2008`) |
+| `layover_shadow_mask` | 1, uint8 | 255 | 0 not masked, 1 shadow, 2 layover, 3 both |
+
+No water mask: the DISP granules carry `water_mask`. No DISP-NISAR static
+collection exists in CMR yet.
+
 ## Not recorded yet
 
 - An official DISP-NISAR granule.

@@ -246,8 +246,6 @@ ignore = [
 [tool.ruff.lint.per-file-ignores]
 "**/__init__.py" = ["F403"]
 "tests/**" = ["D", "N", "PTH"]
-# Last opera_utils import; removed by plan task T12.1.
-"src/disp_xr/geometry/static.py" = ["TID251"]
 
 [tool.mypy]
 python_version = "3.12"
@@ -259,13 +257,10 @@ plugins = ["pydantic.mypy"]
 testpaths = ["tests", "src/disp_xr"]
 # Doctests run on the package. Modules that need an optional extra or a
 # dependency being removed are skipped until their plan task rewrites them:
-# geometry/static (imports opera_utils, T12), export/mintpy (mintpy extra, T14),
-# their deprecated aliases static_layers and mintpy, search and its alias
+# export/mintpy (mintpy extra, T14), its deprecated alias mintpy, search and its alias
 # download (aws extra), timeseries/_jax_solver (jax extra).
 addopts = """
   --doctest-modules
-  --ignore=src/disp_xr/geometry/static.py
-  --ignore=src/disp_xr/static_layers.py
   --ignore=src/disp_xr/export/mintpy.py
   --ignore=src/disp_xr/mintpy.py
   --ignore=src/disp_xr/search.py

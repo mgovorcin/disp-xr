@@ -7,6 +7,8 @@ namespace as their plan tasks land (see docs/todo.md).
 from . import accessor as _accessor  # noqa: F401  (registers .disp)
 from ._version import __version__
 from .config import config
+from .geometry.los import enu_to_los
+from .geometry.static import open_static
 from .open import open_disp, open_disp_tree
 from .product import find_products, get_disp_info
 from .quality import mask, quality_summary, valid_mask
@@ -20,11 +22,13 @@ __all__ = [
     "__version__",
     "combine_disp_product",
     "config",
+    "enu_to_los",
     "find_products",
     "get_disp_info",
     "mask",
     "open_disp",
     "open_disp_tree",
+    "open_static",
     "quality_summary",
     "rereference",
     "stack_disp",
