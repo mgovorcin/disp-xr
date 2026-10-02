@@ -8,9 +8,10 @@ from ._version import __version__
 from .config import config
 from .open import open_disp, open_disp_tree
 from .product import find_products, get_disp_info
-from .stack import combine_disp_product
+from .stack import NaNPolicy, combine_disp_product, stack_disp
 
 __all__ = [
+    "NaNPolicy",
     "__version__",
     "combine_disp_product",
     "config",
@@ -18,4 +19,5 @@ __all__ = [
     "get_disp_info",
     "open_disp",
     "open_disp_tree",
+    "stack_disp",
 ]

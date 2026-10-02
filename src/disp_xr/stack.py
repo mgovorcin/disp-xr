@@ -1,191 +1,50 @@
-# NaNPolicy, create_rebased_displacement, rebase_timeseries and _ensure_chunks
-# are adapted from opera-utils (https://github.com/opera-adt/opera-utils,
-# src/opera_utils/disp/_rebase.py and _utils.py; source commit not recorded),
-# Copyright (c) 2022 California Institute of Technology, BSD-3-Clause.
-# See THIRD_PARTY_NOTICES.md.
+"""Chain DISP ministacks into one displacement series from the first date.
+
+Each DISP granule's displacement is relative to its ministack's reference date.
+For an epoch ``t`` in ministack ``k`` with reference date ``r_k``::
+
+    cumulative(t) = displacement(t) + cumulative(r_k),    cumulative(r_0) = 0
+
+``cumulative(r_k)`` is read from the epoch whose secondary date is ``r_k`` (the
+"crossover" granule of the previous ministack), so every reference date after
+the first must also be an epoch of the stack.
+
+``NaNPolicy`` and the chaining idea are adapted from opera-utils
+(src/opera_utils/disp/_rebase.py, commit dff4b45), Copyright (c) 2022 California
+Institute of Technology, BSD-3-Clause. See THIRD_PARTY_NOTICES.md. Changes: the
+offset comes from the crossover epoch by date (opera-utils assumes it is the
+previous epoch), a missing crossover raises, and the input dtype is kept.
+"""
+
+from __future__ import annotations
+
 import logging
+import warnings
 from collections.abc import Sequence
 from datetime import datetime
 from enum import Enum
-from typing import Optional
+from typing import Optional, Union
 
 import numpy as np
 import pandas as pd
 import xarray as xr
 
 from .log.logging import log_runtime
-from .product import _get_reference_dates
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_CHUNKS = {"time": -1, "x": 512, "y": 512}
+__all__ = ["MissingCrossoverError", "NaNPolicy", "stack_disp"]
 
-
-@log_runtime
-def combine_disp_product(
-    disp_df: pd.DataFrame,
-    chunks: Optional[dict] = None,
-    start_date: Optional[str] = None,
-    end_date: Optional[str] = None,
-) -> xr.Dataset:
-    """Stacks displacement products over time.
-
-    Combines data from a DataFrame containing displacement file paths into an
-    xarray dataset.
-
-    Parameters
-    ----------
-    disp_df : pd.DataFrame
-        DataFrame with displacement file paths and 'date1', 'date2' columns.
-    chunks : Optional[dict], optional
-        Chunking configuration for xarray. Defaults to None.
-    start_date : Optional[str], optional
-        Start date to filter data. Defaults to None.
-    end_date : Optional[str], optional
-        End date to filter data. Defaults to None.
-
-    Returns
-    -------
-    xr.Dataset
-        Stacked displacement dataset.
-
-    """
-    logger.info("Stacking into common stack")
-    chunks = {
-        **DEFAULT_CHUNKS,
-        **(chunks or {}),
-    }  # Merge default chunks with user-defined chunks
-    logger.info(f" Chunk blocks: {chunks}")
-
-    # Get substacks and reference dates
-    substacks, reference_dates = _get_reference_dates(disp_df)
-
-    mask = pd.Series(True, index=reference_dates)
-    if start_date:
-        mask &= pd.to_datetime(reference_dates) >= pd.to_datetime(start_date)
-
-    if end_date:
-        mask &= pd.to_datetime(reference_dates) <= pd.to_datetime(end_date)
-    reference_dates = reference_dates[mask]
-
-    stacks: list = []
-    for ix, date in enumerate(reference_dates):
-        stack_files = substacks.loc[date].sort_index().path.to_list()
-        stack = xr.open_mfdataset(stack_files, chunks=chunks)
-
-        # Append first epoch of new ministack to last epochs of previous
-        if ix > 0:
-            stack["displacement"] += stacks[ix - 1].isel(time=-1).displacement
-
-        stacks.append(stack)
-
-    # Get first reference date
-    first_epoch = disp_df.start_date.min()
-    first_epoch = np.datetime64(first_epoch.to_pydatetime())
-
-    # Get empty dataset with first reference date
-    first_ds = xr.full_like(stacks[0].isel(time=0), 0)
-    first_ds["time"] = first_epoch
-    first_ds["reference_time"] = first_ds["time"]
-    first_ds = first_ds.expand_dims("time")
-
-    # Concatenate first epoch with stacks
-    stacks.insert(0, first_ds)
-
-    return xr.concat(stacks, dim="time")
-
-
-@log_runtime
-def rebase_disp(
-    disp_df: pd.DataFrame,
-    chunks: Optional[dict] = None,
-    add_reference_time: bool = False,
-) -> xr.Dataset:
-    """Stacks displacement products over time.
-
-    Combines data from a DataFrame containing displacement file paths into an
-    xarray dataset.
-
-    Parameters
-    ----------
-    disp_df : pd.DataFrame
-        DataFrame with displacement file paths and 'date1', 'date2' columns.
-    chunks : Optional[dict], optional
-        Chunking configuration for xarray. Defaults to None.
-    start_date : Optional[str], optional
-        Start date to filter data. Defaults to None.
-    end_date : Optional[str], optional
-        End date to filter data. Defaults to None.
-    add_reference_time : bool, default False
-        If True, adds 'reference_time' attribute to the output dataset,
-        inferred from the earliest 'date1'.
-
-    Returns
-    -------
-    xr.Dataset
-        Stacked displacement dataset.
-
-    """
-    logger.info("Stacking into common stack")
-    chunks = {
-        **DEFAULT_CHUNKS,
-        **(chunks or {}),
-    }  # Merge default chunks with user-defined chunks
-    logger.info(f" Chunk blocks: {chunks}")
-
-    # Get substacks and reference dates
-    sorted_paths = disp_df.sort_values("date2").path.to_list()
-
-    ds_stack = xr.open_mfdataset(sorted_paths, chunks=chunks)
-
-    # Get reference dates of ministacks and indices
-    ref_dates = np.unique(ds_stack.reference_time)
-    # Find the last date in each ministack
-    last_ix = np.where(ds_stack.time.isin(ref_dates))[0]
-
-    # Get offsets
-    ref_offset = (ds_stack.displacement.isel(time=last_ix)).cumsum(dim="time")
-
-    # Rebase displacement
-    displacement_corrected = ds_stack.displacement.copy()
-
-    for ix, ref in enumerate(ref_dates[1:]):
-        mask = (ds_stack.reference_time == ref).compute()
-        # Use xr.where to conditionally add the cumsum correction
-        displacement_corrected = xr.where(
-            mask,
-            displacement_corrected + ref_offset.isel(time=ix),
-            displacement_corrected,
-        )
-
-    # Update the dataset with corrected displacement
-    ds_stack = ds_stack.assign(displacement=displacement_corrected)
-
-    if add_reference_time:
-        # Add initial reference epoch of zeros, and rechunk
-        first_xr = xr.full_like(ds_stack.isel(time=0), 0)
-        first_xr["time"] = ds_stack.reference_time[0]
-        first_xr["reference_time"] = first_xr["time"]
-        first_xr = first_xr.expand_dims("time")
-
-        return xr.concat([first_xr, ds_stack], dim="time")
-    else:
-        return ds_stack
-
-
-def _ensure_chunks(
-    requested_chunks: dict[str, int] | None, data_shape: tuple[int, int, int]
-) -> dict[str, int]:
-    """Ensure requested_chunks are smaller than the downloaded size."""
-    chunks = {**(requested_chunks or {})}
-    chunks["time"] = min(chunks["time"], data_shape[0])
-    chunks["y"] = min(chunks["y"], data_shape[1])
-    chunks["x"] = min(chunks["x"], data_shape[2])
-    return chunks
+DISPLACEMENT_LAYERS = ("displacement", "short_wavelength_displacement")
 
 
 class NaNPolicy(str, Enum):
-    """Policy for handling NaN values in rebase_timeseries."""
+    """How a NaN at a crossover epoch affects later ministacks.
+
+    ``propagate`` (default): later epochs of that pixel become NaN, since their
+    offset is unknown. ``omit``: the missing offset is taken as zero, which
+    assumes no motion over the missing interval.
+    """
 
     propagate = "propagate"
     omit = "omit"
@@ -194,148 +53,219 @@ class NaNPolicy(str, Enum):
         return self.value
 
 
-# NOTE move bellow to function export to local zarr
+class MissingCrossoverError(ValueError):
+    """A reference date has no epoch to take its offset from."""
+
+
+def _check_crossovers(times: np.ndarray, refs: np.ndarray) -> None:
+    first = refs.min()
+    missing = sorted({r for r in refs if r != first and r not in set(times)})
+    if missing:
+        raise MissingCrossoverError(
+            "No epoch at reference dates "
+            f"{[str(pd.Timestamp(m).date()) for m in missing]}: the granule that "
+            "links each ministack to the previous one is missing"
+        )
+
+
+def _chain(
+    raw: np.ndarray, times: np.ndarray, refs: np.ndarray, nan_policy: str
+) -> np.ndarray:
+    """Chain a block with time on the last axis (the apply_ufunc layout)."""
+    out = np.empty_like(raw)
+    later_refs = set(refs) - {refs.min()}
+    offset = {refs.min(): np.zeros(raw.shape[:-1], dtype=raw.dtype)}
+    for i in np.argsort(times, kind="stable"):
+        out[..., i] = raw[..., i] + offset[refs[i]]
+        if times[i] in later_refs:
+            value = out[..., i]
+            offset[times[i]] = (
+                np.nan_to_num(value) if nan_policy == NaNPolicy.omit else value
+            )
+    return out
+
+
+@log_runtime
+def stack_disp(
+    ds: xr.Dataset,
+    *,
+    start: Optional[Union[str, datetime, pd.Timestamp]] = None,
+    end: Optional[Union[str, datetime, pd.Timestamp]] = None,
+    nan_policy: Union[str, NaNPolicy] = NaNPolicy.propagate,
+    zero_epoch: bool = True,
+) -> xr.Dataset:
+    """Chain ministacks so displacement is relative to one reference date.
+
+    Parameters
+    ----------
+    ds : xr.Dataset
+        Output of :func:`disp_xr.open_disp`: ``time`` and ``reference_time``
+        coordinates, displacement relative to each granule's reference date.
+    start : date-like, optional
+        Chain from this ministack reference date; earlier ministacks are
+        dropped. Must be one of the reference dates.
+    end : date-like, optional
+        Drop epochs after this date.
+    nan_policy : {"propagate", "omit"}
+        See :class:`NaNPolicy`.
+    zero_epoch : bool
+        Prepend the reference date as an epoch with zero displacement. Other
+        layers get their no-data value there (NaN for floats, ``_FillValue``
+        for integers), so their dtype is kept.
+
+    Returns
+    -------
+    xr.Dataset
+        Same variables; ``displacement`` and ``short_wavelength_displacement``
+        relative to the first reference date, with the whole time axis in one
+        chunk. ``attrs["reference_date"]`` records that date.
+
+    Raises
+    ------
+    MissingCrossoverError
+        If a reference date after the first is not an epoch of ``ds``.
+    ValueError
+        If ``start`` is not a reference date.
+
+    """
+    nan_policy = NaNPolicy(nan_policy)
+    refs_all = np.unique(ds["reference_time"].values)
+    if start is not None:
+        start = np.datetime64(pd.Timestamp(start), "ns")
+        if start not in refs_all:
+            raise ValueError(
+                f"start must be a ministack reference date; choose one of "
+                f"{[str(pd.Timestamp(r).date()) for r in refs_all]}"
+            )
+        ds = ds.sel(time=ds["reference_time"].values >= start)
+    if end is not None:
+        ds = ds.sel(time=ds["time"].values <= np.datetime64(pd.Timestamp(end), "ns"))
+
+    times = ds["time"].values
+    refs = ds["reference_time"].values
+    _check_crossovers(times, refs)
+    first = refs.min()
+
+    chained = ds.copy()
+    for name in DISPLACEMENT_LAYERS:
+        if name not in ds:
+            continue
+        da = ds[name].chunk({"time": -1})
+        chained[name] = xr.apply_ufunc(
+            _chain,
+            da,
+            input_core_dims=[["time"]],
+            output_core_dims=[["time"]],
+            kwargs={"times": times, "refs": refs, "nan_policy": nan_policy},
+            dask="parallelized",
+            output_dtypes=[da.dtype],
+        ).transpose(*da.dims)
+        chained[name].attrs = ds[name].attrs
+
+    if zero_epoch:
+        chained = _prepend_zero_epoch(chained, first)
+    chained.attrs["reference_date"] = str(pd.Timestamp(first))
+    return chained
+
+
+def _prepend_zero_epoch(ds: xr.Dataset, first: np.datetime64) -> xr.Dataset:
+    fill = {}
+    for name, var in ds.data_vars.items():
+        if np.issubdtype(var.dtype, np.integer):
+            fill[name] = var.attrs.get("_FillValue", var.encoding.get("_FillValue", 0))
+        else:
+            fill[name] = np.nan
+    new_times = np.concatenate([[first], ds["time"].values])
+    out = ds.reindex(time=new_times, fill_value=fill)
+    refs = out["reference_time"].values.copy()
+    refs[0] = first
+    out = out.assign_coords(reference_time=("time", refs))
+    for name in DISPLACEMENT_LAYERS:
+        if name in out:
+            zero = xr.zeros_like(out[name].isel(time=0))
+            out[name] = xr.concat(
+                [zero.expand_dims(time=[first]), out[name].isel(time=slice(1, None))],
+                dim="time",
+            ).chunk({"time": -1})
+            out[name].attrs = ds[name].attrs
+    return out
+
+
+# --- deprecated entry points (removed in plan task T38) -----------------------
+
+
+def combine_disp_product(
+    disp_df: pd.DataFrame,
+    chunks: Optional[dict] = None,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+) -> xr.Dataset:
+    """Open and chain the granules listed by :func:`disp_xr.product.get_disp_info`.
+
+    .. deprecated::
+        Use ``stack_disp(open_disp(paths))``.
+
+    ``start_date`` keeps ministacks whose reference date is on or after it,
+    ``end_date`` those whose reference date is on or before it.
+    """
+    warnings.warn(
+        "combine_disp_product is deprecated; use stack_disp(open_disp(paths))",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+    from .open import open_disp
+
+    ds = open_disp(list(disp_df["path"]), chunks=chunks or "timeseries")
+    refs = pd.DatetimeIndex(np.unique(ds["reference_time"].values))
+    start = refs[refs >= pd.Timestamp(start_date)].min() if start_date else None
+    if end_date:
+        keep = ds["reference_time"].values <= np.datetime64(pd.Timestamp(end_date))
+        ds = ds.sel(time=keep)
+    return stack_disp(ds, start=start)
+
+
+def rebase_disp(
+    disp_df: pd.DataFrame,
+    chunks: Optional[dict] = None,
+    add_reference_time: bool = False,
+) -> xr.Dataset:
+    """Open and chain granules (``timeseries_fitting`` branch API).
+
+    .. deprecated::
+        Use ``stack_disp(open_disp(paths), zero_epoch=...)``.
+    """
+    warnings.warn(
+        "rebase_disp is deprecated; use stack_disp(open_disp(paths))",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+    from .open import open_disp
+
+    ds = open_disp(list(disp_df["path"]), chunks=chunks or "timeseries")
+    return stack_disp(ds, zero_epoch=add_reference_time)
 
 
 def create_rebased_displacement(
     da_displacement: xr.DataArray,
-    reference_datetimes: Sequence[datetime | pd.DatetimeIndex],
-    process_chunk_size: tuple[int, int] = (512, 512),
+    reference_datetimes: Sequence[Union[datetime, pd.Timestamp]],
+    process_chunk_size: tuple[int, int] = (512, 512),  # noqa: ARG001
     add_reference_time: bool = False,
-    nan_policy: str | NaNPolicy = NaNPolicy.propagate,
+    nan_policy: Union[str, NaNPolicy] = NaNPolicy.propagate,
 ) -> xr.DataArray:
-    """Rebase and stack displacement products with different reference dates.
+    """Chain one displacement DataArray.
 
-    This function combines displacement products that may have different reference
-    dates by accumulating displacements when the reference date changes.
-    When a new reference date is encountered, the displacement values from the
-    previous stack's final epoch are added to all epochs in the new stack.
-
-    Parameters
-    ----------
-    da_displacement : xr.DataArray
-        Displacement dataarray to rebase.
-    reference_datetimes : Sequence[datetime | pd.DatetimeIndex]
-        Reference datetime for each epoch.
-        Must be same length as `da_displacement.time`.
-    process_chunk_size : tuple[int, int], optional
-        Chunk size for processing. Defaults to (512, 512).
-    add_reference_time : bool, optional
-        Whether to add a zero array for the reference time.
-        Defaults to False.
-    nan_policy : choices = ["propagate", "omit"]
-        Whether to propagate or omit (zero out) NaNs in the data.
-        By default "propagate", which means any ministack, or any "reference crossover"
-        product, with nan at a pixel causes all subsequent data to be nan.
-        If "omit", then any nan causes the pixel to be zeroed out, which is
-        equivalent to assuming that 0 displacement occurred during that time.
-
-    Returns
-    -------
-    xr.DataArray
-        Stacked displacement dataarray with rebased displacements.
-
+    .. deprecated::
+        Use :func:`stack_disp` on a dataset with a ``reference_time`` coordinate.
+        ``process_chunk_size`` is ignored.
     """
-    logger.info("Starting displacement stack rebasing")
-
-    process_chunks = {
-        "time": -1,
-        "y": process_chunk_size[0],
-        "x": process_chunk_size[1],
-    }
-    process_chunks = _ensure_chunks(process_chunks, da_displacement.shape)
-
-    # Make the map_blocks-compatible function to accumulate the displacement
-    def process_block(arr: xr.DataArray) -> xr.DataArray:
-        out = rebase_timeseries(
-            arr.to_numpy(), reference_datetimes, nan_policy=nan_policy
-        )
-        return xr.DataArray(out, coords=arr.coords, dims=arr.dims)
-
-    # Process the dataset in blocks
-    rebased_da = da_displacement.chunk(process_chunks).map_blocks(process_block)
-
-    if add_reference_time:
-        # Add initial reference epoch of zeros, and rechunk
-        rebased_da = xr.concat(
-            [xr.full_like(rebased_da[0], 0), rebased_da],
-            dim="time",
-        )
-        # Ensure correct dimension order
-        rebased_da = rebased_da.transpose("time", "y", "x")
-
-    return rebased_da
-
-
-def rebase_timeseries(
-    raw_data: np.ndarray,
-    reference_dates: Sequence[datetime],
-    nan_policy: str | NaNPolicy = NaNPolicy.propagate,
-) -> np.ndarray:
-    """Adjust for moving reference dates to create a continuous time series.
-
-    DISP-S1 products have a reference date which changes over time.
-    For example, shortening to YYYY-MM-DD notation, the products may be
-
-        (2020-01-01, 2020-01-13)
-        (2020-01-01, 2020-01-25)
-        ...
-        (2020-01-01, 2020-06-17)
-        (2020-06-17, 2020-06-29)
-        ...
-
-
-    This function sums up the "crossover" values (the displacement image where the
-    reference date moves forward) so that the output is referenced to the first input
-    time.
-
-    Parameters
-    ----------
-    raw_data : np.ndarray
-        3D array of displacement values with moving reference dates
-        shape = (time, rows, cols)
-    reference_dates : Sequence[datetime]
-        Reference dates for each time step
-    nan_policy : choices = ["propagate", "omit"]
-        Whether to propagate or omit (zero out) NaNs in the data.
-        By default "propagate", which means any ministack, or any "reference crossover"
-        product, with nan at a pixel causes all subsequent data to be nan.
-        If "omit", then any nan causes the pixel to be zeroed out, which is
-        equivalent to assuming that 0 displacement occurred during that time.
-
-    Returns
-    -------
-    np.ndarray
-        Continuous displacement time series with consistent reference date
-
-    """
-    if len(set(reference_dates)) == 1:
-        return raw_data.copy()
-
-    shape2d = raw_data.shape[1:]
-    cumulative_offset = np.zeros(shape2d, dtype=np.float32)
-    previous_displacement = np.zeros(shape2d, dtype=np.float32)
-
-    # Set initial reference date
-    current_reference_date = reference_dates[0]
-
-    output = np.zeros_like(raw_data)
-    # Process each time step
-    for cur_ref_date, current_displacement, out_layer in zip(
-        reference_dates, raw_data, output
-    ):
-        # Check for shift in temporal reference date
-        if cur_ref_date != current_reference_date:
-            # When reference date changes, accumulate the previous displacement
-            if nan_policy == NaNPolicy.omit:
-                np.nan_to_num(previous_displacement, copy=False)
-            cumulative_offset += previous_displacement
-            current_reference_date = cur_ref_date
-
-        # Store current displacement for next iteration
-        previous_displacement = current_displacement.copy()
-
-        # Add cumulative offset to get consistent reference
-        out_layer[:] = current_displacement + cumulative_offset
-
-    return output
+    warnings.warn(
+        "create_rebased_displacement is deprecated; use stack_disp",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+    refs = np.asarray(pd.DatetimeIndex(reference_datetimes).tz_localize(None))
+    ds = da_displacement.to_dataset(name="displacement").assign_coords(
+        reference_time=("time", refs.astype("datetime64[ns]"))
+    )
+    out = stack_disp(ds, nan_policy=nan_policy, zero_epoch=add_reference_time)
+    return out["displacement"].rename(da_displacement.name)
