@@ -32,24 +32,16 @@ def test_get_disp_info_parses_dates(two_ministacks, stack_dir):
     assert df["end_date"].min() == two_ministacks.times[1]
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="Bug 8 (code_review.md): .unique().max() fails on pandas 3 string arrays",
-    raises=AttributeError,
-)
 def test_get_disp_info_keeps_latest_version_of_a_duplicate(disp_stacks):
+    """Regression: bug 8, mixed versions crashed under pandas 3."""
     stack = disp_stacks["duplicate"]
     df = product.get_disp_info(stack.paths[0].parent)
     assert len(df) == len(stack.paths)
     assert set(df["version"]) == {"v1.0"}
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="Bug 1 (code_review.md): versions compared as strings",
-    raises=(AttributeError, AssertionError),
-)
 def test_get_disp_info_orders_versions_numerically(two_ministacks, tmp_path):
+    """Regression: bug 1, versions were compared as strings."""
     for path in two_ministacks.paths[:2]:
         shutil.copy(path, tmp_path / path.name.replace("_v1.0_", "_v1.10_"))
         shutil.copy(path, tmp_path / path.name.replace("_v1.0_", "_v1.9_"))

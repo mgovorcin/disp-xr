@@ -49,14 +49,14 @@ Risk: ported code can drift from opera_utils as the DISP product changes. Each p
 
 | # | Location | Problem | Effect | Fix in |
 | --- | --- | --- | --- | --- |
-| 1 | `product.py:74` | Filters `version == min_version`; when `min_version` is None it picks the max string version | Drops all newer versions when `min_version` is set; string comparison misorders `1.10` vs `1.9` | T5 (ported dedupe) |
+| 1 | `product.py:74` | Filters `version == min_version`; when `min_version` is None it picks the max string version | Drops all newer versions when `min_version` is set; string comparison misorders `1.10` vs `1.9` | Fixed in T5 (`find_products`) |
 | 2 | `product.py:116` | `_find_duplicates` appends `input_df.iloc[ix]` for the row it keeps, using a label as a position | The "removed duplicates" list holds the kept rows, from the wrong positions once the index is not a range | T5 |
 | 3 | `stack.py:75–79` | First epoch is `min(start_date)` over all products even after `start_date` filtering; the zero epoch uses `full_like(..., 0)` for every variable | With `start_date`, the zero epoch has the wrong date; quality layers (coherence, masks) get fake zeros at that epoch | T7 |
 | 4 | `mintpy.py:487` | `if (ref_lalo is None) & (ref_yx is not None): ... else: raise ValueError` | Passing `ref_lalo` always raises | T14 (replace) |
 | 5 | `mintpy.py:516` | `except Exception as e: print(e)` | All errors are swallowed; the function "succeeds" with no output | T14 (replace) |
 | 6 | `mintpy.py:84, 88` | `RLOOkS` typo; `AZIMUTH_PIXEL_SIZE = 14.1` hardcoded | Wrong MintPy metadata key; NISAR would be wrong | T14 (replace) |
 | 7 | `utils.py:229` | `random.choice` for the reference pixel | Non-reproducible results run to run | T11 |
-| 8 | `product.py:73` | `disp_df.version.unique().max()`; under pandas 3 `unique()` returns an `ArrowStringArray`, which has no `max` | `get_disp_info` raises `AttributeError` whenever a folder holds more than one product version, including the duplicate case | T5 (ported dedupe) |
+| 8 | `product.py:73` | `disp_df.version.unique().max()`; under pandas 3 `unique()` returns an `ArrowStringArray`, which has no `max` | `get_disp_info` raises `AttributeError` whenever a folder holds more than one product version, including the duplicate case | Fixed in T5 (`find_products`) |
 | 9 | `search.py` (was `download.py`), `search()` | `params["attribute[]"]` is attached only if the filter list is non-empty before the frame filter is appended | With `product_version=None` the frame filter never reaches CMR, so the search returns every frame | Fixed in T4.5 |
 
 Found while writing the characterization tests (T2.6, 2026-10-01):
@@ -67,7 +67,7 @@ Found while writing the characterization tests (T2.6, 2026-10-01):
 - `combine_disp_product` relies on xarray's `data_vars` default for `open_mfdataset`, which xarray warns will change (T6.1).
 - `utils.find_reference_point` emits an all-NaN warning before it raises when there is no candidate.
 
-Each bug has a strict `xfail` test in `tests/` that asserts the correct behavior (bugs 1, 3, 7 and 8; bug 9 is fixed and its test is a regression test).
+Each bug has a strict `xfail` test in `tests/` that asserts the correct behavior (bugs 3 and 7 are open; bugs 1, 8 and 9 are fixed and their tests are regression tests).
 
 Smaller issues: `utils.py` imports `yaml` and `h5py`, but neither PyYAML nor h5py is in `environment.yml` (only `types-PyYAML`). `get_burst_ids` is annotated as returning a tuple but returns a list. `quality_metrics.get_stack_stat` calls `.compute()` and its error messages say "Dataset" for a DataArray check. The `get_disp_info` docstring says it returns three values but it returns one DataFrame. `pyproject.toml` points the entry point at `disp_xr.cli:cli_app`, but `cli/` has no `__init__.py`.
 
