@@ -6,6 +6,7 @@ needs the ``aws`` extra.
 
 import logging
 import re
+import warnings
 from pathlib import Path
 from typing import Optional, Tuple, Union
 
@@ -85,7 +86,17 @@ def get_extent(ds: xr.Dataset) -> Tuple[float, float, float, float]:
         - y1 is the starting y-coordinate,
         - y0 is the ending y-coordinate.
 
+    .. deprecated::
+        Use ``ds.rio.bounds()`` (rioxarray), which returns
+        ``(left, bottom, right, top)``.
+
     """
+    warnings.warn(
+        "get_extent is deprecated; use ds.rio.bounds()",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+
     # Extracting GeoTransform values
     transform = ds.spatial_ref.attrs["GeoTransform"].split(" ")
     x0, dx, _, y0, _, dy = map(float, transform)
