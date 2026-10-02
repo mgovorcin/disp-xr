@@ -1,6 +1,6 @@
 # disp-xr project index
 
-**Last indexed:** 2026-10-02 · `main` on `origin` = `mgovorcin/disp-xr`, through T16.5 (documentation site)
+**Last indexed:** 2026-10-02 · `main` on `origin` = `mgovorcin/disp-xr`, through T17.4 (interactive gallery; T17 done)
 
 How and when this file is rebuilt: see "Project Index (cyclical indexing)" in `CLAUDE.md` at the repository root.
 
@@ -24,7 +24,7 @@ The PRD also lives as a shared doc; `specs.md` is its copy in the repo and must 
 | Milestone | Tasks | Done |
 | --- | --- | --- |
 | M0 Foundation (v0.1) | T1–T8 | 5 / 8 (T2, T4, T5, T6, T7 done; T1 open only for T1.4b; T3 open for T3.4–T3.5) |
-| M1 Core API (v0.2) | T9–T18 | 6 / 10 (T9, T10, T11, T13, T14, T15; T12 open only for T12.5, T17 only for T17.4) |
+| M1 Core API (v0.2) | T9–T18 | 7 / 10 (T9, T10, T11, T13, T14, T15, T17; T12 open only for T12.5, T16 only for ReadTheDocs publishing) |
 | M2 Analysis (v0.3) | T19–T34 | 0 / 16 |
 | M3 Release (v1.0) | T35–T39 | 0 / 5 |
 
@@ -55,7 +55,7 @@ Still open in M0: T1.4b (name maintainers), T3.4 badge and T3.5 branch protectio
 | F10 GNSS | T25 | Not started |
 | F11 Multi-frame | T36 | Not started |
 | F12 Export | T14 | Done: GeoTIFF, Zarr v3, NetCDF, MintPy, Icechunk, virtual stores |
-| F13 Plot | T17 | `plot_map`, `plot_point` and accessor done; interactive gallery (T17.4) waits for T16 |
+| F13 Plot | T17 | Done: `plot_map`, `plot_point`, accessor, interactive gallery page |
 | F14 CLI | T15 | Done: `info`, `stack`, `export`, `geometry`, `search`, `virtual` |
 | F15 Plate motion | T13.5 | Done: `plate_motion_los`, `remove_plate_motion` (ITRF2014-PMM) |
 | F16 Search | T4.5 | Exists, S1 only (`download.py`) |
@@ -158,6 +158,7 @@ Still open in M0: T1.4b (name maintainers), T3.4 badge and T3.5 branch protectio
 | Date | Trigger | Changes |
 | --- | --- | --- |
 | 2026-09-30 | First index | Created from `specs.md`, `todo.md`, `code_review.md` and the source on `main` |
+| 2026-10-02 | T17.4 finished; T17 done | Interactive gallery page (hvplot, datashader); pixi `interactive` feature in `docs` and `dev`; test that core imports neither |
 | 2026-10-02 | T16.1–T16.5 finished | mkdocs site (pages, API reference, 4 executed gallery examples, Development section), strict docs CI job, `.readthedocs.yaml`; `disp_xr.tutorial`; `to_geotiff` takes a Dataset and tags full provenance, `--format cog`; provenance of reopened stores fixed; CHANGELOG brought up to date; publishing on ReadTheDocs waits for a connected account |
 | 2026-10-02 | T6.7 added and finished | Native default chunks, chunk-preserving `stack_disp`, `rechunk`/`time_contiguous`, bounded dask threads for plots and exports; fit fixed for split time chunks and `open_disp` coordinates; decision logged |
 | 2026-10-02 | T17.1–T17.3 finished | `plot.py` (`plot_map`, `plot_point`, diverging colormap), accessor wiring, Agg smoke tests, gallery script; matplotlib-base in the pixi `test` feature; T17.4 waits for T16 |

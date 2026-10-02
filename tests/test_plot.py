@@ -144,3 +144,18 @@ def test_core_import_without_matplotlib(stack_dir):
         [sys.executable, "-c", code], capture_output=True, text=True, check=True
     )
     assert "disp_xr[plot]" in out.stdout
+
+
+def test_core_does_not_import_interactive_libraries():
+    import subprocess
+    import sys
+
+    code = (
+        "import sys, disp_xr, disp_xr.plot, disp_xr.cli\n"
+        "print(sorted(m for m in ('hvplot', 'datashader', 'holoviews', 'bokeh')"
+        " if m in sys.modules))\n"
+    )
+    out = subprocess.run(
+        [sys.executable, "-c", code], capture_output=True, text=True, check=True
+    )
+    assert out.stdout.strip() == "[]"
