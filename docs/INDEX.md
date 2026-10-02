@@ -125,7 +125,7 @@ Still open in M0: T1.4b (name maintainers), T3.4 badge and T3.5 branch protectio
 
 - Local checkouts `01_OPERA/STAKEHOLDER/disp-xr` and `01_OPERA/VLM/disp-xr` are on `timeseries_fitting`, which `refactor/package-layout` now contains. The conda envs `disp_xr` and `disp_xr_py311` hold non-editable installs of old commits.
 - `geometry/static.py` (and its alias `static_layers`) still imports `opera_utils`, so it fails to import in the new environments; the ruff ban exempts it until T12.1.
-- `pyproject.toml` URLs point to `opera-adt/disp-xr`, the live repo, while the PRD says the package belongs to OPERA Cal/Val. The old `OPERA-Cal-Val/disp_xr_tools` URL redirects to the personal repo `mgovorcin/disp_xr_tools`.
+- disp-xr now lives at `mgovorcin/disp-xr` (migrated 2026-10-02; `upstream` remote is `opera-adt/disp-xr`, which stays at `ce0d105`). The PRD still says the package belongs to OPERA Cal/Val; ownership is to be settled.
 - `feature/t1-packaging` is not pushed and does not follow the `type/summary` branch naming of the `git-commit-pr` skill; rename it when it becomes a PR.
 - Open bug with a strict xfail test: 7. Bugs 1, 3, 8 and 9 are fixed. The old notebooks still import the deprecated module names (`download`, `io`, `quality_metrics`, `static_layers`, `utils.*`); they keep working with warnings until T16 rewrites them.
 - `.claude/skills` is a symlink to `../skills`, which does not exist in this repo; `.claude/` is excluded through `.git/info/exclude`, as in geepers.

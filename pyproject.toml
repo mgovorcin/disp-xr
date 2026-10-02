@@ -77,8 +77,8 @@ eof = ["xeofs"]
 jax = ["jax"]
 
 [project.urls]
-Homepage = "https://github.com/opera-adt/disp-xr"
-"Bug Tracker" = "https://github.com/opera-adt/disp-xr/issues"
+Homepage = "https://github.com/mgovorcin/disp-xr"
+"Bug Tracker" = "https://github.com/mgovorcin/disp-xr/issues"
 
 # Entry points for the command line interface
 [project.scripts]

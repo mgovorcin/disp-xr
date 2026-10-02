@@ -25,7 +25,7 @@ ministack's reference date; `stack_disp` chains the ministacks. See
 
 1. Download source code:
 ```bash
-git clone https://github.com/opera-adt/disp-xr.git
+git clone https://github.com/mgovorcin/disp-xr.git
 ```
 2. Install with [pixi](https://pixi.sh) (recommended). It reads `pyproject.toml` and installs `disp_xr` in editable mode:
 ```bash
