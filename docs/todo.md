@@ -186,10 +186,10 @@ Goal: make the existing code safe to change. That means installable, tested, in 
 - [ ] **T8. Release v0.1** — Depends on: T3, T7 · PRD: Milestones (M0 gate)
   - Context: gate "CI green, tests pass". This first tagged release lets early users install the package.
   - Done when: tag `v0.1.0` exists, CI is green on the tag, and a short changelog is published.
-  - [ ] T8.1 Add `CHANGELOG.md` (Keep a Changelog format) and fill in v0.1.0.
-  - [ ] T8.2 Configure `.github/release.yml` categories and tag `v0.1.0` (setuptools_scm picks it up).
-  - [ ] T8.3 Update the README quick start to `dxr.find_products`, `dxr.open_disp` and chaining.
-  - [ ] T8.4 Set target dates for M1–M3 with the maintainers (PRD open question) and record them in the PRD.
+  - [x] T8.1 Add `CHANGELOG.md` (Keep a Changelog format) and fill in v0.1.0. Done on `chore/release-v0.1` (`c3b5763`); dated when tagged.
+  - [ ] T8.2 Configure `.github/release.yml` categories and tag `v0.1.0` (setuptools_scm picks it up). Waiting: the tag belongs on `main` after the stacked branches are reviewed, merged and pushed.
+  - [x] T8.3 Update the README quick start to `dxr.find_products`, `dxr.open_disp` and chaining. Done (`c3b5763`); the snippet was run on a fixture stack.
+  - [ ] T8.4 Set target dates for M1–M3 with the maintainers (PRD open question) and record them in the PRD. Waiting: needs the maintainers (T1.4b).
 
 ---
 

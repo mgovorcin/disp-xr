@@ -1,6 +1,6 @@
 # disp-xr project index
 
-**Last indexed:** 2026-10-02 · branch `feat/chain-ministacks` (on `feat/open-disp`, on `feat/product-registry`, on `refactor/package-layout`, on `feature/t1-packaging`, on `main` `ce0d105`); nothing pushed
+**Last indexed:** 2026-10-02 · branch `chore/release-v0.1` (on `feat/chain-ministacks`, on `feat/open-disp`, on `feat/product-registry`, on `refactor/package-layout`, on `feature/t1-packaging`, on `main` `ce0d105`); nothing pushed
 
 How and when this file is rebuilt: see "Project Index (cyclical indexing)" in [CLAUDE.md](../CLAUDE.md).
 
@@ -28,10 +28,11 @@ The PRD also lives as a shared doc; `specs.md` is its copy in the repo and must 
 | M2 Analysis (v0.3) | T19–T34 | 0 / 16 |
 | M3 Release (v1.0) | T35–T39 | 0 / 5 |
 
-Five local branches, stacked, not pushed:
+Six local branches, stacked, not pushed:
 
 - `feature/t1-packaging`: annotation fix, T1 (packaging, pixi), T2 (tests), T3 (CI), planning docs.
-- `feat/chain-ministacks` (on top): T7. `stack_disp` chains ministacks from the crossover epoch by date (bug 3 fixed); old entry points (`get_disp_info`, `combine_disp_product`, `rebase_disp`, `create_rebased_displacement`) are deprecated wrappers.
+- `chore/release-v0.1` (on top): T8.1 and T8.3 (changelog, README quick start).
+- `feat/chain-ministacks`: T7. `stack_disp` chains ministacks from the crossover epoch by date (bug 3 fixed); old entry points (`get_disp_info`, `combine_disp_product`, `rebase_disp`, `create_rebased_displacement`) are deprecated wrappers.
 - `feat/open-disp`: T6. `open_disp` and `open_disp_tree` (lazy, CRS attached, integer layers keep dtype, mixed productions refused), chunk presets from a byte target, remote access over S3/HTTPS/fsspec with Earthdata and ASF credentials (ported), faster `check_granules`.
 - `feat/product-registry`: T5. `ProductSpec` registry (DISP-S1; DISP-NISAR provisional), `DispGranule` parsing from names or metadata, `find_products`, `group_ministacks`, `check_granules`; `get_disp_info` rebuilt on it (bugs 1 and 8 fixed).
 - `refactor/package-layout`: T4. Merges `origin/timeseries_fitting`, makes jax optional, moves modules to the new layout behind deprecated aliases, fixes the CLI entry point, adds the top-level API, opera-utils attribution, the search port (with the bug 9 fix) and `disp_xr.config`.
@@ -148,6 +149,7 @@ Still open in M0: T1.4b (name maintainers), T3.4 badge and T3.5 branch protectio
 | Date | Trigger | Changes |
 | --- | --- | --- |
 | 2026-09-30 | First index | Created from `specs.md`, `todo.md`, `code_review.md` and the source on `main` |
+| 2026-10-02 | T8 prepared | Changelog and quick start; tag and milestone dates wait for a merged `main` and named maintainers |
 | 2026-10-02 | T7 finished | Crossover offsets by date instead of previous epoch; `get_value_percentage` fixed for coordinates carried by `open_disp` output |
 | 2026-10-02 | T6 finished | Real-frame timing drove the 1024-pixel read block and the one-file-per-production check; T6.5b moved to T14.2c |
 | 2026-10-02 | T5 finished | Product registry and parser checked on real F44055, F39355 and DISP-NISAR golden data; DISP-NISAR spec provisional (no official granule); `get_disp_info` deprecation moved to T7 |
