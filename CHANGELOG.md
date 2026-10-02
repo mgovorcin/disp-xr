@@ -4,6 +4,49 @@ All notable changes to disp-xr. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow
 [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+
+- `.disp` accessor on Datasets and DataArrays, with an operation history
+  recorded in every result; `to_units`; `validate_disp`.
+- Quality: `mask` and `valid_mask` (`recommended`, `strict` or per criterion),
+  `quality_summary`.
+- `rereference` by point, area, scene median, border, high-coherence pixels
+  or a deterministic stable pixel (`auto`).
+- Static layers: `open_static` (DISP-S1-STATIC, CSLC-STATIC), LOS helpers,
+  `enu_to_los`.
+- Corrections: `correct` (ionosphere, solid-earth tide, external layers) and
+  `remove_plate_motion` (ITRF2014 plate motion model).
+- Export: `to_zarr` (Zarr v3, sharded, zstd), `to_netcdf`, `to_geotiff`
+  (Cloud Optimized GeoTIFF), `to_mintpy`, all with provenance; `to_icechunk`,
+  `open_icechunk`, and virtual frames (`build_virtual_frame`, `open_virtual`,
+  `validate_virtual`) with the `cloud` extra.
+- `disp_xr` command line: `info`, `stack`, `export`, `geometry`, `search`,
+  `virtual`.
+- Quick-look plots: `plot_map`, `plot_point` (`plot` extra).
+- `rechunk` and a `native` chunk preset; `disp_xr.tutorial.make_disp_stack`
+  for synthetic granules.
+- Documentation site (mkdocs) with a gallery of executed examples.
+
+### Changed
+
+- `open_disp` keeps the file layout by default (`chunks="native"`), and
+  `stack_disp` keeps the input chunks, so a map or a point reads only what it
+  needs. Per-pixel functions rechunk themselves.
+- Plots and exports compute with at most 32 dask threads
+  (`config["num_workers"]`).
+- `stack_disp(start=)` accepts a plain date.
+- `to_geotiff` accepts a Dataset and a `layer`, and tags the input granules,
+  history and package versions.
+
+### Fixed
+
+- The command line failed at start-up (logging formatter name).
+- `fit_timeseries_block` fitted each chunk's epochs separately when time was
+  split across chunks, and failed on `open_disp` output.
+- Re-exporting a store split its `input_granules` list into characters.
+
 ## [0.1.0] - Unreleased
 
 First tagged release: a tested, installable foundation for opening and chaining

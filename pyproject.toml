@@ -50,10 +50,12 @@ dependencies = [
 test = ["pytest", "pytest-cov", "pytest-xdist", "cf_xarray"]
 docs = [
   "mkdocs",
-  "mkdocs-material",
+  "mkdocs-material>=9.5",
   "mkdocstrings>=0.29",
   "mkdocstrings-python>=1.16",
-  "mkdocs-jupyter",
+  "mkdocs-jupyter>=0.25",
+  "ipykernel",
+  "matplotlib",
 ]
 gnss = ["xvec", "geopandas"]
 # MintPy is used only to read exports back in round-trip tests.
@@ -148,8 +150,11 @@ types-pyyaml = "*"
 
 [tool.pixi.feature.docs.dependencies]
 mkdocs = "*"
-mkdocs-jupyter = "*"
-mkdocs-material = "*"
+mkdocs-jupyter = ">=0.25"
+mkdocs-material = ">=9.5"
+# The gallery notebooks are executed at build time.
+ipykernel = "*"
+matplotlib-base = "*"
 # Older pairs break against current griffe.
 mkdocstrings = ">=0.29"
 mkdocstrings-python = ">=1.16"

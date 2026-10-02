@@ -3,7 +3,7 @@ from __future__ import annotations
 from io import BytesIO
 from pathlib import Path
 from tempfile import NamedTemporaryFile
-from typing import Any, Dict, NamedTuple, Tuple, Union
+from typing import Any, Dict, NamedTuple, Optional, Tuple, Union
 
 import numpy as np
 import rasterio
@@ -13,6 +13,7 @@ from rasterio.transform import Affine, from_bounds
 from rasterio.warp import Resampling, reproject
 
 from ..config import bounded_threads
+from ._provenance import provenance_attrs
 
 
 class GeoInfo(NamedTuple):
@@ -211,18 +212,29 @@ def reproject_raster(
 
 @bounded_threads
 def to_geotiff(
-    da: xr.DataArray,
+    obj: Union[xr.DataArray, xr.Dataset],
     path: Union[str, Path],
     *,
+    layer: str = "displacement",
     per_epoch: bool = False,
     compress: str = "DEFLATE",
+    _provenance: Optional[dict] = None,
 ) -> list[Path]:
-    """Write a layer as Cloud Optimized GeoTIFF (with overviews).
+    """Write a layer as a Cloud Optimized GeoTIFF (COG) with overviews.
+
+    The file is tiled with internal overviews (GDAL adds them above 512
+    pixels), so it can be read in parts over HTTP. Its metadata holds the
+    provenance: ``DISP_XR_VERSION``, ``SOFTWARE_VERSIONS``,
+    ``INPUT_GRANULES`` and ``HISTORY``.
 
     Parameters
     ----------
-    da : xr.DataArray
-        A ``(y, x)`` layer with a CRS, or ``(time, y, x)`` with ``per_epoch``.
+    obj : xr.DataArray or xr.Dataset
+        A ``(y, x)`` layer with a CRS, or ``(time, y, x)`` with ``per_epoch``;
+        or a Dataset, from which ``layer`` is written. Pass the Dataset to keep
+        its provenance: input granules and history live in Dataset attributes.
+    layer : str
+        Layer to write when ``obj`` is a Dataset.
     path : str or Path
         Output file. With ``per_epoch``, one file per epoch named
         ``<stem>_<YYYYMMDD>.tif`` next to it.
@@ -250,6 +262,14 @@ def to_geotiff(
     from ..config import config
 
     path = Path(path)
+    if isinstance(obj, xr.Dataset):
+        if layer not in obj:
+            raise ValueError(f"No layer {layer!r}; have {sorted(obj.data_vars)}")
+        provenance = provenance_attrs(obj)
+        da = obj[layer]
+    else:
+        da = obj
+        provenance = _provenance or provenance_attrs(obj)  # type: ignore[arg-type]
     if da.rio.crs is None:
         raise ValueError("The layer has no CRS; open it with disp_xr.open_disp")
     if per_epoch:
@@ -259,7 +279,10 @@ def to_geotiff(
         for t in da["time"].values:
             name = f"{path.stem}_{pd.Timestamp(t):%Y%m%d}{path.suffix or '.tif'}"
             written += to_geotiff(
-                da.sel(time=t, drop=True), path.with_name(name), compress=compress
+                da.sel(time=t, drop=True),
+                path.with_name(name),
+                compress=compress,
+                _provenance=provenance,
             )
         return written
     if da.dims != ("y", "x"):
@@ -268,17 +291,17 @@ def to_geotiff(
         raise ValueError(
             f"Layer of {da.nbytes / 1e9:.1f} GB is larger than max_load_bytes"
         )
-    layer = da.compute()
-    nodata = np.nan if layer.dtype.kind == "f" else layer.attrs.get("_FillValue")
+    image = da.compute()
+    nodata = np.nan if image.dtype.kind == "f" else image.attrs.get("_FillValue")
     attrs = {
         k: v
-        for k, v in layer.attrs.items()
+        for k, v in image.attrs.items()
         if k not in ("_FillValue", "grid_mapping") and isinstance(v, (str, int, float))
     }
-    layer = (
-        layer.rio.write_nodata(nodata, encoded=False) if nodata is not None else layer
+    image = (
+        image.rio.write_nodata(nodata, encoded=False) if nodata is not None else image
     )
-    layer.attrs = attrs
+    image.attrs = attrs
     # Write a tiled GTiff, then let GDAL CreateCopy make the COG: writing to
     # the COG driver directly truncates floats to integers with rasterio 1.5.1
     # and GDAL 3.13.
@@ -286,12 +309,14 @@ def to_geotiff(
 
     staging = path.with_name(f".{path.stem}.staging.tif")
     try:
-        layer.rio.to_raster(
+        image.rio.to_raster(
             staging,
             tiled=True,
             tags={
                 "DISP_XR_VERSION": __version__,
-                "HISTORY": da.attrs.get("history", ""),
+                "SOFTWARE_VERSIONS": provenance["software_versions"],
+                "INPUT_GRANULES": provenance["input_granules"],
+                "HISTORY": provenance["history"],
             },
         )
         rasterio.shutil.copy(staging, path, driver="COG", compress=compress)

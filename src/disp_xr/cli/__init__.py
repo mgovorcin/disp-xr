@@ -22,7 +22,7 @@ from disp_xr.log.logging import setup_logging
 
 F = TypeVar("F", bound=Callable[..., Any])
 
-FORMATS = ("geotiff", "zarr", "netcdf", "mintpy")
+FORMATS = ("cog", "geotiff", "zarr", "netcdf", "mintpy")
 MASKS = ("recommended", "strict", "none")
 REFERENCES = ("auto", "point", "median", "border", "high_coherence", "none")
 
@@ -277,10 +277,10 @@ def stack(
     "--layer",
     default="displacement",
     show_default=True,
-    help="Layer to write (geotiff).",
+    help="Layer to write (cog, geotiff).",
 )
-@click.option("--epoch", help="Date of the epoch to write (geotiff); default: last.")
-@click.option("--per-epoch", is_flag=True, help="One GeoTIFF per epoch, in --out.")
+@click.option("--epoch", help="Date of the epoch to write (cog); default: last.")
+@click.option("--per-epoch", is_flag=True, help="One COG per epoch, next to --out.")
 @click.option(
     "--preset",
     type=click.Choice(["timeseries", "maps"]),
@@ -310,7 +310,7 @@ def export(
     frame_id: Optional[int],
     min_version: Optional[str],
 ) -> None:
-    """Write a stack to GeoTIFF, Zarr, NetCDF or MintPy.
+    """Write a stack to Cloud Optimized GeoTIFF, Zarr, NetCDF or MintPy.
 
     PATHS is a store written by ``disp_xr stack``, or DISP granules, which are
     chained without corrections, masking or re-referencing (use ``stack``
@@ -319,14 +319,14 @@ def export(
     import disp_xr as dxr
 
     ds = _open_input(paths, frame_id, min_version)
-    if fmt == "geotiff":
+    if fmt in ("cog", "geotiff"):
         if layer not in ds:
             raise ValueError(f"No layer {layer!r}; have {sorted(ds.data_vars)}")
-        da = ds[layer]
-        if "time" in da.dims and not per_epoch:
-            da = da.sel(time=epoch, method="nearest") if epoch else da.isel(time=-1)
-        written = dxr.to_geotiff(da, out, per_epoch=per_epoch)
-        click.echo(f"Wrote {len(written)} GeoTIFF file(s) to {out}")
+        sub = ds[[layer]]
+        if "time" in sub[layer].dims and not per_epoch:
+            sub = sub.sel(time=epoch, method="nearest") if epoch else sub.isel(time=-1)
+        written = dxr.to_geotiff(sub, out, layer=layer, per_epoch=per_epoch)
+        click.echo(f"Wrote {len(written)} Cloud Optimized GeoTIFF file(s) to {out}")
     elif fmt == "mintpy":
         static = (
             dxr.open_static(ds, static_dir=static_dir, download=False)

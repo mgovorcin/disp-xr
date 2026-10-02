@@ -1,0 +1,91 @@
+site_name: disp-xr
+site_description: Xarray tools for OPERA DISP surface displacement products
+repo_url: https://github.com/mgovorcin/disp-xr
+repo_name: mgovorcin/disp-xr
+edit_uri: edit/main/docs/
+docs_dir: docs
+strict: true
+
+theme:
+  name: material
+  features:
+    - content.code.copy
+    - navigation.sections
+    - navigation.top
+    - search.suggest
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      toggle:
+        icon: material/weather-night
+        name: Dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      toggle:
+        icon: material/weather-sunny
+        name: Light mode
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.highlight
+  - pymdownx.superfences
+  - pymdownx.details
+
+plugins:
+  - search
+  - mkdocs-jupyter:
+      # Gallery examples are `# %%` scripts, executed at every build so a
+      # broken example fails the build.
+      include: ["gallery/*.py"]
+      execute: true
+      allow_errors: false
+      include_source: true
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: [src]
+          options:
+            docstring_style: numpy
+            heading_level: 3
+            members_order: source
+            separate_signature: true
+            show_root_heading: true
+            show_root_full_path: false
+            show_signature_annotations: true
+            show_source: false
+
+exclude_docs: |
+  check_plan.py
+
+nav:
+  - Home: README.md
+  - Install: install.md
+  - Getting started: getting-started.md
+  - Concepts: concepts.md
+  - Command line: cli.md
+  - Gallery:
+      - Quick look at a frame: gallery/quicklook.py
+      - Quality layers and masking: gallery/quality_masks.py
+      - Exporting results: gallery/export.py
+      - Chunks for maps and time series: gallery/chunking.py
+  - API reference:
+      - Overview: api/index.md
+      - Find and open: api/open.md
+      - Process: api/process.md
+      - Export: api/export.md
+      - Icechunk and virtual stores: api/cloud.md
+      - Plot: api/plot.md
+      - Accessor: api/accessor.md
+      - Settings and chunks: api/config.md
+      - Synthetic data: api/tutorial.md
+  - Development:
+      - Project index: INDEX.md
+      - Requirements (PRD): specs.md
+      - Plan: todo.md
+      - Code review: code_review.md
+      - Porting from opera-utils: porting.md
+      - References: references.md

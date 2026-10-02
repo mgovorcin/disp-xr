@@ -30,7 +30,7 @@ def run(*args, ok=True):
         (None, "Xarray tools for OPERA DISP products"),
         ("info", "Summarize the DISP granules"),
         ("stack", "fixed order of the PRD"),
-        ("export", "GeoTIFF, Zarr, NetCDF or MintPy"),
+        ("export", "Cloud Optimized GeoTIFF, Zarr, NetCDF or MintPy"),
         ("geometry", "static layers"),
         ("search", "Find DISP granules"),
         ("virtual", "granule references in Icechunk"),
@@ -180,7 +180,13 @@ def test_export_geotiff(stored, tmp_path):
     out = run(
         "export", stored, "--format", "geotiff", "--out", epochs, "--per-epoch"
     ).output
-    assert f"Wrote {back.sizes['time']} GeoTIFF" in out
+    assert f"Wrote {back.sizes['time']} Cloud Optimized GeoTIFF" in out
+    # --format cog is the same writer, with the stack's provenance.
+    cog = tmp_path / "cog.tif"
+    run("export", stored, "--format", "cog", "--out", cog)
+    with rasterio.open(cog) as src:
+        assert src.tags()["INPUT_GRANULES"].startswith('["OPERA_L3_DISP')
+        assert "stack_disp" in src.tags()["HISTORY"]
 
 
 def test_export_geotiff_unknown_layer(stored, tmp_path):
