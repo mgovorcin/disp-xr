@@ -72,3 +72,12 @@ def test_get_value_percentage_returns_dataarray(epochs):
         epochs.recommended_mask.chunk({"time": -1}), value=0
     )
     assert isinstance(pct, xr.DataArray)
+
+
+def test_get_value_percentage_with_non_index_coords(epochs):
+    """Regression: open_disp output carries spatial_ref and reference_time."""
+    da = epochs.recommended_mask.chunk({"time": -1}).assign_coords(
+        spatial_ref=0, reference_time=("time", epochs.time.values)
+    )
+    pct = quality_metrics.get_value_percentage(da, value=0)
+    assert float(pct[0, 0]) == 100.0

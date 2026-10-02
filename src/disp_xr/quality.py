@@ -165,6 +165,9 @@ def get_value_percentage(
     if not isinstance(stack_xr, xr.DataArray):
         raise TypeError("Input must be an xarray Dataset.")
     logger.info(f"Get percentage of {stack_xr.name}")
+    # The block function returns bare counts; scalar or per-time coordinates
+    # (spatial_ref, reference_time) would not match the template.
+    stack_xr = stack_xr.reset_coords(drop=True)
     template = get_template(stack_xr)
     data = stack_xr.map_blocks(
         get_counts, kwargs={"label": value, "reverse": reverse}, template=template
