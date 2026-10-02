@@ -2,6 +2,9 @@
 changelog:
   exclude:
     labels: [skip-changelog]
+    authors:
+      - dependabot
+      - pre-commit-ci
   categories:
     - title: Breaking changes
       labels: [breaking]
