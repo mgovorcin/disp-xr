@@ -1,43 +1,72 @@
-"""Quick-look plots of a DISP frame: a displacement map and a point time series.
+# %% [markdown]
+# # Quick look at a frame
+#
+# Open a frame of DISP granules, apply the product corrections and quality
+# mask, chain the ministacks, re-reference, and look at a map and a time
+# series. The granules are synthetic (`disp_xr.tutorial`), written with the
+# layout of real DISP-S1 files and a known truth, so the result can be
+# checked. Replace `folder` with your own granules.
 
-Run on a directory of DISP granules (needs the ``plot`` extra)::
-
-    python docs/gallery/quicklook.py /path/to/granules --out quicklook
-
-It chains the ministacks, re-references to a stable point, and writes
-``map.png`` (last epoch) and ``point.png`` (the scene center, median over
-90 m).
-"""
-
-import argparse
+# %%
+import tempfile
 from pathlib import Path
 
-import matplotlib
+import matplotlib.pyplot as plt
+import numpy as np
 
-matplotlib.use("Agg")
+import disp_xr as dxr
+from disp_xr.tutorial import make_disp_stack
 
-import disp_xr as dxr  # noqa: E402
+folder = Path(tempfile.mkdtemp()) / "granules"
+truth = make_disp_stack(folder, "three_ministacks", shape=(128, 128))
+print(len(truth.paths), "granules in", folder)
 
+# %% [markdown]
+# ## Open, correct, mask, chain
+#
+# `open_disp` reads metadata only. Corrections and the mask apply per
+# granule, before `stack_disp` chains the three ministacks into one series
+# from the first reference date.
 
-def main() -> None:
-    """Write the two quick-look figures for the granules given on the command line."""
-    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("granules", type=Path)
-    parser.add_argument("--out", type=Path, default=Path("quicklook"))
-    args = parser.parse_args()
-    args.out.mkdir(parents=True, exist_ok=True)
+# %%
+ds = dxr.open_disp(folder, corrections=True)
+ds = ds.disp.correct().disp.mask("recommended").disp.stack()
+ds = ds.disp.rereference("auto")
+print("relative to", ds.attrs["reference_date"], "| epochs:", ds.sizes["time"])
 
-    ds = dxr.open_disp(args.granules).disp.mask("recommended").disp.stack()
-    ds = ds.disp.rereference("auto")
+# %% [markdown]
+# ## Map
+#
+# `plot_map` shows one epoch (the last by default) in millimeters on a scale
+# symmetric about zero. Masked pixels and water are blank.
 
-    ax = ds.disp.plot_map()  # last epoch, in mm, symmetric scale
-    ax.figure.savefig(args.out / "map.png", dpi=150)
+# %%
+fig, (left, right) = plt.subplots(1, 2, figsize=(11, 4.5), layout="constrained")
+ds.disp.plot_map(ds.time[len(ds.time) // 2].values, ax=left)
+ds.disp.plot_map(ax=right)
+plt.show()
 
-    row, col = ds.sizes["y"] // 2, ds.sizes["x"] // 2
-    ax = ds.disp.plot_point(row=row, col=col, buffer_m=90)
-    ax.figure.savefig(args.out / "point.png", dpi=150)
-    print(f"Wrote {args.out / 'map.png'} and {args.out / 'point.png'}")
+# %% [markdown]
+# ## Time series
+#
+# `plot_point` takes a longitude and latitude (or `row`/`col`) and marks each
+# reference-date change, where one ministack is joined to the next.
 
+# %%
+row, col = 64, 90
+ax = ds.disp.plot_point(row=row, col=col, buffer_m=60)
+plt.show()
 
-if __name__ == "__main__":
-    main()
+# %% [markdown]
+# ## Check against the truth
+#
+# `rereference` records the pixel it chose in `attrs["reference"]`. The
+# synthetic truth is known, so the chaining itself can be checked: without
+# corrections, masking or re-referencing, the chained series must equal the
+# displacement the granules were built from.
+
+# %%
+print("reference:", ds.attrs["reference"])
+chained = dxr.stack_disp(dxr.open_disp(folder))
+error = chained.displacement.values - truth.cumulative
+print(f"largest difference from the truth: {np.nanmax(np.abs(error)) * 1000:.4f} mm")

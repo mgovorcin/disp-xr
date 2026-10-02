@@ -203,3 +203,30 @@ def test_geotiff_checks(ds, tmp_path):
         pytest.raises(ValueError, match="max_load_bytes"),
     ):
         dxr.to_geotiff(ds.displacement.isel(time=0), tmp_path / "x.tif")
+
+
+def test_geotiff_from_dataset_is_a_cog_with_provenance(tmp_path):
+    from disp_xr.tutorial import make_disp_stack
+
+    make_disp_stack(tmp_path / "g", shape=(600, 600), epochs_per_ministack=2)
+    ds = dxr.stack_disp(dxr.open_disp(tmp_path / "g"))
+    (path,) = dxr.to_geotiff(ds.isel(time=-1), tmp_path / "a.tif", layer="displacement")
+    with rasterio.open(path) as src:
+        tags = src.tags()
+        assert src.overviews(1)  # above 512 pixels GDAL adds overviews
+        assert src.profile["tiled"]
+        assert src.tags(ns="IMAGE_STRUCTURE").get("LAYOUT") == "COG"
+    assert tags["DISP_XR_VERSION"] == dxr.__version__
+    assert len(json.loads(tags["INPUT_GRANULES"])) == 4
+    assert json.loads(tags["HISTORY"].splitlines()[-1])["op"] == "stack_disp"
+    assert set(json.loads(tags["SOFTWARE_VERSIONS"])) >= {"xarray", "zarr"}
+    with pytest.raises(ValueError, match="No layer"):
+        dxr.to_geotiff(ds, tmp_path / "b.tif", layer="nope")
+
+
+def test_provenance_of_a_reopened_store(ds, tmp_path):
+    # Stores hold input_granules as a JSON string; re-exporting must not split it.
+    dxr.to_zarr(ds, tmp_path / "a.zarr")
+    dxr.to_zarr(xr.open_zarr(tmp_path / "a.zarr"), tmp_path / "b.zarr")
+    granules = json.loads(xr.open_zarr(tmp_path / "b.zarr").attrs["input_granules"])
+    assert len(granules) == 10 and granules[0].startswith("OPERA_L3_DISP")

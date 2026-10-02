@@ -19,6 +19,15 @@ ds.displacement.isel(x=4000, y=3000).plot()    # one pixel's time series
 ministack's reference date; `stack_disp` chains the ministacks. See
 `docs/specs.md` for the plan and `CHANGELOG.md` for what has changed.
 
+## Documentation
+
+The documentation (install, getting started, concepts, command line, a
+gallery of examples and the API reference) builds with mkdocs:
+
+```bash
+pixi run -e docs mkdocs serve    # http://127.0.0.1:8000
+```
+
 ## Development setup
 
 ### Prerequisite installs

@@ -30,6 +30,11 @@ def _version(package: str) -> str:
         return "not installed"
 
 
+def _granules(value: Any) -> list:
+    # A store read back from Zarr or NetCDF holds the list as a JSON string.
+    return json.loads(value) if isinstance(value, str) else list(value)
+
+
 def provenance_attrs(ds: xr.Dataset) -> dict[str, Any]:
     """Return the provenance attributes for an output written from ``ds``.
 
@@ -40,7 +45,7 @@ def provenance_attrs(ds: xr.Dataset) -> dict[str, Any]:
     return {
         "disp_xr_version": __version__,
         "software_versions": json.dumps({p: _version(p) for p in PACKAGES}),
-        "input_granules": json.dumps(list(ds.attrs.get("input_granules", []))),
+        "input_granules": json.dumps(_granules(ds.attrs.get("input_granules", []))),
         "history": ds.attrs.get("history", ""),
     }
 

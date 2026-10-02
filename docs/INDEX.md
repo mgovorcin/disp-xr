@@ -1,8 +1,8 @@
 # disp-xr project index
 
-**Last indexed:** 2026-10-02 · `main` on `origin` = `mgovorcin/disp-xr`, through T6.7 (chunking per operation)
+**Last indexed:** 2026-10-02 · `main` on `origin` = `mgovorcin/disp-xr`, through T16.5 (documentation site)
 
-How and when this file is rebuilt: see "Project Index (cyclical indexing)" in [CLAUDE.md](../CLAUDE.md).
+How and when this file is rebuilt: see "Project Index (cyclical indexing)" in `CLAUDE.md` at the repository root.
 
 ## Documents
 
@@ -15,7 +15,7 @@ How and when this file is rebuilt: see "Project Index (cyclical indexing)" in [C
 | [references.md](references.md) | Outside practices followed and their sources: earth-mover repositories, Zarr docs, xarray ecosystem | 206 |
 | [check_plan.py](check_plan.py) | Mechanical check of `todo.md` (run in every indexing cycle) | — |
 | [img/](img/) | `architecture.png`, `roadmap.png`, exported from the PRD doc | — |
-| [../CLAUDE.md](../CLAUDE.md) | Coding rules and the indexing cycle | — |
+| `CLAUDE.md` (repository root) | Coding rules and the indexing cycle | — |
 
 The PRD also lives as a shared doc; `specs.md` is its copy in the repo and must match it.
 
@@ -77,7 +77,7 @@ Still open in M0: T1.4b (name maintainers), T3.4 badge and T3.5 branch protectio
 | NFR Compatibility | T5.7, T35 | Not started |
 | NFR Metadata, Provenance | T14.2a, T14.4 | Not started |
 | NFR Benchmarks, Performance, Memory | T37 | Not started |
-| NFR Docs | T16 | Not started |
+| NFR Docs | T16 | mkdocs site with executed gallery and strict CI build done; ReadTheDocs publishing waits for an account |
 | API rules (config, history, order) | T4.9, T9, T15.2 | Config and history done; processing order in T15.2 |
 
 ## Modules (branch `refactor/package-layout`, `src/disp_xr`)
@@ -101,6 +101,7 @@ Still open in M0: T1.4b (name maintainers), T3.4 badge and T3.5 branch protectio
 | `open.py` | F2 | `open_disp`, `open_disp_tree` | T7 (chaining on top) |
 | `_chunks.py`, `_remote.py`, `_credentials.py` | F2, C1 | Chunk presets; remote access (ported) | — |
 | `search.py` (was `download.py`) | F16 | Ported CMR search, session seam, NISAR short name; bug 9 fixed | T5.2 (NISAR spec) |
+| `tutorial.py` | NFR Docs, tests | `make_disp_stack`: synthetic granules with a known truth (was `tests/fixtures/make_disp.py`) | T2.3, T16.3 |
 | `plot.py` | F13 | `plot_map`, `plot_point`, `diverging_cmap` (`plot` extra, imported lazily) | T17 |
 | `accessor.py`, `_history.py`, `units.py`, `validate.py` | API rules | `.disp` accessor, operation history, unit conversion, validation | — |
 | `config.py` | API rules | `donfig` settings, `DISP_XR_*` overrides | — |
@@ -157,6 +158,7 @@ Still open in M0: T1.4b (name maintainers), T3.4 badge and T3.5 branch protectio
 | Date | Trigger | Changes |
 | --- | --- | --- |
 | 2026-09-30 | First index | Created from `specs.md`, `todo.md`, `code_review.md` and the source on `main` |
+| 2026-10-02 | T16.1–T16.5 finished | mkdocs site (pages, API reference, 4 executed gallery examples, Development section), strict docs CI job, `.readthedocs.yaml`; `disp_xr.tutorial`; `to_geotiff` takes a Dataset and tags full provenance, `--format cog`; provenance of reopened stores fixed; CHANGELOG brought up to date; publishing on ReadTheDocs waits for a connected account |
 | 2026-10-02 | T6.7 added and finished | Native default chunks, chunk-preserving `stack_disp`, `rechunk`/`time_contiguous`, bounded dask threads for plots and exports; fit fixed for split time chunks and `open_disp` coordinates; decision logged |
 | 2026-10-02 | T17.1–T17.3 finished | `plot.py` (`plot_map`, `plot_point`, diverging colormap), accessor wiring, Agg smoke tests, gallery script; matplotlib-base in the pixi `test` feature; T17.4 waits for T16 |
 | 2026-10-02 | T15 finished | `disp_xr info`, `stack`, `export`, `geometry`, `search`, `virtual` with one-line user errors; logging config fixed (formatter class name); `stack_disp(start=)` accepts a plain date |
