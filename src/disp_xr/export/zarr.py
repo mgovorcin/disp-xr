@@ -6,7 +6,8 @@ and the chunk inside it (the unit of reading) is 64 x 64 over the whole time
 axis for ``"timeseries"`` or 1,024 x 1,024 of one epoch for ``"maps"``.
 ``"ministack"`` is for stores appended to along time (Icechunk): chunk and
 shard hold all epochs of the first write, and the chunk is sized to about
-``MINISTACK_READ_MB`` in space.
+``MINISTACK_READ_MB`` in space. ``"whole"`` stores each variable as one
+chunk, for small arrays such as coarse pyramid levels.
 
 ``round_mantissa`` and the per-variable encoding idea are adapted from
 opera-utils (src/opera_utils/disp/_utils.py and _reformat.py, commit dff4b45),
@@ -33,7 +34,7 @@ from ._provenance import with_provenance
 
 __all__ = ["chunk_scheme", "round_mantissa", "to_netcdf", "to_zarr", "zarr_encoding"]
 
-Preset = Literal["timeseries", "maps", "ministack"]
+Preset = Literal["timeseries", "maps", "ministack", "whole"]
 READ_CHUNK = {"timeseries": 64, "maps": 1024}
 MINISTACK_READ_MB = 16
 DIMS = ("time", "y", "x")
@@ -79,11 +80,15 @@ def chunk_scheme(
     sized for the widest dtype among the ``(time, y, x)`` variables, so all
     variables share one grid.
     """
-    if preset not in (*READ_CHUNK, "ministack"):
+    if preset not in (*READ_CHUNK, "ministack", "whole"):
         raise ValueError(
-            f"preset must be 'timeseries', 'maps' or 'ministack', not {preset!r}"
+            "preset must be 'timeseries', 'maps', 'ministack' or 'whole', "
+            f"not {preset!r}"
         )
     shape = tuple(ds.sizes.get(d, 1) for d in DIMS)
+    if preset == "whole":
+        whole = dict(zip(DIMS, shape))
+        return whole, dict(whole)
     itemsize = max(
         (v.dtype.itemsize for v in ds.data_vars.values() if v.ndim >= 2), default=4
     )
@@ -218,6 +223,7 @@ def to_zarr(
     target_mb: Optional[float] = None,
     consolidated: bool = True,
     storage_options: Optional[Mapping[str, Any]] = None,
+    group: Optional[str] = None,
 ) -> None:
     """Write ``ds`` to a Zarr v3 store.
 
@@ -227,10 +233,10 @@ def to_zarr(
         DISP dataset with ``(time, y, x)`` and ``(y, x)`` variables.
     store : str, Path or zarr store
         Local path, URL (with ``storage_options``) or any zarr ``Store``.
-    preset : {"timeseries", "maps", "ministack"}
+    preset : {"timeseries", "maps", "ministack", "whole"}
         Chunk layout; see the module docstring.
     mode : {"w-", "w"}
-        Fail if the store exists (default), or overwrite it.
+        Fail if the store (or ``group``) exists (default), or overwrite it.
     keep_bits : int, optional
         Mantissa bits to keep in float variables (lossy). ``None`` keeps the
         data exact, as Cal/Val outputs need.
@@ -242,6 +248,8 @@ def to_zarr(
         Write consolidated metadata (readers need not use it).
     storage_options : mapping, optional
         fsspec options for a URL store.
+    group : str, optional
+        Write into this group of the store instead of the root.
 
     """
     out, _ = _prepare(ds, preset, keep_bits, target_mb)
@@ -260,6 +268,7 @@ def to_zarr(
             zarr_format=3,
             consolidated=consolidated,
             storage_options=dict(storage_options) if storage_options else None,
+            group=group,
         )
 
 

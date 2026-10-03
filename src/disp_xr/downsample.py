@@ -359,10 +359,13 @@ def downsample(
             value = value.drop_vars([c for c in value.coords if c not in value.dims])
         keep = (1.0 - n_valid / f**2) <= nan_threshold
         keep &= sum_w > 0
-        out[name] = value.where(keep).assign_attrs(ds[name].attrs, aggregation=stat)
+        # An integer layer's fill value means nothing once it is averaged.
+        attrs = {k: v for k, v in ds[name].attrs.items() if k != "_FillValue"}
+        out[name] = value.where(keep).drop_attrs().assign_attrs(attrs, aggregation=stat)
         out[f"{name}_sigma"] = (
             (spread / np.sqrt(n_eff))
             .where(keep)
+            .drop_attrs()
             .assign_attrs(
                 units=ds[name].attrs.get("units", ""),
                 long_name=f"sigma of the cell {stat} (pixels independent)",
@@ -372,35 +375,62 @@ def downsample(
             model = variogram[name]
             rho_bar = mean_block_correlation(model, f, spacing_yx)
             n_eff_corr = n_eff_correlated(sum_w, sum_w2, rho_bar).where(keep)
-            out[f"{name}_sigma_corr"] = np.sqrt(model.sill / n_eff_corr).assign_attrs(
+            sigma_corr = np.sqrt(model.sill / n_eff_corr).drop_attrs()
+            out[f"{name}_sigma_corr"] = sigma_corr.assign_attrs(
                 units=ds[name].attrs.get("units", ""),
                 long_name=f"sigma of the cell {stat} (spatially correlated errors)",
                 variogram=model.to_json(),
                 mean_block_correlation=rho_bar,
             )
             if "n_eff_corr" not in shared:
-                shared["n_eff_corr"] = n_eff_corr.assign_attrs(
+                shared["n_eff_corr"] = n_eff_corr.drop_attrs().assign_attrs(
                     long_name="effective independent pixels (variogram)"
                 )
         if "n_eff" not in shared:
             shared |= {
-                "n_eff": n_eff.where(keep),
-                "n_valid": n_valid,
-                "valid_fraction": n_valid / f**2,
+                "n_eff": (
+                    n_eff.where(keep)
+                    .drop_attrs()
+                    .assign_attrs(
+                        long_name="effective sample count, (sum w)^2 / sum w^2"
+                    )
+                ),
+                "n_valid": (
+                    n_valid.drop_attrs().assign_attrs(
+                        long_name="valid pixels in the cell"
+                    )
+                ),
+                "valid_fraction": (
+                    (n_valid / f**2)
+                    .drop_attrs()
+                    .assign_attrs(long_name="valid share of the full block")
+                ),
             }
             if stat == "wmean":
-                shared["sum_w"] = sum_w
-                shared["sum_w2"] = sum_w2
+                shared["sum_w"] = sum_w.drop_attrs().assign_attrs(
+                    long_name="sum of weights"
+                )
+                shared["sum_w2"] = sum_w2.drop_attrs().assign_attrs(
+                    long_name="sum of squared weights"
+                )
     for name, how in categorical.items():
         if {"y", "x"} <= set(ds[name].dims):
             out[name] = _categorical(ds[name], f, how)
     # Static per-cell quality and weighted centroid.
     total = _block_sum(static, f)
     xx, yy = xr.broadcast(ds["x"].astype(np.float64), ds["y"].astype(np.float64))
-    shared["quality"] = total / f**2
-    shared["centroid_x"] = _block_sum(static * xx, f) / total.where(total > 0)
-    shared["centroid_y"] = _block_sum(static * yy, f) / total.where(total > 0)
-    result = xr.Dataset({**out, **shared}).unify_chunks()
+    shared["quality"] = (
+        (total / f**2)
+        .drop_attrs()
+        .assign_attrs(long_name="mean static weight of the block")
+    )
+    for name, coord in (("centroid_x", xx), ("centroid_y", yy)):
+        centroid = _block_sum(static * coord, f) / total.where(total > 0)
+        shared[name] = centroid.drop_attrs().assign_attrs(
+            units=ds[name[-1]].attrs.get("units", ""),
+            long_name="weighted centroid (static weights)",
+        )
+    result = xr.Dataset({**out, **shared}).unify_chunks().drop_encoding()
     result = result.drop_vars([c for c in ("y", "x") if c in result.coords])
     result = result.assign_coords(coords)
     for name in list(result.coords):

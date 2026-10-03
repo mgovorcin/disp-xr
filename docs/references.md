@@ -36,6 +36,8 @@ Commits read: icechunk `468004a` (Sep 29, 2026), icechunk-nasa `b23165f`, icechu
 | Levels as sibling groups, so each keeps `y`/`x` and a DataTree opens without alignment errors | Core | icechunk-multiscales-demo `config.py` | T27.7 |
 | Each level is self-contained: full CRS and CF attributes | Core | Corrects icechunk-multiscales-demo, which drops the CRS on overview levels | T27.7 |
 | Read levels from the `layout` metadata, never from group names | Core | icechunk-multiscales-demo | T27.7 |
+| Every level holds the same variables (readers switch levels by zoom for one variable) | Core | bowser `state.py` (`dataset_for_tile_zoom`) | T27.7, T27.9 |
+| bowser compatibility: root `multiscales.layout[].asset` finest first, CRS from `proj:code`, `proj:wkt2` or `spatial_ref.crs_wkt`, pixel-center `x`/`y` with y descending, a correct `GeoTransform` per level, NaN as missing, no reliance on consolidated metadata, factor-2 display levels | Core | bowser `geozarr.py`, `state.py`, `main.py`, `_tifs_to_geozarr.py` (branch `ops`, `0a61c6a`) | T27.9 |
 | Keep the convention ids, versions and schema URLs in one module, record the version in provenance, and test conformance. The conventions are still at pilot maturity (section 2), so the writer must be easy to migrate | Core | topozarr `test_specs.py` | T27.7 |
 | Small levels (a frame at 1 km is about 250 x 300 pixels) use one spatial chunk over all of time | Core | icechunk-multiscales-demo | T27.7 |
 | Keep the 30 m level virtual and materialize only the overviews | Opt-in | topozarr `build_demo_data.py` | T27.7, T6.5b |
@@ -125,6 +127,7 @@ Facts about DISP-S1 granules found during this reading (to confirm in T2.2):
 
 Bugs and gaps found in the reference code:
 
+- bowser (`ops`, `0a61c6a`) writes `proj:`/`spatial:` attributes only on level 0 and the root, never reads `spatial:*`, `derived_from` or `transform`, chooses the level by comparing the pixel size in native CRS units with Web Mercator meters (so a geographic CRS always gets the coarsest level), keeps `spatial_ref` as a data variable, and has no Zarr tests. disp-xr writes every level self-contained, so its stores are readable by bowser and by strict GeoZarr readers.
 - icechunk-multiscales-demo sets overview coordinates to the first pixel of each block while its transform implies block centers, and its array shapes (ceil) disagree with its coarsening (floor) when a size is not divisible.
 - topozarr coarsens by 2 only, with unweighted reductions and `boundary="trim"`.
 - serverless-datacube-demo commits whatever sessions came back, even after failed jobs, and uses the pre-1.0 Icechunk distributed API.

@@ -179,3 +179,11 @@ def test_chunk_independent():
     a = downsample(whole_ds, factor=3, stat="wmedian", weights=w).compute()
     b = downsample(split_ds, factor=3, stat="wmedian", weights=ws).compute()
     xr.testing.assert_allclose(a.displacement, b.displacement)
+
+
+def test_averaged_integer_layer_drops_its_fill(stack_dir):
+    ds = dxr.stack_disp(dxr.open_disp(stack_dir))
+    out = downsample(ds, factor=9)
+    assert "_FillValue" not in out.shp_counts.attrs  # 0 is a valid mean
+    assert out.recommended_mask.attrs["_FillValue"] == 255
+    assert "_FillValue" not in out.n_valid.encoding

@@ -54,6 +54,27 @@ with rasterio.open(work / "last.tif") as src:
     print("disp-xr:", src.tags()["DISP_XR_VERSION"])
 
 # %% [markdown]
+# ## Multiscale pyramid
+#
+# `to_pyramid` writes the input as level `0` and quality-weighted
+# downsampled levels (`downsample`) as sibling groups `1`, `2`, ..., with the
+# zarr-conventions `multiscales` layout on the root. Every level is
+# self-contained (CRS, transform, the same variables as level `0`), and
+# `open_pyramid` finds the levels from the layout.
+
+# %%
+dxr.to_pyramid(ds, work / "pyramid.zarr", factors=(3, 9))
+tree = dxr.open_pyramid(work / "pyramid.zarr")
+for entry in tree.attrs["multiscales"]["layout"]:
+    level = tree[entry["asset"]]
+    print(
+        entry["asset"],
+        dict(level.sizes),
+        f"{entry['spatial:transform'][0]:g} m",
+        entry.get("resampling_method", "input"),
+    )
+
+# %% [markdown]
 # ## MintPy
 #
 # `to_mintpy` writes `timeseries.h5` and the quality files MintPy reads, with

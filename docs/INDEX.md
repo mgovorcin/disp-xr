@@ -105,6 +105,7 @@ Still open in M0: T1.4b (name maintainers), T3.4 badge and T3.5 branch protectio
 | `_chunks.py`, `_remote.py`, `_credentials.py` | F2, C1 | Chunk presets; remote access (ported) | — |
 | `search.py` (was `download.py`) | F16 | Ported CMR search, session seam, NISAR short name; bug 9 fixed | T5.2 (NISAR spec) |
 | `tutorial.py` | NFR Docs, tests | `make_disp_stack`: synthetic granules with a known truth (was `tests/fixtures/make_disp.py`); `correlated_noise`: a field with a known exponential covariance | T2.3, T16.3, T27.3b |
+| `export/multiscales.py` | C4 | `build_overviews`, `to_pyramid`, `open_pyramid`, `MULTISCALES_CONVENTION` | T27.7, T27.9 |
 | `downsample.py` | S2 | `downsample`, `to_points` | T27 |
 | `residuals.py` | S2 (cell uncertainty), S4 | `empirical_variogram`, `fit_variogram`, `VariogramModel`, `mean_block_correlation`, `n_eff_correlated` | T27.3b, T32.1 |
 | `weights.py` | S2 | `quality_weights`, `residual_cycles`, `network_degree`, `residual_cycle_histogram` | T26 |
@@ -164,6 +165,7 @@ Still open in M0: T1.4b (name maintainers), T3.4 badge and T3.5 branch protectio
 | Date | Trigger | Changes |
 | --- | --- | --- |
 | 2026-09-30 | First index | Created from `specs.md`, `todo.md`, `code_review.md` and the source on `main` |
+| 2026-10-03 | T27.7 finished; T27.9 planned | Multiscale pyramid writer and reader (`export/multiscales.py`), `to_zarr(group=..., preset="whole")`; downsample derived variables get their own attributes; T27.9 (GeoZarr export bowser opens directly) planned after analyzing bowser `ops` (`0a61c6a`), comparison in `references.md` |
 | 2026-10-03 | T27.3b finished; T27.8 planned | `residuals.py` (variogram from log-uniform random pairs, model fit, block correlation); `downsample(variogram=...)` adds `<layer>_sigma_corr` and `n_eff_corr`; `tutorial.correlated_noise`; T27.8 hexagonal downsampling (planar, then H3) added to `specs.md` S2, `todo.md` and `references.md` |
 | 2026-10-03 | T27.1–T27.6 finished | `downsample` and `to_points`; per-chunk block reductions without rechunking; T27.3b and T27.7 follow in their own PRs |
 | 2026-10-03 | T26 finished | `quality_weights`; real granules show residual clustering at 2 pi (not pi as planned), so cycles count 2 pi and the fixture follows; network degree from the dolphin config (`max_bandwidth = 3`) |

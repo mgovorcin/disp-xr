@@ -11,11 +11,14 @@ from .config import config
 from .corrections import correct, remove_plate_motion
 from .downsample import downsample, to_points
 from .export import (
+    build_overviews,
     open_icechunk,
+    open_pyramid,
     to_geotiff,
     to_icechunk,
     to_mintpy,
     to_netcdf,
+    to_pyramid,
     to_zarr,
 )
 from .geometry.los import enu_to_los
@@ -49,6 +52,7 @@ __all__ = [
     "Trajectory",
     "VariogramModel",
     "__version__",
+    "build_overviews",
     "build_virtual_frame",
     "config",
     "correct",
@@ -64,6 +68,7 @@ __all__ = [
     "open_disp",
     "open_disp_tree",
     "open_icechunk",
+    "open_pyramid",
     "open_static",
     "open_virtual",
     "predict_trajectory",
@@ -78,6 +83,7 @@ __all__ = [
     "to_mintpy",
     "to_netcdf",
     "to_points",
+    "to_pyramid",
     "to_zarr",
     "to_units",
     "valid_mask",
