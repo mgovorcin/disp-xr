@@ -43,6 +43,10 @@ All notable changes to disp-xr. The format follows
   `noise="auto"` picks the model per group by BIC.
 - `fit_velocity` and `fit_trajectory` refuse data marked denoised unless
   `allow_denoised=True`.
+- `quality_weights`: per-epoch and static pixel weights from phase
+  similarity, temporal coherence and inversion residuals (cycle jumps in
+  2 pi down-weight, never exclude); `residual_cycle_histogram`,
+  `network_degree`.
 
 ### Changed
 

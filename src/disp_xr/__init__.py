@@ -39,6 +39,7 @@ from .timeseries import (
 from .units import to_units
 from .validate import validate_disp
 from .virtual import build_virtual_frame, open_virtual, validate_virtual
+from .weights import quality_weights
 
 __all__ = [
     "NaNPolicy",
@@ -61,6 +62,7 @@ __all__ = [
     "open_virtual",
     "predict_trajectory",
     "quality_summary",
+    "quality_weights",
     "rechunk",
     "remove_plate_motion",
     "rereference",

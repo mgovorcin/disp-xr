@@ -42,7 +42,8 @@ LOW_COHERENCE = (slice(0, 8), slice(0, 8))
 UNWRAP_FAILED = (slice(20, 24), slice(20, 24))
 WATER_COLUMNS = 4
 PS_PIXELS = ((30, 30), (31, 40), (45, 12))
-CYCLE_PIXELS = {(10, 50): 1, (11, 51): 2}  # pixel -> number of pi in the residual
+# pixel -> number of 2 pi cycles in the residual (real granules cluster at 2 pi)
+CYCLE_PIXELS = {(10, 50): 1, (11, 51): 2}
 
 
 class Frame(NamedTuple):
@@ -299,7 +300,7 @@ def _residuals(ny: int, nx: int, epoch_index: int) -> np.ndarray:
     residuals = np.full((ny, nx), 0.1, np.float32)
     if epoch_index == 1:
         for (iy, ix), cycles in CYCLE_PIXELS.items():
-            residuals[iy, ix] = cycles * np.pi
+            residuals[iy, ix] = cycles * 2 * np.pi
     return residuals
 
 
