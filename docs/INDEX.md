@@ -1,6 +1,6 @@
 # disp-xr project index
 
-**Last indexed:** 2026-10-03 · `main` on `origin` = `mgovorcin/disp-xr`, through T23 (full-frame colored-noise GLS)
+**Last indexed:** 2026-10-03 · `main` on `origin` = `mgovorcin/disp-xr`, through T26 (quality weights)
 
 How and when this file is rebuilt: see "Project Index (cyclical indexing)" in `CLAUDE.md` at the repository root.
 
@@ -28,7 +28,7 @@ The PRD also lives as a shared doc; `specs.md` is its copy in the repo and must 
 | --- | --- | --- |
 | M0 Foundation (v0.1) | T1–T8 | 5 / 8 (T2, T4, T5, T6, T7 done; T1 open only for T1.4b; T3 open for T3.4–T3.5) |
 | M1 Core API (v0.2) | T9–T18 | 7 / 10 (T9, T10, T11, T13, T14, T15, T17; T12 open only for T12.5, T16 only for ReadTheDocs publishing) |
-| M2 Analysis (v0.3) | T19–T34 | 4 / 16 (T20, T21, T22, T23; started before the T18 review) |
+| M2 Analysis (v0.3) | T19–T34 | 5 / 16 (T20, T21, T22, T23, T26; started before the T18 review) |
 | M3 Release (v1.0) | T35–T39 | 0 / 5 |
 
 Six local branches, stacked, not pushed:
@@ -63,7 +63,7 @@ Still open in M0: T1.4b (name maintainers), T3.4 badge and T3.5 branch protectio
 | F15 Plate motion | T13.5 | Done: `plate_motion_los`, `remove_plate_motion` (ITRF2014-PMM) |
 | F16 Search | T4.5 | Exists, S1 only (`download.py`) |
 | S1 Colored-noise velocity | T20, T21, T22, T23 | Done: OLS, one-series colored noise, per-pixel Whittle and MIDAS, frame GLS with coherence groups; quadtree groups wait for T28; noise-model policy proposed, awaiting confirmation |
-| S2 Downsampling | T26, T27, T28, T29 | Not started |
+| S2 Downsampling | T26, T27, T28, T29 | Quality weights done (T26); downsampling (T27, T28) and trade study (T29) open |
 | S3 Temporal denoising | T30, T31 | Prototype outside repo (`00_tools/tests/temporal_denoising`) |
 | S4 Residual analysis | T32 | Residual statistics on branch |
 | C1 Zarr v3 output | T14.2, T14.2a | Not started |
@@ -105,6 +105,7 @@ Still open in M0: T1.4b (name maintainers), T3.4 badge and T3.5 branch protectio
 | `_chunks.py`, `_remote.py`, `_credentials.py` | F2, C1 | Chunk presets; remote access (ported) | — |
 | `search.py` (was `download.py`) | F16 | Ported CMR search, session seam, NISAR short name; bug 9 fixed | T5.2 (NISAR spec) |
 | `tutorial.py` | NFR Docs, tests | `make_disp_stack`: synthetic granules with a known truth (was `tests/fixtures/make_disp.py`) | T2.3, T16.3 |
+| `weights.py` | S2 | `quality_weights`, `residual_cycles`, `network_degree`, `residual_cycle_histogram` | T26 |
 | `plot.py` | F13 | `plot_map`, `plot_point`, `diverging_cmap` (`plot` extra, imported lazily) | T17 |
 | `accessor.py`, `_history.py`, `units.py`, `validate.py` | API rules | `.disp` accessor, operation history, unit conversion, validation | — |
 | `config.py` | API rules | `donfig` settings, `DISP_XR_*` overrides | — |
@@ -161,6 +162,7 @@ Still open in M0: T1.4b (name maintainers), T3.4 badge and T3.5 branch protectio
 | Date | Trigger | Changes |
 | --- | --- | --- |
 | 2026-09-30 | First index | Created from `specs.md`, `todo.md`, `code_review.md` and the source on `main` |
+| 2026-10-03 | T26 finished | `quality_weights`; real granules show residual clustering at 2 pi (not pi as planned), so cycles count 2 pi and the fixture follows; network degree from the dolphin config (`max_bandwidth = 3`) |
 | 2026-10-03 | T23 finished (coherence groups; quadtree after T28) | Grouped exact GLS with Schur-complement gaps; noise shape per group, amplitude per pixel; denoised-input guard; noise-model policy proposed in the PRD; benchmark and gallery |
 | 2026-10-03 | T22 finished | `fit_velocity` (OLS, Whittle, MIDAS); Whittle bias study (reliable from about 200 epochs); MIDAS on numbagg medians; benchmarks recorded |
 | 2026-10-02 | T21 finished | `fit_noise` and `NoiseResult` ported from geepers (Apache-2.0 attribution added); committed geepers reference; Whittle bias on short series recorded for T22 |

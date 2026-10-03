@@ -17,6 +17,16 @@ after. See [Concepts](../concepts.md).
 
 ::: disp_xr.quality_summary
 
+::: disp_xr.quality_weights
+
+::: disp_xr.weights
+    options:
+      members:
+        - residual_cycles
+        - network_degree
+        - max_bandwidth_from_granule
+        - residual_cycle_histogram
+
 ## Chaining
 
 ::: disp_xr.stack_disp

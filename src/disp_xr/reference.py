@@ -198,8 +198,9 @@ def _area_mask(
 
 
 def _phase_jump_epochs(residuals: xr.DataArray) -> xr.DataArray:
-    # The L1 inversion residual of a cycle slip is about a multiple of pi, so
-    # anything above half of pi counts as a jump.
+    # A cycle slip adds about 2 pi to the L1 inversion residual of each date
+    # it touches (residuals cluster at multiples of 2 pi on real granules);
+    # anything above pi / 2 counts as a jump.
     return (residuals >= np.pi / 2).sum("time")
 
 
