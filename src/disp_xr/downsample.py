@@ -12,9 +12,10 @@ Every cell also gets ``n_valid``, ``valid_fraction`` (of the full block, so
 edge cells padded beyond the frame show how much they hold) and ``quality``
 (mean static weight). Weighted-mean levels keep ``sum_w`` and ``sum_w2`` so a
 coarser mean can be rebuilt from them; a weighted median cannot, so every
-median level is computed from 30 m. The ``sigma`` here treats pixels as
-independent, which is too small at 1 to 10 km; the variogram-based sigma is
-plan task T27.3b.
+median level is computed from 30 m. The ``sigma`` treats pixels as
+independent, which is far too small at 1 to 10 km; pass a variogram model
+(:mod:`disp_xr.residuals`) to also get ``<layer>_sigma_corr``, which accounts
+for spatially correlated errors.
 
 Odd factors (33, 67, 333 for 990 m, 2,010 m, 9,990 m) put each cell centre on
 a 30 m pixel centre, so the coarse transform is exact. Run after chaining and
@@ -33,6 +34,7 @@ import xarray as xr
 
 from ._history import recorded
 from .config import bounded_threads
+from .residuals import VariogramModel, mean_block_correlation, n_eff_correlated
 
 __all__ = ["downsample", "to_points"]
 
@@ -243,6 +245,7 @@ def downsample(
     layers: Optional[list[str]] = None,
     categorical: Optional[Mapping[str, Categorical]] = None,
     nan_threshold: float = 1.0,
+    variogram: Optional[Mapping[str, VariogramModel]] = None,
 ) -> xr.Dataset:
     """Aggregate a DISP dataset to coarse cells with quality weights.
 
@@ -276,6 +279,13 @@ def downsample(
         Largest share of missing pixels (of the full block) a cell may have;
         cells above it become NaN. 1.0 keeps any cell with data. Follows
         xarray-regrid's ``nan_threshold``.
+    variogram : mapping of str to VariogramModel, optional
+        A fitted variogram (:func:`disp_xr.residuals.fit_variogram`) per
+        layer, estimated on that layer's residual field. Adds
+        ``<layer>_sigma_corr = sqrt(sill / n_eff_corr)`` and ``n_eff_corr``,
+        the effective number of independent pixels of the cell mean given the
+        spatial correlation (Hugonnet et al. 2022). The model is the same for
+        every epoch.
 
     Returns
     -------
@@ -283,7 +293,8 @@ def downsample(
         One variable per aggregated layer on the coarse grid, with
         ``<layer>_sigma`` and, shared by all, ``n_eff``, ``n_valid``,
         ``valid_fraction``, ``quality``, ``centroid_x``, ``centroid_y``, and
-        for ``"wmean"`` ``sum_w`` and ``sum_w2``. Integer layers are reduced
+        for ``"wmean"`` ``sum_w`` and ``sum_w2``; with ``variogram``,
+        ``<layer>_sigma_corr`` and ``n_eff_corr``. Integer layers are reduced
         with mode or any. Lazy if the input is.
 
     Examples
@@ -313,6 +324,13 @@ def downsample(
             and n not in categorical
         ]
     categorical = {k: v for k, v in categorical.items() if k in ds}
+    variogram = dict(variogram or {})
+    if missing := set(variogram) - set(layers):
+        raise ValueError(f"variogram given for layers not aggregated: {missing}")
+    spacing_yx = (
+        abs(float(ds["y"][1] - ds["y"][0])),
+        abs(float(ds["x"][1] - ds["x"][0])),
+    )
     coords = _coarse_coords(ds, f)
     out: dict[str, xr.DataArray] = {}
     shared: dict[str, xr.DataArray] = {}
@@ -350,8 +368,22 @@ def downsample(
                 long_name=f"sigma of the cell {stat} (pixels independent)",
             )
         )
-        if not shared:
-            shared = {
+        if name in variogram:
+            model = variogram[name]
+            rho_bar = mean_block_correlation(model, f, spacing_yx)
+            n_eff_corr = n_eff_correlated(sum_w, sum_w2, rho_bar).where(keep)
+            out[f"{name}_sigma_corr"] = np.sqrt(model.sill / n_eff_corr).assign_attrs(
+                units=ds[name].attrs.get("units", ""),
+                long_name=f"sigma of the cell {stat} (spatially correlated errors)",
+                variogram=model.to_json(),
+                mean_block_correlation=rho_bar,
+            )
+            if "n_eff_corr" not in shared:
+                shared["n_eff_corr"] = n_eff_corr.assign_attrs(
+                    long_name="effective independent pixels (variogram)"
+                )
+        if "n_eff" not in shared:
+            shared |= {
                 "n_eff": n_eff.where(keep),
                 "n_valid": n_valid,
                 "valid_fraction": n_valid / f**2,

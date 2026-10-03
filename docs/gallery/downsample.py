@@ -57,7 +57,54 @@ plt.show()
 # edge cells extend past the frame (128 is not a multiple of 9) and their
 # valid fraction shows how much of the block they hold. The sigma treats
 # pixels as independent; spatially correlated errors make it too small at
-# kilometre scales (a variogram-based sigma is planned).
+# kilometre scales, which the next section fixes.
+
+# %% [markdown]
+# ## Sigma with spatially correlated errors
+#
+# InSAR errors (troposphere, unwrapping) are correlated over kilometres, so
+# averaging 81 pixels does not divide the noise by 9. Following xDEM
+# (Hugonnet et al. 2022), estimate a variogram on a residual field (stable
+# ground, or data minus a model), fit it, and pass it to `downsample`. Here
+# the residual is synthetic: correlated noise with a 900 m range, 2 mm
+# correlated and 1 mm white.
+
+# %%
+import numpy as np  # noqa: E402
+
+from disp_xr.tutorial import correlated_noise  # noqa: E402
+
+noise = correlated_noise(
+    (128, 128), correlation_range=900, sill=(2e-3) ** 2, nugget=(1e-3) ** 2
+)
+residual = ds.displacement.isel(time=-1).copy(data=noise)
+empirical = dxr.empirical_variogram(residual)
+model = dxr.fit_variogram(empirical, ("exponential",))
+print(model)
+
+h = np.linspace(1, float(empirical.distance.max()), 300)
+fig, ax = plt.subplots(figsize=(5, 3.4), layout="constrained")
+ax.plot(empirical.distance, empirical.gamma * 1e6, "o", label="empirical")
+ax.plot(h, model.gamma(h) * 1e6, label="fitted model")
+ax.set(xscale="log", xlabel="distance (m)", ylabel="semivariance (mm$^2$)")
+ax.legend()
+plt.show()
+
+# %%
+noisy = ds.assign(displacement=ds.displacement + noise)
+corr = dxr.downsample(noisy, factor=9, variogram={"displacement": model}).compute()
+print(
+    "median cell sigma, pixels independent:",
+    f"{float(corr.displacement_sigma.median()) * 1000:.2f} mm;",
+    "with the variogram:",
+    f"{float(corr.displacement_sigma_corr.median()) * 1000:.2f} mm",
+)
+
+# %% [markdown]
+# The variogram sigma is several times larger: neighbouring pixels share most
+# of their error. `n_eff_corr` is the effective number of independent pixels
+# per cell. The model holds for every epoch; estimate it on the epoch or the
+# velocity residual you care about.
 
 # %% [markdown]
 # ## Points
