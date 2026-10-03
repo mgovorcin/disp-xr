@@ -308,8 +308,13 @@ def fit_velocity(
     obj : xr.Dataset or xr.DataArray
         Chained displacement ``(time, y, x)``, or a Dataset holding it.
     method : {"whittle", "ols", "midas"}
-        See the module docstring. ``"whittle"`` (default) gives colored-noise
-        sigmas; ``"midas"`` is robust to steps and outliers.
+        ``"whittle"`` (default): colored-noise sigmas, reliable from about
+        200 epochs (6.5 years at 12 days); a warning is logged below.
+        ``"midas"``: robust to unmodelled steps and outliers, for records of
+        several years. ``"ols"``: fast, but its sigma ignores correlated
+        noise and is several times too small. For shorter records use
+        :func:`disp_xr.fit_noise` on selected pixels. See the guide
+        "Choosing a velocity method" in the documentation.
     terms : Trajectory, optional
         Deterministic model for ``"ols"`` and ``"whittle"`` (default offset,
         velocity and annual cycle). MIDAS needs none.

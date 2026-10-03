@@ -103,7 +103,8 @@ print(f"residual RMS: {float(np.sqrt((residual**2).mean())) * 1000:.2f} mm")
 # %% [markdown]
 # ## Colored-noise and robust sigmas
 #
-# `fit_velocity` estimates the noise of every pixel. `"whittle"` keeps the
+# `fit_velocity` estimates the noise of every pixel (see "Choosing a velocity
+# method" for when to use which). `"whittle"` keeps the
 # OLS velocity and estimates power-law plus white noise from the periodogram
 # of the residuals (reliable from about 200 epochs); `"midas"` takes the
 # median of one-year slopes, with a deliberately conservative sigma. The

@@ -66,6 +66,7 @@ nav:
   - Install: install.md
   - Getting started: getting-started.md
   - Concepts: concepts.md
+  - Choosing a velocity method: velocity-methods.md
   - Command line: cli.md
   - Try it on your frame: try-it.md
   - Gallery:
