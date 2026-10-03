@@ -27,6 +27,14 @@ after. See [Concepts](../concepts.md).
 
 ::: disp_xr.rereference
 
+## Time series
+
+::: disp_xr.fit_trajectory
+
+::: disp_xr.Trajectory
+
+::: disp_xr.predict_trajectory
+
 ## Units, geometry and checks
 
 ::: disp_xr.to_units

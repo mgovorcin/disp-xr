@@ -43,6 +43,8 @@ dependencies = [
   # 0.23 writes the Zarr spatial: and proj: conventions.
   "rioxarray>=0.23",
   "scipy",
+  # Caps BLAS threads inside dask tasks (per-pixel solvers).
+  "threadpoolctl",
   "xarray",
 ]
 
@@ -121,6 +123,7 @@ pyyaml = "*"
 rasterio = "*"
 rioxarray = ">=0.23"
 scipy = "*"
+threadpoolctl = "*"
 xarray = "*"
 gdal = "*"
 libgdal-hdf5 = "*"

@@ -1,6 +1,6 @@
 # disp-xr project index
 
-**Last indexed:** 2026-10-02 · `main` on `origin` = `mgovorcin/disp-xr`, through T18 preparation (API review materials)
+**Last indexed:** 2026-10-02 · `main` on `origin` = `mgovorcin/disp-xr`, through T20 (trajectory model and OLS velocity)
 
 How and when this file is rebuilt: see "Project Index (cyclical indexing)" in `CLAUDE.md` at the repository root.
 
@@ -28,7 +28,7 @@ The PRD also lives as a shared doc; `specs.md` is its copy in the repo and must 
 | --- | --- | --- |
 | M0 Foundation (v0.1) | T1–T8 | 5 / 8 (T2, T4, T5, T6, T7 done; T1 open only for T1.4b; T3 open for T3.4–T3.5) |
 | M1 Core API (v0.2) | T9–T18 | 7 / 10 (T9, T10, T11, T13, T14, T15, T17; T12 open only for T12.5, T16 only for ReadTheDocs publishing) |
-| M2 Analysis (v0.3) | T19–T34 | 0 / 16 |
+| M2 Analysis (v0.3) | T19–T34 | 1 / 16 (T20; started before the T18 review) |
 | M3 Release (v1.0) | T35–T39 | 0 / 5 |
 
 Six local branches, stacked, not pushed:
@@ -53,7 +53,7 @@ Still open in M0: T1.4b (name maintainers), T3.4 badge and T3.5 branch protectio
 | F5 Reference | T11 | Done: `rereference` (point, median, border, high_coherence, area, auto) |
 | F6 Correct | T13 | Done: `correct` (product layers, external troposphere) |
 | F7 Geometry | T12 | DISP-S1 done (`open_static`, `enu_to_los`); DISP-NISAR waits for a DISP-NI-STATIC granule (T12.5) |
-| F8 Time series | T20 | On branch `timeseries_fitting` |
+| F8 Time series | T20 | Done: `fit_trajectory`, `Trajectory`, `predict_trajectory` |
 | F9 Spatial models | T19, T24, T33 | Not started |
 | F10 GNSS | T25 | Not started |
 | F11 Multi-frame | T36 | Not started |
@@ -62,7 +62,7 @@ Still open in M0: T1.4b (name maintainers), T3.4 badge and T3.5 branch protectio
 | F14 CLI | T15 | Done: `info`, `stack`, `export`, `geometry`, `search`, `virtual` |
 | F15 Plate motion | T13.5 | Done: `plate_motion_los`, `remove_plate_motion` (ITRF2014-PMM) |
 | F16 Search | T4.5 | Exists, S1 only (`download.py`) |
-| S1 Colored-noise velocity | T20, T21, T22, T23 | OLS only, on branch |
+| S1 Colored-noise velocity | T20, T21, T22, T23 | White-noise OLS done (T20); colored noise not started |
 | S2 Downsampling | T26, T27, T28, T29 | Not started |
 | S3 Temporal denoising | T30, T31 | Prototype outside repo (`00_tools/tests/temporal_denoising`) |
 | S4 Residual analysis | T32 | Residual statistics on branch |
@@ -109,7 +109,7 @@ Still open in M0: T1.4b (name maintainers), T3.4 badge and T3.5 branch protectio
 | `accessor.py`, `_history.py`, `units.py`, `validate.py` | API rules | `.disp` accessor, operation history, unit conversion, validation | — |
 | `config.py` | API rules | `donfig` settings, `DISP_XR_*` overrides | — |
 | `cli/__init__.py` | F14, F16 | `disp_xr` commands wrapping library functions | T15 |
-| `timeseries/` | F8, S1, S4 | From `timeseries_fitting`; jax optional | T20, T32 |
+| `timeseries/` | F8, S1, S4 | `trajectory.py` (`fit_trajectory`), design matrix, legacy `fit_timeseries_block`; jax optional | T20, T32 |
 | `utils.py` | — | Deprecated aliases only | T38 |
 | `quality_metrics.py`, `io.py`, `mintpy.py`, `static_layers.py`, `download.py` | — | Deprecated aliases | T38 |
 | `log/` | Infrastructure | Unchanged | — |
@@ -161,6 +161,7 @@ Still open in M0: T1.4b (name maintainers), T3.4 badge and T3.5 branch protectio
 | Date | Trigger | Changes |
 | --- | --- | --- |
 | 2026-09-30 | First index | Created from `specs.md`, `todo.md`, `code_review.md` and the source on `main` |
+| 2026-10-02 | T20 finished (M2 started before the T18 review, at the user's request) | `fit_trajectory`, `Trajectory`, `predict_trajectory`; hybrid grouped/batched solver; branch bug fixed (step and postseismic onsets); threadpoolctl dependency; benchmark and velocity gallery example |
 | 2026-10-02 | T18 prepared | `api_review.md` (7 open questions), `try-it.md` (guide for Cal/Val users), `api_policy.md` draft, `.github/release.yml`; private parameter out of `to_geotiff`; deprecated names out of `__all__`. Waiting: users, tags (`v0.1.0` on `1c04c1c`), ReadTheDocs |
 | 2026-10-02 | T17.4 finished; T17 done | Interactive gallery page (hvplot, datashader); pixi `interactive` feature in `docs` and `dev`; test that core imports neither |
 | 2026-10-02 | T16.1–T16.5 finished | mkdocs site (pages, API reference, 4 executed gallery examples, Development section), strict docs CI job, `.readthedocs.yaml`; `disp_xr.tutorial`; `to_geotiff` takes a Dataset and tags full provenance, `--format cog`; provenance of reopened stores fixed; CHANGELOG brought up to date; publishing on ReadTheDocs waits for a connected account |

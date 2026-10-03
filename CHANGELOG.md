@@ -28,6 +28,9 @@ All notable changes to disp-xr. The format follows
 - `rechunk` and a `native` chunk preset; `disp_xr.tutorial.make_disp_stack`
   for synthetic granules.
 - Documentation site (mkdocs) with a gallery of executed examples.
+- `fit_trajectory` with `Trajectory` terms (polynomial, seasonal, steps,
+  postseismic log/exp) and `predict_trajectory`: velocity, amplitudes and
+  their white-noise sigmas for every pixel.
 
 ### Changed
 
@@ -51,6 +54,8 @@ All notable changes to disp-xr. The format follows
 - `fit_timeseries_block` fitted each chunk's epochs separately when time was
   split across chunks, and failed on `open_disp` output.
 - Re-exporting a store split its `input_granules` list into characters.
+- Trajectory steps and postseismic terms never fired: their onsets were
+  compared in absolute years with time relative to the reference.
 
 ## [0.1.0] - Unreleased
 

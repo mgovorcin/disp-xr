@@ -73,6 +73,7 @@ nav:
       - Quality layers and masking: gallery/quality_masks.py
       - Exporting results: gallery/export.py
       - Chunks for maps and time series: gallery/chunking.py
+      - Velocity from a trajectory fit: gallery/velocity.py
       - Interactive browsing of a full frame: gallery/interactive.py
   - API reference:
       - Overview: api/index.md

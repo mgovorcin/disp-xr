@@ -5,7 +5,11 @@ from typing import Any, Dict, List, Optional
 import numpy as np
 from scipy.special import factorial
 
-from ._datetime import _date_str_to_decimal_year, _dates_to_decimal_years
+from ._datetime import (
+    _date_str_to_decimal_year,
+    _dates_to_decimal_years,
+    _decimal_year,
+)
 
 
 class DesignMatrixBuilder:
@@ -15,7 +19,13 @@ class DesignMatrixBuilder:
         self.dates = dates
         self.reference_index = reference_index
         self.time_years = _dates_to_decimal_years(dates, reference_index)
+        # Onsets are absolute dates; time_years is relative to the reference.
+        self._reference_year = _decimal_year(dates[reference_index])
         self._cache: dict[str, Any] = {}
+
+    def _relative(self, date: str) -> float:
+        """Return ``date`` in years after the reference date."""
+        return _date_str_to_decimal_year(date) - self._reference_year
 
     def add_polynomial_terms(self, degree: int) -> np.ndarray:
         """Add polynomial terms with factorial normalization."""
@@ -66,8 +76,7 @@ class DesignMatrixBuilder:
 
         columns = []
         for step_date in step_dates:
-            step_time = _date_str_to_decimal_year(step_date)
-            step_relative = step_time - self.time_years[self.reference_index]
+            step_relative = self._relative(step_date)
             columns.append((self.time_years >= step_relative).astype(float))
 
         return np.column_stack(columns)
@@ -81,10 +90,7 @@ class DesignMatrixBuilder:
 
         columns = []
         for onset_date, char_times in exponential_terms.items():
-            onset_time = (
-                _date_str_to_decimal_year(onset_date)
-                - self.time_years[self.reference_index]
-            )
+            onset_time = self._relative(onset_date)
             for tau_days in char_times:
                 if tau_days <= 0:
                     raise ValueError(
@@ -108,10 +114,7 @@ class DesignMatrixBuilder:
 
         columns = []
         for onset_date, char_times in logarithmic_terms.items():
-            onset_time = (
-                _date_str_to_decimal_year(onset_date)
-                - self.time_years[self.reference_index]
-            )
+            onset_time = self._relative(onset_date)
             for tau_days in char_times:
                 if tau_days <= 0:
                     raise ValueError(
@@ -259,12 +262,12 @@ def get_coefficient_names(
     # Exponential decay terms
     for onset_date, char_times in exponential_terms.items():
         for tau_days in char_times:
-            names.append(f"exp_decay_{onset_date}_tau{tau_days}d")
+            names.append(f"postseismic_exp_{onset_date}_tau{tau_days}d")
 
     # Logarithmic terms
     for onset_date, char_times in logarithmic_terms.items():
         for tau_days in char_times:
-            names.append(f"log_term_{onset_date}_tau{tau_days}d")
+            names.append(f"postseismic_log_{onset_date}_tau{tau_days}d")
 
     return names
 
@@ -335,9 +338,9 @@ def infer_parameters_from_names(coefficient_names: List[str]) -> Dict[str, Any]:
                 step_dates.append(step_date)
 
         # Check exponential decay terms
-        elif name.startswith("exp_decay_"):
-            # Pattern: exp_decay_{onset_date}_tau{tau_days}d
-            match = re.match(r"exp_decay_(.+)_tau(\d+)d", name)
+        elif name.startswith(("postseismic_exp_", "exp_decay_")):
+            # postseismic_exp_{onset}_tau{days}d; exp_decay_ is the old name.
+            match = re.match(r"(?:postseismic_exp|exp_decay)_(.+)_tau(\d+)d", name)
             if match:
                 onset_date = match.group(1)
                 tau_days = int(match.group(2))
@@ -347,9 +350,9 @@ def infer_parameters_from_names(coefficient_names: List[str]) -> Dict[str, Any]:
                     exponential_terms[onset_date].append(tau_days)
 
         # Check logarithmic terms
-        elif name.startswith("log_term_"):
-            # Pattern: log_term_{onset_date}_tau{tau_days}d
-            match = re.match(r"log_term_(.+)_tau(\d+)d", name)
+        elif name.startswith(("postseismic_log_", "log_term_")):
+            # postseismic_log_{onset}_tau{days}d; log_term_ is the old name.
+            match = re.match(r"(?:postseismic_log|log_term)_(.+)_tau(\d+)d", name)
             if match:
                 onset_date = match.group(1)
                 tau_days = int(match.group(2))

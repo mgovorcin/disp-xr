@@ -29,6 +29,13 @@ def _dates_to_decimal_years(dates: np.ndarray, ref_idx: int) -> np.ndarray:
     return decimal_years - decimal_years[ref_idx]
 
 
+def _decimal_year(date) -> float:
+    """Return a datetime64 or datetime as a decimal year."""
+    if isinstance(date, np.datetime64):
+        return _datetime64_to_decimal_year(date)
+    return _datetime_to_decimal_year(date)
+
+
 def _datetime64_to_decimal_year(date: np.datetime64) -> float:
     """Convert numpy datetime64 to decimal year."""
     try:
@@ -54,21 +61,7 @@ def _datetime_to_decimal_year(dt: datetime) -> float:
 
 
 def _date_str_to_decimal_year(date_str: str) -> float:
-    """Convert date string (YYYYMMDD format) to decimal year.
+    """Convert a date string (``YYYYMMDD``, ``YYYY-MM-DD``, ...) to a decimal year."""
+    import pandas as pd
 
-    Parameters
-    ----------
-    date_str : str
-        Date string in YYYYMMDD format
-
-    Returns
-    -------
-    float
-        Decimal year representation
-
-    """
-    try:
-        dt = datetime.strptime(date_str, "%Y%m%d")
-        return _datetime_to_decimal_year(dt)
-    except ValueError:
-        raise ValueError(f"Invalid date string '{date_str}'. Expected YYYYMMDD format")
+    return _datetime_to_decimal_year(pd.Timestamp(date_str).to_pydatetime())

@@ -320,7 +320,7 @@ def fit_timeseries_3d_jax(
         weights_2d = None
 
     # Fit using 2D JAX function
-    (coeffs_2d, mse_1d, Qxx_3d, residuals_2d, n_valid_1d, rank_1d) = (
+    coeffs_2d, mse_1d, Qxx_3d, residuals_2d, n_valid_1d, rank_1d = (
         fit_timeseries_2d_jax(A_jax, data_2d, weights_2d, min_obs)
     )
 
