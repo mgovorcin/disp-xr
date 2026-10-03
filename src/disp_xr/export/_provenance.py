@@ -56,13 +56,15 @@ def _serializable(value: Any) -> Any:
     return value
 
 
-def with_provenance(ds: xr.Dataset) -> xr.Dataset:
+def with_provenance(ds: xr.Dataset, *, json_native: bool = False) -> xr.Dataset:
     """Return ``ds`` with provenance, CF flag and grid-mapping attributes set.
 
-    List and dict attributes become JSON strings, which every format can store.
+    List and dict attributes become JSON strings, which every format can
+    store, unless ``json_native``: Zarr attributes are JSON, and readers such
+    as bowser expect lists and objects there, not strings.
     """
     out = ds.copy()
-    out.attrs = {k: _serializable(v) for k, v in ds.attrs.items()}
+    out.attrs = {k: v if json_native else _serializable(v) for k, v in ds.attrs.items()}
     out.attrs.update(provenance_attrs(ds))
     for name, var in out.data_vars.items():
         attrs = dict(var.attrs)

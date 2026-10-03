@@ -30,7 +30,7 @@ def run(*args, ok=True):
         (None, "Xarray tools for OPERA DISP products"),
         ("info", "Summarize the DISP granules"),
         ("stack", "fixed order of the PRD"),
-        ("export", "Cloud Optimized GeoTIFF, Zarr, NetCDF or MintPy"),
+        ("export", "Cloud Optimized GeoTIFF, Zarr, GeoZarr, NetCDF or MintPy"),
         ("geometry", "static layers"),
         ("search", "Find DISP granules"),
         ("virtual", "granule references in Icechunk"),

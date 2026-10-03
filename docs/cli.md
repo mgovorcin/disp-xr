@@ -13,7 +13,7 @@ disp_xr stack PATHS... --out out.zarr|out.nc
     [--reference auto|point|median|border|high_coherence|none]
     [--row R --col C | --lon X --lat Y] [--start DATE --end DATE]
     [--preset timeseries|maps] [--overwrite]
-disp_xr export PATHS... --format cog|geotiff|zarr|netcdf|mintpy --out OUT
+disp_xr export PATHS... --format cog|geotiff|zarr|geozarr|netcdf|mintpy --out OUT
     [--layer displacement] [--epoch DATE | --per-epoch] [--static-dir DIR] [--overwrite]
 disp_xr geometry PATHS... --out static.zarr [--static-dir DIR] [--no-download]
 disp_xr search --frame-id F [--start DATE] [--end DATE] [--product DISP-S1|DISP-NISAR]
@@ -28,6 +28,7 @@ disp_xr info granules/                                  # what is there
 disp_xr stack granules/ --out frame.zarr --mask strict  # correct, mask, chain, reference
 disp_xr export frame.zarr --format cog --out last.tif   # Cloud Optimized GeoTIFF
 disp_xr export frame.zarr --format mintpy --out mintpy/
+disp_xr export frame.zarr --format geozarr --out view.zarr  # bowser opens it
 ```
 
 - `stack` runs the steps in the fixed order: corrections and quality mask per

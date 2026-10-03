@@ -68,6 +68,7 @@ nav:
   - Concepts: concepts.md
   - Choosing a velocity method: velocity-methods.md
   - Command line: cli.md
+  - View in bowser: bowser.md
   - Try it on your frame: try-it.md
   - Gallery:
       - Quick look at a frame: gallery/quicklook.py

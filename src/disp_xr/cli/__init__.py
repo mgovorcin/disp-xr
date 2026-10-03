@@ -22,7 +22,7 @@ from disp_xr.log.logging import setup_logging
 
 F = TypeVar("F", bound=Callable[..., Any])
 
-FORMATS = ("cog", "geotiff", "zarr", "netcdf", "mintpy")
+FORMATS = ("cog", "geotiff", "zarr", "geozarr", "netcdf", "mintpy")
 MASKS = ("recommended", "strict", "none")
 REFERENCES = ("auto", "point", "median", "border", "high_coherence", "none")
 
@@ -291,7 +291,27 @@ def stack(
 @click.option(
     "--static-dir",
     type=click.Path(exists=True, file_okay=False, path_type=Path),
-    help="Local static layers to add as MintPy geometry (mintpy).",
+    help="Local static layers: MintPy geometry (mintpy), LOS attributes (geozarr).",
+)
+@click.option(
+    "--profile",
+    type=click.Choice(["bowser", "standard"]),
+    default="bowser",
+    show_default=True,
+    help="GeoZarr flavor: ready for bowser, or the plain pyramid (geozarr).",
+)
+@click.option(
+    "--factors",
+    default="",
+    help="Comma-separated analysis levels, e.g. 33,67,333 (geozarr).",
+)
+@click.option("--flat", is_flag=True, help="One group, no pyramid (geozarr).")
+@click.option(
+    "--look-side",
+    type=click.Choice(["right", "left"]),
+    default="right",
+    show_default=True,
+    help="Radar look direction for the LOS heading (geozarr).",
 )
 @click.option("--overwrite", is_flag=True, help="Replace an existing output.")
 @_frame
@@ -306,11 +326,18 @@ def export(
     per_epoch: bool,
     preset: str,
     static_dir: Optional[Path],
+    profile: str,
+    factors: str,
+    flat: bool,
+    look_side: str,
     overwrite: bool,
     frame_id: Optional[int],
     min_version: Optional[str],
 ) -> None:
-    """Write a stack to Cloud Optimized GeoTIFF, Zarr, NetCDF or MintPy.
+    """Write a stack to Cloud Optimized GeoTIFF, Zarr, GeoZarr, NetCDF or MintPy.
+
+    ``--format geozarr`` writes a multiscale GeoZarr store; with the default
+    ``--profile bowser``, ``bowser run --stack-file OUT.zarr`` opens it.
 
     PATHS is a store written by ``disp_xr stack``, or DISP granules, which are
     chained without corrections, masking or re-referencing (use ``stack``
@@ -335,6 +362,27 @@ def export(
         )
         files = dxr.to_mintpy(ds, out, static=static, overwrite=overwrite)
         click.echo(f"Wrote {', '.join(str(p) for p in files.values())}")
+    elif fmt == "geozarr":
+        if out.suffix != ".zarr":
+            raise ValueError(f"--format geozarr writes a .zarr store, not {out.name!r}")
+        if out.exists() and not overwrite:
+            raise FileExistsError(f"{out} exists; pass --overwrite to replace it")
+        static = (
+            dxr.open_static(ds, static_dir=static_dir, download=False)
+            if static_dir is not None
+            else None
+        )
+        dxr.to_geozarr(
+            ds,
+            out,
+            profile=profile,  # type: ignore[arg-type]
+            pyramid=not flat,
+            factors=[int(f) for f in factors.split(",") if f.strip()],
+            static=static,
+            look_side=look_side,  # type: ignore[arg-type]
+            mode="w",
+        )
+        click.echo(f"Wrote {out}")
     else:
         suffix = ".zarr" if fmt == "zarr" else ".nc"
         if out.suffix != suffix:
