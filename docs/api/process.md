@@ -72,6 +72,12 @@ after. See [Concepts](../concepts.md).
 
 ::: disp_xr.NoiseResult
 
+## Downsampling
+
+::: disp_xr.downsample
+
+::: disp_xr.to_points
+
 ## Units, geometry and checks
 
 ::: disp_xr.to_units

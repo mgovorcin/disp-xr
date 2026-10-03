@@ -47,6 +47,9 @@ All notable changes to disp-xr. The format follows
   similarity, temporal coherence and inversion residuals (cycle jumps in
   2 pi down-weight, never exclude); `residual_cycle_histogram`,
   `network_degree`.
+- `downsample` (weighted mean or median to a regular coarse grid, with cell
+  sigma, effective count, valid fraction and quality; mode or any for masks)
+  and `to_points`.
 
 ### Changed
 

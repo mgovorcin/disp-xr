@@ -9,6 +9,7 @@ from ._chunks import rechunk
 from ._version import __version__
 from .config import config
 from .corrections import correct, remove_plate_motion
+from .downsample import downsample, to_points
 from .export import (
     open_icechunk,
     to_geotiff,
@@ -49,6 +50,7 @@ __all__ = [
     "build_virtual_frame",
     "config",
     "correct",
+    "downsample",
     "enu_to_los",
     "find_products",
     "fit_noise",
@@ -71,6 +73,7 @@ __all__ = [
     "to_icechunk",
     "to_mintpy",
     "to_netcdf",
+    "to_points",
     "to_zarr",
     "to_units",
     "valid_mask",

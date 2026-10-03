@@ -108,3 +108,14 @@ Per 256 x 256 tile on one core (`_gls_block`): 0.7 s with no NaNs, 0.9 s with
   noise step before); and a tile's temporaries reached about 1 GB, so dask's
   default of one thread per core (224) exhausted memory. Pixels are now solved
   in batches of 8,192.
+
+## `bench_downsample.py` (plan task T27.6)
+
+`downsample` of a 100 x 1000 x 1000 stack (random values, 10% NaNs,
+per-epoch weights) to factor 33, dask limited to 32 threads, including the
+generation of the random data. Run on 2026-10-03, load 151:
+
+| stat | time |
+|---|---:|
+| wmean | 16.3 s |
+| wmedian | 28.8 s |

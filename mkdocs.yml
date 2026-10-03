@@ -73,6 +73,7 @@ nav:
       - Quick look at a frame: gallery/quicklook.py
       - Quality layers and masking: gallery/quality_masks.py
       - Quality weights: gallery/quality_weights.py
+      - Downsampling with quality weights: gallery/downsample.py
       - Exporting results: gallery/export.py
       - Chunks for maps and time series: gallery/chunking.py
       - Velocity from a trajectory fit: gallery/velocity.py
