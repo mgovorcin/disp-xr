@@ -35,6 +35,17 @@ after. See [Concepts](../concepts.md).
 
 ::: disp_xr.predict_trajectory
 
+## Colored noise (one series)
+
+::: disp_xr.timeseries.noise
+    options:
+      members: false
+      show_root_heading: false
+
+::: disp_xr.fit_noise
+
+::: disp_xr.NoiseResult
+
 ## Units, geometry and checks
 
 ::: disp_xr.to_units

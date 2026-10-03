@@ -28,13 +28,20 @@ from .stack import (  # noqa: F401  (combine_disp_product is deprecated)
     combine_disp_product,
     stack_disp,
 )
-from .timeseries import Trajectory, fit_trajectory, predict_trajectory
+from .timeseries import (
+    NoiseResult,
+    Trajectory,
+    fit_noise,
+    fit_trajectory,
+    predict_trajectory,
+)
 from .units import to_units
 from .validate import validate_disp
 from .virtual import build_virtual_frame, open_virtual, validate_virtual
 
 __all__ = [
     "NaNPolicy",
+    "NoiseResult",
     "Trajectory",
     "__version__",
     "build_virtual_frame",
@@ -42,6 +49,7 @@ __all__ = [
     "correct",
     "enu_to_los",
     "find_products",
+    "fit_noise",
     "fit_trajectory",
     "mask",
     "open_disp",

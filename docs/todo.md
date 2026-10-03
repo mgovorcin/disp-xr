@@ -340,14 +340,14 @@ Goal: the Cal/Val science features S1–S4, fit/predict estimators and the GNSS 
 
 ### T21. Colored-noise estimation for a single series
 
-- [ ] **T21. Colored-noise estimation for a single series** — Depends on: T20 · PRD: S1
+- [x] **T21. Colored-noise estimation for a single series** — Depends on: T20 · PRD: S1
   - Context: port geepers `trend.py` into `timeseries/noise.py` (the PRD decided the estimator lives in disp-xr). The pieces are `_powerlaw_covariance` and `_fractional_diff_coeffs` (Hosking 1981), the `_nll_core` GLS-inside-likelihood, the models WN, FNWN, PLWN (free kappa) and RWFNWN with softmax mixture weights, and RMLE. Cost is O(n³) per likelihood evaluation, so this is for one series or one group.
   - Done when: `fit_noise(times, y, A, model="PLWN")` reproduces geepers `estimate_trend` on shared test series within tolerance (velocity within 1%, sigma within 5%), and synthetic power-law noise recovers kappa.
-  - [ ] T21.1 Port the covariance builders and fractional-difference coefficients, with unit tests on known small cases.
-  - [ ] T21.2 Port the negative log-likelihood with GLS for the deterministic part, including RMLE.
-  - [ ] T21.3 Implement the model registry (WN, FNWN, PLWN, RWFNWN) with parameter transforms and bounds, optimized with `scipy.optimize.minimize`.
-  - [ ] T21.4 Return a `NoiseResult` dataclass: parameters, sigmas, kappa, noise amplitudes, log-likelihood, AIC, BIC.
-  - [ ] T21.5 Cross-validate against geepers on 5 GNSS-like series (geepers is a test-only dependency) and on `power_law_noise` synthetics.
+  - [x] T21.1 Port the covariance builders and fractional-difference coefficients, with unit tests on known small cases. Done in `timeseries/noise.py` (ported from geepers `trend.py` at `d542178`, Apache-2.0: header, `LICENSES/geepers-*`, `THIRD_PARTY_NOTICES.md`); unit tests: white, random walk (`min(i, j) + 1`), flicker symmetry and positive definiteness, d = 0.5 coefficients.
+  - [x] T21.2 Port the negative log-likelihood with GLS for the deterministic part, including RMLE. Done (`_nll_core`, profiled variance, RMLE term).
+  - [x] T21.3 Implement the model registry (WN, FNWN, PLWN, RWFNWN) with parameter transforms and bounds, optimized with `scipy.optimize.minimize`. Done: WN, FNWN, PLWN (kappa in [-3, 0.01], logit white fraction), RWFNWN (softmax weights), geepers start grids polished with Nelder-Mead; also `method="whittle"` for PLWN. The PL (power law only) model was not ported.
+  - [x] T21.4 Return a `NoiseResult` dataclass: parameters, sigmas, kappa, noise amplitudes, log-likelihood, AIC, BIC. Done: `NoiseResult` with names, coefficients and sigmas (`parameters`, `velocity`, `velocity_sigma`), kappa, amplitudes per component, log-likelihood, AIC, BIC, residuals and fitted values; `dxr.fit_noise`.
+  - [x] T21.5 Cross-validate against geepers on 5 GNSS-like series (geepers is a test-only dependency) and on `power_law_noise` synthetics. Done with a committed reference instead of a test dependency: `tests/data/make_noise_reference.py` runs geepers on 5 series (daily GNSS-like with flicker or random walk, 12-day InSAR-like, with and without gaps) and writes `noise_reference.json`. Velocities agree within 0.3%, sigmas within 0.8%, kappa within 0.003 (all 20 series and model pairs); the Whittle path matches geepers' Whittle. Kappa is recovered on synthetic power-law noise (-0.5, -1, -1.5, within 0.25). Found: Whittle is biased on short series (200 epochs: kappa -1.59 against exact -1.04, sigma 80% larger), which matters for T22.
 
 ### T22. Whittle and MIDAS, vectorized over pixels
 

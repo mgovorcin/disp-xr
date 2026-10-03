@@ -31,6 +31,9 @@ All notable changes to disp-xr. The format follows
 - `fit_trajectory` with `Trajectory` terms (polynomial, seasonal, steps,
   postseismic log/exp) and `predict_trajectory`: velocity, amplitudes and
   their white-noise sigmas for every pixel.
+- `fit_noise`: colored-noise trajectory fit for one series (WN, FNWN, PLWN,
+  RWFNWN by restricted maximum likelihood, or Whittle), ported from geepers;
+  returns realistic velocity sigmas, kappa, noise amplitudes, AIC and BIC.
 
 ### Changed
 

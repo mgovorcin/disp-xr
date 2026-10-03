@@ -28,3 +28,24 @@ Every ported file carries a header naming its source. Ported code, by disp-xr fi
 
 New ports name the opera-utils commit they were taken from (`dff4b45` for the
 ports planned in `docs/porting.md`). Add a row here in the same change as the port.
+
+## geepers
+
+disp-xr does not depend on [geepers](https://github.com/opera-adt/geepers). Its
+colored-noise trend estimator is ported into disp-xr (the PRD decided the S1
+estimator lives here). geepers is licensed under the Apache License 2.0; the
+license text is in [`LICENSES/geepers-Apache-2.0.txt`](LICENSES/geepers-Apache-2.0.txt)
+and its NOTICE, which Section 4(d) requires with any derivative work, in
+[`LICENSES/geepers-NOTICE.txt`](LICENSES/geepers-NOTICE.txt).
+
+Copyright (c) 2025-2026 California Institute of Technology ("Caltech"). U.S.
+Government sponsorship acknowledged.
+
+The ported file keeps the geepers SPDX header and names its source and changes.
+
+| disp-xr file | Ported names | geepers source | Source commit |
+| --- | --- | --- | --- |
+| `src/disp_xr/timeseries/noise.py` | `_fractional_diff_coeffs`, `_powerlaw_covariance`, `_softmax_weights`, `_nll_core`, the PLWN, FNWN, RWFNWN and WN likelihood searches, the Whittle power-law estimate, the final GLS solve of `estimate_trend` | `src/geepers/trend.py` | `d542178` |
+
+`tests/data/noise_reference.json` holds geepers results on synthetic series,
+written by `tests/data/make_noise_reference.py` in a geepers environment.
