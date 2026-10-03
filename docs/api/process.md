@@ -35,6 +35,15 @@ after. See [Concepts](../concepts.md).
 
 ::: disp_xr.predict_trajectory
 
+## Velocity for every pixel
+
+::: disp_xr.timeseries.velocity
+    options:
+      members: false
+      show_root_heading: false
+
+::: disp_xr.fit_velocity
+
 ## Colored noise (one series)
 
 ::: disp_xr.timeseries.noise

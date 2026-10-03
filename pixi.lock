@@ -7616,8 +7616,8 @@ packages:
   requires_python: '>=3.11'
 - pypi: ./
   name: disp-xr
-  version: 0.1.0.post1.dev27+g75523e26d.d20261003
-  sha256: f9c28f65232f4f565ebd0f2dd804019ddc183fc5140e2d8f670713d82dbe7688
+  version: 0.1.0.post1.dev29+g958134ad5.d20261003
+  sha256: 88b1fd02a7253914ba237b3072b275e455e1fd3bc32442b54c45bb1caab88181
   requires_dist:
   - click>=7.0
   - dask
@@ -7628,6 +7628,7 @@ packages:
   - h5netcdf
   - h5py
   - netcdf4
+  - numbagg
   - numpy
   - packaging
   - pandas

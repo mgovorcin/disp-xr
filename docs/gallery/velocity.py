@@ -18,7 +18,7 @@ from disp_xr.tutorial import make_disp_stack
 
 folder = Path(tempfile.mkdtemp()) / "granules"
 truth = make_disp_stack(
-    folder, "three_ministacks", shape=(64, 64), epochs_per_ministack=30
+    folder, "three_ministacks", shape=(64, 64), epochs_per_ministack=70
 )
 ds = dxr.open_disp(folder).disp.mask("recommended").disp.stack()
 print(
@@ -42,8 +42,8 @@ print(list(fit.data_vars))
 # %% [markdown]
 # ## Velocity and its uncertainty
 #
-# Sigmas assume white noise (plan tasks T21 to T23 add colored noise, which
-# makes them larger and more realistic).
+# These sigmas assume white noise; the next section compares them with
+# colored-noise and robust estimates.
 
 # %%
 fig, (left, right) = plt.subplots(1, 2, figsize=(11, 4.2), layout="constrained")
@@ -99,3 +99,22 @@ ax.set_title(f"row {row}, col {col}", loc="left")
 plt.show()
 residual = ds.displacement[:, row, col] - model[:, row, col]
 print(f"residual RMS: {float(np.sqrt((residual**2).mean())) * 1000:.2f} mm")
+
+# %% [markdown]
+# ## Colored-noise and robust sigmas
+#
+# `fit_velocity` estimates the noise of every pixel. `"whittle"` keeps the
+# OLS velocity and estimates power-law plus white noise from the periodogram
+# of the residuals (reliable from about 200 epochs); `"midas"` takes the
+# median of one-year slopes, with a deliberately conservative sigma. The
+# synthetic noise is white, so OLS and Whittle should agree and Whittle should
+# find kappa near 0; on real InSAR series the white-noise sigma is several
+# times too small.
+
+# %%
+for method in ("ols", "whittle", "midas"):
+    result = dxr.fit_velocity(ds, method, terms=terms).compute()
+    sigma = float(result.velocity_sigma.median()) * 1000
+    print(f"{method:>8}: median velocity sigma {sigma:.2f} mm/yr")
+whittle = dxr.fit_velocity(ds, "whittle", terms=terms).compute()
+print(f"median kappa: {float(whittle.kappa.median()):.2f} (white noise is 0)")

@@ -15,6 +15,7 @@ from .estimate_fit import (
 )
 from .noise import NoiseResult, fit_noise
 from .trajectory import Trajectory, fit_trajectory, predict_trajectory
+from .velocity import fit_velocity
 
 __all__ = [
     "NoiseResult",
@@ -24,6 +25,7 @@ __all__ = [
     "fit_noise",
     "fit_timeseries_block",
     "fit_trajectory",
+    "fit_velocity",
     "get_coefficient_names",
     "get_predicted",
     "get_residuals_analysis",
