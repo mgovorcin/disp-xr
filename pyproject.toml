@@ -33,6 +33,8 @@ dependencies = [
   "h5netcdf",
   "h5py",
   "netcdf4",
+  # Fast NaN-aware reductions (MIDAS medians): about 250x np.nanmedian.
+  "numbagg",
   "numpy",
   "packaging",
   "pandas",

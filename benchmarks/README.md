@@ -36,3 +36,43 @@ Run on 2026-10-02, Aurora node, 224 cores, load 62:
 
 Next optimizations, not done: a no-NaN fast path for whole tiles, and
 GIL-free kernels (BLAS `matmul` in place of `einsum`, or numba).
+
+## `bench_velocity.py` (plan task T22.4)
+
+`fit_velocity` on a 1000 x 1000 x 200 float32 stack (12-day epochs, flicker
+plus white noise, 2% NaNs). One tile: 256 x 256 on one core. Whole stack: 16
+tiles, dask threaded scheduler. Run on 2026-10-03, load 76 (the Whittle row
+overlapped a test run):
+
+| method | one tile (s) | whole stack (s) |
+|---|---:|---:|
+| ols | 2.0 | 52.8 |
+| midas | 0.6 | 4.9 |
+| whittle | 6.6 | 186.1 |
+
+- MIDAS uses numbagg's NaN median, about 250x faster than `np.nanmedian`
+  (the first version took 16.5 s per tile and 307 s for the stack). numbagg
+  compiles on first use (about 10 s), excluded above.
+- Whittle scores candidates with matrix products: a coarse grid shared by all
+  pixels, then finer grids shared by the pixels of each coarse cell, with each
+  lattice point's spectrum computed once. A per-pixel local grid took 83 s per
+  tile.
+- Like `fit_trajectory`, OLS and Whittle hold the GIL, so threads scale
+  poorly; use a dask distributed cluster with worker processes for frames.
+
+## `whittle_bias.py` (plan task T22)
+
+Whittle against exact RMLE (`fit_noise`, PLWN) on 12-day series of a trend,
+flicker (kappa -1) and white noise, 30 realizations per length:
+
+| epochs | years | kappa exact | kappa Whittle | sigma Whittle / exact | velocity error / sigma, exact | same, Whittle |
+|---:|---:|---:|---:|---:|---:|---:|
+| 60 | 2.0 | -1.03 | -0.19 | 0.59 | 1.06 | 1.86 |
+| 100 | 3.3 | -0.92 | -0.75 | 0.93 | 1.21 | 1.47 |
+| 200 | 6.6 | -0.94 | -0.81 | 0.99 | 0.94 | 1.01 |
+| 400 | 13.1 | -1.04 | -1.00 | 1.01 | 0.84 | 0.81 |
+| 800 | 26.3 | -0.93 | -0.94 | 0.99 | 0.90 | 0.94 |
+
+Whittle is reliable from about 200 epochs; below, it underestimates `|kappa|`
+and its sigmas are too small. `fit_velocity(method="whittle")` warns below
+200 epochs.

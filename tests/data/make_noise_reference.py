@@ -1,4 +1,4 @@
-"""Write ``noise_reference.json``: geepers ``estimate_trend`` on five series.
+"""Write ``noise_reference.json``: geepers trend and MIDAS fits of five series.
 
 The reference for ``tests/test_noise.py`` (plan task T21.5). geepers is not a
 disp-xr dependency, so this script runs once in a geepers environment and its
@@ -19,6 +19,7 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+from geepers.midas import midas
 from geepers.trend import estimate_trend
 
 OUT = Path(__file__).with_name("noise_reference.json")
@@ -101,6 +102,20 @@ def main() -> None:
             "velocity": res.velocity,
             "velocity_sigma": res.velocity_uncertainty,
             "kappa": res.kappa,
+        }
+        decimal = np.asarray(
+            [
+                d.year
+                + (d.dayofyear - 1 + d.hour / 24) / (366 if d.is_leap_year else 365)
+                for d in dates
+            ]
+        )
+        mid = midas(decimal, values)
+        fits["MIDAS"] = {
+            "velocity": float(mid.velocity),
+            "velocity_sigma": float(mid.velocity_uncertainty),
+            "outlier_fraction": float(mid.outlier_fraction),
+            "velocity_scatter": float(mid.velocity_scatter),
         }
         out["series"].append(
             {

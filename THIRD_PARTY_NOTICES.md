@@ -45,6 +45,7 @@ The ported file keeps the geepers SPDX header and names its source and changes.
 
 | disp-xr file | Ported names | geepers source | Source commit |
 | --- | --- | --- | --- |
+| `src/disp_xr/timeseries/velocity.py` | MIDAS pair selection (`select_pairs`) and trimming; the Whittle likelihood | `src/geepers/midas.py` (a conversion of Geoff Blewitt's MIDAS code, Copyright (C) 2015), `src/geepers/trend.py` | `d542178` |
 | `src/disp_xr/timeseries/noise.py` | `_fractional_diff_coeffs`, `_powerlaw_covariance`, `_softmax_weights`, `_nll_core`, the PLWN, FNWN, RWFNWN and WN likelihood searches, the Whittle power-law estimate, the final GLS solve of `estimate_trend` | `src/geepers/trend.py` | `d542178` |
 
 `tests/data/noise_reference.json` holds geepers results on synthetic series,

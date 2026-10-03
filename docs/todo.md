@@ -351,13 +351,13 @@ Goal: the Cal/Val science features S1–S4, fit/predict estimators and the GNSS 
 
 ### T22. Whittle and MIDAS, vectorized over pixels
 
-- [ ] **T22. Whittle and MIDAS, vectorized over pixels** — Depends on: T21 · PRD: S1 (fallbacks)
+- [x] **T22. Whittle and MIDAS, vectorized over pixels** — Depends on: T21 · PRD: S1 (fallbacks)
   - Context: geepers has `_whittle_noise_estimate` (frequency-domain likelihood on the periodogram of OLS residuals, O(n log n)) and `midas()` (median of pair slopes, MAD trimming). Both are per series there; here they run on `(n_t, n_px)` arrays.
   - Done when: `fit_velocity(ds, method="whittle" | "midas")` runs per pixel on a full synthetic frame, matches the per-series versions on samples, and is benchmarked.
-  - [ ] T22.1 Vectorize Whittle: put residuals on the regular epoch grid with gaps zero-filled plus a mask, take a batched FFT, and minimize the likelihood per pixel. Start with a vectorized grid search over kappa, then refine. Follow xrft's spectrum scaling and window-correction conventions.
-  - [ ] T22.2 Vectorize MIDAS: build pair indices once from the times (about one-year separations), compute slopes as array ops, then a masked median and MAD trimming.
-  - [ ] T22.3 Wrap both with `apply_ufunc` and add them to `fit_velocity`.
-  - [ ] T22.4 Add sample-pixel equality tests against T21 and against geepers `midas`, plus benchmarks.
+  - [x] T22.1 Vectorize Whittle: put residuals on the regular epoch grid with gaps zero-filled plus a mask, take a batched FFT, and minimize the likelihood per pixel. Start with a vectorized grid search over kappa, then refine. Follow xrft's spectrum scaling and window-correction conventions. Done in `timeseries/velocity.py`, after a bias study (`benchmarks/whittle_bias.py`): Whittle is reliable from about 200 epochs and biased below (60 epochs: kappa -0.19 for a true -1, sigmas 1.9x overconfident), so `fit_velocity` warns below 200. Gaps are linearly interpolated (as in geepers and `fit_noise`), not zero-filled with a mask, so the vectorized result matches the per-series one. Grid search: a coarse grid shared by all pixels, then finer grids shared per coarse cell, all as matrix products. The velocity sigma is the OLS velocity's under the estimated covariance, from a kappa lookup of the complete record (approximate for gappy pixels; exact grouped GLS is T23).
+  - [x] T22.2 Vectorize MIDAS: build pair indices once from the times (about one-year separations), compute slopes as array ops, then a masked median and MAD trimming. Done: pairs selected once from the stack dates (geepers `select_pairs`, from Blewitt's MIDAS), masked per pixel, numbagg NaN medians (about 250x `np.nanmedian`). Differs from per-series MIDAS only for pixels with NaNs, where a dropped pair is not replaced.
+  - [x] T22.3 Wrap both with `apply_ufunc` and add them to `fit_velocity`. Done as a new `dxr.fit_velocity(ds, method="ols" | "whittle" | "midas")`.
+  - [x] T22.4 Add sample-pixel equality tests against T21 and against geepers `midas`, plus benchmarks. Done: MIDAS equals geepers on the 5 reference series (relative 1e-9); Whittle kappa within 0.02 of `fit_noise(method="whittle")`, velocity sigma within 20% of its GLS sigma; frame tests for all methods; benchmark in `benchmarks/README.md` (1000 x 1000 x 200: MIDAS 4.9 s, Whittle 186 s, OLS 53 s with threads). numbagg is now a declared dependency.
 
 ### T23. Full-frame batched GLS with colored noise
 

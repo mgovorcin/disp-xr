@@ -34,6 +34,9 @@ All notable changes to disp-xr. The format follows
 - `fit_noise`: colored-noise trajectory fit for one series (WN, FNWN, PLWN,
   RWFNWN by restricted maximum likelihood, or Whittle), ported from geepers;
   returns realistic velocity sigmas, kappa, noise amplitudes, AIC and BIC.
+- `fit_velocity(ds, method="ols" | "whittle" | "midas")` for every pixel:
+  OLS, Whittle colored-noise sigmas (reliable from about 200 epochs), or the
+  robust MIDAS estimator.
 
 ### Changed
 

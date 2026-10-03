@@ -33,6 +33,7 @@ from .timeseries import (
     Trajectory,
     fit_noise,
     fit_trajectory,
+    fit_velocity,
     predict_trajectory,
 )
 from .units import to_units
@@ -51,6 +52,7 @@ __all__ = [
     "find_products",
     "fit_noise",
     "fit_trajectory",
+    "fit_velocity",
     "mask",
     "open_disp",
     "open_disp_tree",
