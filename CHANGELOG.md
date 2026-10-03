@@ -40,6 +40,11 @@ All notable changes to disp-xr. The format follows
 - `to_geotiff` accepts a Dataset and a `layer`, and tags the input granules,
   history and package versions.
 
+### Deprecated
+
+- `get_disp_info` and `combine_disp_product` (already warning) are no longer
+  in `disp_xr.__all__`; they stay importable until T38.
+
 ### Fixed
 
 - The command line failed at start-up (logging formatter name).

@@ -3,7 +3,7 @@ from __future__ import annotations
 from io import BytesIO
 from pathlib import Path
 from tempfile import NamedTemporaryFile
-from typing import Any, Dict, NamedTuple, Optional, Tuple, Union
+from typing import Any, Dict, NamedTuple, Tuple, Union
 
 import numpy as np
 import rasterio
@@ -218,7 +218,6 @@ def to_geotiff(
     layer: str = "displacement",
     per_epoch: bool = False,
     compress: str = "DEFLATE",
-    _provenance: Optional[dict] = None,
 ) -> list[Path]:
     """Write a layer as a Cloud Optimized GeoTIFF (COG) with overviews.
 
@@ -258,9 +257,6 @@ def to_geotiff(
     import pandas as pd
     import rioxarray  # noqa: F401  (registers the .rio accessor)
 
-    from .._version import __version__
-    from ..config import config
-
     path = Path(path)
     if isinstance(obj, xr.Dataset):
         if layer not in obj:
@@ -269,7 +265,7 @@ def to_geotiff(
         da = obj[layer]
     else:
         da = obj
-        provenance = _provenance or provenance_attrs(obj)  # type: ignore[arg-type]
+        provenance = provenance_attrs(obj)  # type: ignore[arg-type]
     if da.rio.crs is None:
         raise ValueError("The layer has no CRS; open it with disp_xr.open_disp")
     if per_epoch:
@@ -278,13 +274,25 @@ def to_geotiff(
         written: list[Path] = []
         for t in da["time"].values:
             name = f"{path.stem}_{pd.Timestamp(t):%Y%m%d}{path.suffix or '.tif'}"
-            written += to_geotiff(
-                da.sel(time=t, drop=True),
-                path.with_name(name),
-                compress=compress,
-                _provenance=provenance,
+            written.append(
+                _write_cog(
+                    da.sel(time=t, drop=True),
+                    path.with_name(name),
+                    compress,
+                    provenance,
+                )
             )
         return written
+    return [_write_cog(da, path, compress, provenance)]
+
+
+def _write_cog(
+    da: xr.DataArray, path: Path, compress: str, provenance: dict[str, Any]
+) -> Path:
+    """Write one ``(y, x)`` layer as a COG tagged with ``provenance``."""
+    from .._version import __version__
+    from ..config import config
+
     if da.dims != ("y", "x"):
         raise ValueError(f"A GeoTIFF layer needs (y, x) dims, not {da.dims}")
     if da.nbytes > config.get("max_load_bytes"):
@@ -322,4 +330,4 @@ def to_geotiff(
         rasterio.shutil.copy(staging, path, driver="COG", compress=compress)
     finally:
         staging.unlink(missing_ok=True)
-    return [path]
+    return path

@@ -1,5 +1,20 @@
+# Categories for GitHub's generated release notes (labels on merged PRs).
 changelog:
   exclude:
+    labels: [skip-changelog]
     authors:
       - dependabot
       - pre-commit-ci
+  categories:
+    - title: Breaking changes
+      labels: [breaking]
+    - title: New features
+      labels: [enhancement, feature]
+    - title: Fixes
+      labels: [bug, fix]
+    - title: Performance
+      labels: [performance]
+    - title: Documentation
+      labels: [documentation]
+    - title: Other changes
+      labels: ["*"]

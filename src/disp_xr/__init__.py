@@ -20,10 +20,14 @@ from .export import (
 from .geometry.los import enu_to_los
 from .geometry.static import open_static
 from .open import open_disp, open_disp_tree
-from .product import find_products, get_disp_info
+from .product import find_products, get_disp_info  # noqa: F401  (deprecated)
 from .quality import mask, quality_summary, valid_mask
 from .reference import rereference
-from .stack import NaNPolicy, combine_disp_product, stack_disp
+from .stack import (  # noqa: F401  (combine_disp_product is deprecated)
+    NaNPolicy,
+    combine_disp_product,
+    stack_disp,
+)
 from .units import to_units
 from .validate import validate_disp
 from .virtual import build_virtual_frame, open_virtual, validate_virtual
@@ -32,12 +36,10 @@ __all__ = [
     "NaNPolicy",
     "__version__",
     "build_virtual_frame",
-    "combine_disp_product",
     "config",
     "correct",
     "enu_to_los",
     "find_products",
-    "get_disp_info",
     "mask",
     "open_disp",
     "open_disp_tree",
