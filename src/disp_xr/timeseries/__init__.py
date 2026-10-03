@@ -13,12 +13,15 @@ from .estimate_fit import (
     get_predicted,
     sincos_to_amplitude_phase,
 )
+from .noise import NoiseResult, fit_noise
 from .trajectory import Trajectory, fit_trajectory, predict_trajectory
 
 __all__ = [
+    "NoiseResult",
     "Trajectory",
     "create_design_matrix",
     "fit_timeseries",
+    "fit_noise",
     "fit_timeseries_block",
     "fit_trajectory",
     "get_coefficient_names",
