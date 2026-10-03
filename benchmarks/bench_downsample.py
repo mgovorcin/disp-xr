@@ -1,7 +1,9 @@
-"""Benchmark downsample on a 1000 x 1000 x 100 stack (plan task T27.6).
+"""Benchmark downsample on a 1000 x 1000 x 100 stack (plan tasks T27.6, T27.8).
 
-Weighted mean and weighted median at factor 33 (990 m), per-epoch random
-weights, 10% NaNs, dask limited to ``config["num_workers"]`` threads. Run::
+Weighted mean and weighted median at factor 33 (990 m squares), and with
+``downsample_hex`` at the equal-area spacing (1,064 m hexagons), per-epoch
+random weights, 10% NaNs, dask limited to ``config["num_workers"]`` threads.
+Run::
 
     pixi run -e test python benchmarks/bench_downsample.py
 """
@@ -45,6 +47,16 @@ def main() -> None:
             out = dxr.downsample(ds, factor=33, stat=stat, weights=w).compute()
             print(
                 f"{stat:>8}: {time.perf_counter() - start:6.1f} s -> {dict(out.sizes)}",
+                flush=True,
+            )
+        spacing = 990.0 * np.sqrt(2 / np.sqrt(3))  # same area as a 990 m square
+        for stat in ("wmean", "wmedian"):
+            start = time.perf_counter()
+            out = dxr.downsample_hex(ds, spacing=spacing, stat=stat, weights=w)
+            out = out.compute()
+            print(
+                f"hex {stat:>8}: {time.perf_counter() - start:6.1f} s -> "
+                f"{dict(out.sizes)}",
                 flush=True,
             )
 

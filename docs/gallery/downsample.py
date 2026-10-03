@@ -107,6 +107,24 @@ print(
 # velocity residual you care about.
 
 # %% [markdown]
+# ## Hexagonal cells
+#
+# `downsample_hex` groups pixels into hexagons instead of squares: all six
+# neighbors are equidistant, so the sampling is more isotropic. The lattice is
+# anchored at the CRS origin, so overlapping frames of one UTM zone share
+# cells. A spacing of 1.0746 times a square's side gives the same area; here
+# 290 m hexagons next to the 270 m squares. The statistics are the same, and
+# the result is a point table like `to_points`.
+
+# %%
+hexes = dxr.downsample_hex(ds, spacing=290).compute()
+fig, axes = plt.subplots(1, 2, figsize=(11, 4.2), layout="constrained")
+dxr.plot.plot_map(coarse, ax=axes[0], title="270 m squares")
+dxr.plot.plot_hex(hexes, ax=axes[1], title="290 m hexagons")
+plt.show()
+print(hexes.sizes["point"], "hexagons;", int(hexes.pixels.median()), "pixels each")
+
+# %% [markdown]
 # ## Points
 
 # %%

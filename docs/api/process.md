@@ -78,6 +78,16 @@ after. See [Concepts](../concepts.md).
 
 ::: disp_xr.to_points
 
+::: disp_xr.downsample_hex
+
+::: disp_xr.hexagons
+    options:
+      show_root_heading: false
+      members:
+        - hex_axial
+        - hex_centers
+        - hexagon_vertices
+
 ### Correlated-error sigma
 
 ::: disp_xr.empirical_variogram
@@ -91,6 +101,7 @@ after. See [Concepts](../concepts.md).
       show_root_heading: false
       members:
         - mean_block_correlation
+        - mean_mask_correlation
         - n_eff_correlated
 
 ## Units, geometry and checks

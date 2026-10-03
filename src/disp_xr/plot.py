@@ -27,7 +27,7 @@ if TYPE_CHECKING:
     from matplotlib.axes import Axes
     from matplotlib.colors import Colormap
 
-__all__ = ["diverging_cmap", "plot_map", "plot_point"]
+__all__ = ["diverging_cmap", "plot_hex", "plot_map", "plot_point"]
 
 # Diverging pair (blue <-> red) around a neutral gray midpoint, and the
 # series color, from the disp-xr reference palette. The outer steps darken
@@ -192,6 +192,78 @@ def plot_map(
             parts.append(_date(da["time"].values))
         if ref:
             parts.append(f"relative to {_date(ref)}")
+        title = ", ".join(parts)
+    ax.set_title(title, loc="left", fontsize=11)
+    return ax
+
+
+def plot_hex(
+    hexes: xr.Dataset,
+    time: Optional[Any] = None,
+    *,
+    layer: str = "displacement",
+    units: Optional[str] = "mm",
+    vmax: Optional[float] = None,
+    percentile: float = 98.0,
+    cmap: Optional[Union[str, Colormap]] = None,
+    ax: Optional[Axes] = None,
+    title: Optional[str] = None,
+) -> Axes:
+    """Map one epoch of a layer of :func:`disp_xr.downsample_hex` cells.
+
+    Draws each hexagon as a polygon (``PolyCollection``); empty cells are
+    left blank. Parameters as in :func:`plot_map`.
+
+    Returns
+    -------
+    matplotlib.axes.Axes
+
+    """
+    from matplotlib.collections import PolyCollection
+
+    from .hexagons import hexagon_vertices
+
+    plt = _pyplot()
+    da = hexes[layer]
+    if "time" in da.dims:
+        da = da.isel(time=-1) if time is None else da.sel(time=time, method="nearest")
+    if da.dims != ("point",):
+        raise ValueError(f"plot_hex needs (point,) after selecting time, not {da.dims}")
+    da = _in_units(da.astype("float64", keep_attrs=True), units).compute()
+    values = da.values
+    finite = np.isfinite(values)
+    if vmax is None:
+        vmax = (
+            float(np.percentile(np.abs(values[finite]), percentile))
+            if finite.any()
+            else 1.0
+        )
+        vmax = vmax or 1.0
+    if ax is None:
+        _, ax = plt.subplots(figsize=(7, 6), layout="constrained")
+    polygons = hexagon_vertices(
+        hexes["x"].values[finite], hexes["y"].values[finite], hexes.attrs["hex_spacing"]
+    )
+    collection = PolyCollection(
+        polygons, array=values[finite], cmap=cmap or diverging_cmap(), linewidths=0
+    )
+    collection.set_clim(-vmax, vmax)
+    ax.add_collection(collection)
+    ax.autoscale_view()
+    colorbar = plt.colorbar(
+        collection, ax=ax, label=f"{layer} ({da.attrs.get('units', '')})"
+    )
+    colorbar.outline.set_visible(False)
+    colorbar.ax.tick_params(colors=TEXT_SECONDARY, labelsize=9)
+    ax.set_aspect("equal")
+    ax.ticklabel_format(style="plain", useOffset=False)
+    ax.set_xlabel("x (m)", color=TEXT_SECONDARY)
+    ax.set_ylabel("y (m)", color=TEXT_SECONDARY)
+    _style(ax)
+    if title is None:
+        parts = [layer, f"{hexes.attrs['hex_spacing']:g} m hexagons"]
+        if "time" in da.coords and da["time"].ndim == 0:
+            parts.append(_date(da["time"].values))
         title = ", ".join(parts)
     ax.set_title(title, loc="left", fontsize=11)
     return ax
