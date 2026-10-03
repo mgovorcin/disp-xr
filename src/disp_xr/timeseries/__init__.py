@@ -13,17 +13,21 @@ from .estimate_fit import (
     get_predicted,
     sincos_to_amplitude_phase,
 )
+from .trajectory import Trajectory, fit_trajectory, predict_trajectory
 
 __all__ = [
+    "Trajectory",
     "create_design_matrix",
     "fit_timeseries",
     "fit_timeseries_block",
+    "fit_trajectory",
     "get_coefficient_names",
     "get_predicted",
     "get_residuals_analysis",
     "infer_parameters_from_names",
     "jax_solve_linear_system",
     "lscov_2d",
+    "predict_trajectory",
     "sincos_to_amplitude_phase",
 ]
 
