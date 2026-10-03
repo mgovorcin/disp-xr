@@ -25,7 +25,7 @@ re-referencing: averaging series with different reference dates is wrong.
 from __future__ import annotations
 
 import math
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from typing import Literal, Optional, Union
 
 import numpy as np
@@ -233,6 +233,110 @@ def _resolve_weights(
     return w, static
 
 
+def _aggregate_layers(
+    ds: xr.Dataset,
+    w: xr.DataArray,
+    *,
+    layers: list[str],
+    group_sum: Callable[[xr.DataArray], xr.DataArray],
+    median: Callable[[xr.DataArray, xr.DataArray], xr.DataArray],
+    full: float,
+    stat: Stat,
+    nan_threshold: float,
+    variogram: Mapping[str, VariogramModel],
+    rho_bar: Callable[[VariogramModel], float],
+) -> tuple[dict[str, xr.DataArray], dict[str, xr.DataArray]]:
+    """Per-cell value, sigma and counts of float layers, for any cell shape.
+
+    ``group_sum`` sums pixels into cells, ``median`` returns the weighted
+    median per cell, ``full`` is the pixel count of a full cell, and
+    ``rho_bar`` the mean pixel correlation of a full cell under a variogram.
+    Returns the per-layer variables and those shared by all layers.
+    """
+    out: dict[str, xr.DataArray] = {}
+    shared: dict[str, xr.DataArray] = {}
+    for name in layers:
+        v = ds[name]
+        if v.dtype.kind in "iu":
+            fill = v.attrs.get("_FillValue", v.encoding.get("_FillValue"))
+            v = v.where(v != fill) if fill is not None else v
+        v = v.astype(np.float64)
+        wv = w.broadcast_like(v).where(v.notnull(), 0.0)
+        if v.chunks is not None:
+            wv = wv.chunk(v.chunksizes)
+        valid = v.notnull()
+        sum_w = group_sum(wv)
+        sum_w2 = group_sum(wv**2)
+        sum_wv = group_sum(wv * v.fillna(0.0))
+        sum_wvv = group_sum(wv * v.fillna(0.0) ** 2)
+        n_valid = group_sum(valid.astype(np.int32))
+        mean = sum_wv / sum_w.where(sum_w > 0)
+        spread = np.sqrt((sum_wvv / sum_w.where(sum_w > 0) - mean**2).clip(min=0.0))
+        n_eff = sum_w**2 / sum_w2.where(sum_w2 > 0)
+        if stat == "wmean":
+            value = mean
+        else:
+            value = median(v, wv)
+            value = value.drop_vars([c for c in value.coords if c not in value.dims])
+        keep = (1.0 - n_valid / full) <= nan_threshold
+        keep &= sum_w > 0
+        # An integer layer's fill value means nothing once it is averaged.
+        attrs = {k: v for k, v in ds[name].attrs.items() if k != "_FillValue"}
+        out[name] = value.where(keep).drop_attrs().assign_attrs(attrs, aggregation=stat)
+        out[f"{name}_sigma"] = (
+            (spread / np.sqrt(n_eff))
+            .where(keep)
+            .drop_attrs()
+            .assign_attrs(
+                units=ds[name].attrs.get("units", ""),
+                long_name=f"sigma of the cell {stat} (pixels independent)",
+            )
+        )
+        if name in variogram:
+            model = variogram[name]
+            rho = rho_bar(model)
+            n_eff_corr = n_eff_correlated(sum_w, sum_w2, rho).where(keep)
+            sigma_corr = np.sqrt(model.sill / n_eff_corr).drop_attrs()
+            out[f"{name}_sigma_corr"] = sigma_corr.assign_attrs(
+                units=ds[name].attrs.get("units", ""),
+                long_name=f"sigma of the cell {stat} (spatially correlated errors)",
+                variogram=model.to_json(),
+                mean_block_correlation=rho,
+            )
+            if "n_eff_corr" not in shared:
+                shared["n_eff_corr"] = n_eff_corr.drop_attrs().assign_attrs(
+                    long_name="effective independent pixels (variogram)"
+                )
+        if "n_eff" not in shared:
+            shared |= {
+                "n_eff": (
+                    n_eff.where(keep)
+                    .drop_attrs()
+                    .assign_attrs(
+                        long_name="effective sample count, (sum w)^2 / sum w^2"
+                    )
+                ),
+                "n_valid": (
+                    n_valid.drop_attrs().assign_attrs(
+                        long_name="valid pixels in the cell"
+                    )
+                ),
+                "valid_fraction": (
+                    (n_valid / full)
+                    .drop_attrs()
+                    .assign_attrs(long_name="valid share of the full cell")
+                ),
+            }
+            if stat == "wmean":
+                shared["sum_w"] = sum_w.drop_attrs().assign_attrs(
+                    long_name="sum of weights"
+                )
+                shared["sum_w2"] = sum_w2.drop_attrs().assign_attrs(
+                    long_name="sum of squared weights"
+                )
+    return out, shared
+
+
 @bounded_threads
 @recorded
 def downsample(
@@ -332,87 +436,20 @@ def downsample(
         abs(float(ds["x"][1] - ds["x"][0])),
     )
     coords = _coarse_coords(ds, f)
-    out: dict[str, xr.DataArray] = {}
-    shared: dict[str, xr.DataArray] = {}
-    for name in layers:
-        v = ds[name]
-        if v.dtype.kind in "iu":
-            fill = v.attrs.get("_FillValue", v.encoding.get("_FillValue"))
-            v = v.where(v != fill) if fill is not None else v
-        v = v.astype(np.float64)
-        wv = w.broadcast_like(v).where(v.notnull(), 0.0)
-        if v.chunks is not None:
-            wv = wv.chunk(v.chunksizes)
-        valid = v.notnull()
-        sum_w = _block_sum(wv, f)
-        sum_w2 = _block_sum(wv**2, f)
-        sum_wv = _block_sum(wv * v.fillna(0.0), f)
-        sum_wvv = _block_sum(wv * v.fillna(0.0) ** 2, f)
-        n_valid = _block_sum(valid.astype(np.int32), f)
-        mean = sum_wv / sum_w.where(sum_w > 0)
-        spread = np.sqrt((sum_wvv / sum_w.where(sum_w > 0) - mean**2).clip(min=0.0))
-        n_eff = sum_w**2 / sum_w2.where(sum_w2 > 0)
-        if stat == "wmean":
-            value = mean
-        else:
-            value = _block_reduce([v, wv], f, _weighted_median_blocks, np.float64)
-            value = value.drop_vars([c for c in value.coords if c not in value.dims])
-        keep = (1.0 - n_valid / f**2) <= nan_threshold
-        keep &= sum_w > 0
-        # An integer layer's fill value means nothing once it is averaged.
-        attrs = {k: v for k, v in ds[name].attrs.items() if k != "_FillValue"}
-        out[name] = value.where(keep).drop_attrs().assign_attrs(attrs, aggregation=stat)
-        out[f"{name}_sigma"] = (
-            (spread / np.sqrt(n_eff))
-            .where(keep)
-            .drop_attrs()
-            .assign_attrs(
-                units=ds[name].attrs.get("units", ""),
-                long_name=f"sigma of the cell {stat} (pixels independent)",
-            )
-        )
-        if name in variogram:
-            model = variogram[name]
-            rho_bar = mean_block_correlation(model, f, spacing_yx)
-            n_eff_corr = n_eff_correlated(sum_w, sum_w2, rho_bar).where(keep)
-            sigma_corr = np.sqrt(model.sill / n_eff_corr).drop_attrs()
-            out[f"{name}_sigma_corr"] = sigma_corr.assign_attrs(
-                units=ds[name].attrs.get("units", ""),
-                long_name=f"sigma of the cell {stat} (spatially correlated errors)",
-                variogram=model.to_json(),
-                mean_block_correlation=rho_bar,
-            )
-            if "n_eff_corr" not in shared:
-                shared["n_eff_corr"] = n_eff_corr.drop_attrs().assign_attrs(
-                    long_name="effective independent pixels (variogram)"
-                )
-        if "n_eff" not in shared:
-            shared |= {
-                "n_eff": (
-                    n_eff.where(keep)
-                    .drop_attrs()
-                    .assign_attrs(
-                        long_name="effective sample count, (sum w)^2 / sum w^2"
-                    )
-                ),
-                "n_valid": (
-                    n_valid.drop_attrs().assign_attrs(
-                        long_name="valid pixels in the cell"
-                    )
-                ),
-                "valid_fraction": (
-                    (n_valid / f**2)
-                    .drop_attrs()
-                    .assign_attrs(long_name="valid share of the full block")
-                ),
-            }
-            if stat == "wmean":
-                shared["sum_w"] = sum_w.drop_attrs().assign_attrs(
-                    long_name="sum of weights"
-                )
-                shared["sum_w2"] = sum_w2.drop_attrs().assign_attrs(
-                    long_name="sum of squared weights"
-                )
+    out, shared = _aggregate_layers(
+        ds,
+        w,
+        layers=layers,
+        group_sum=lambda da: _block_sum(da, f),
+        median=lambda v, wv: _block_reduce(
+            [v, wv], f, _weighted_median_blocks, np.float64
+        ),
+        full=f**2,
+        stat=stat,
+        nan_threshold=nan_threshold,
+        variogram=variogram,
+        rho_bar=lambda model: mean_block_correlation(model, f, spacing_yx),
+    )
     for name, how in categorical.items():
         if {"y", "x"} <= set(ds[name].dims):
             out[name] = _categorical(ds[name], f, how)

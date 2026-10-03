@@ -24,6 +24,7 @@ from .export import (
 )
 from .geometry.los import enu_to_los
 from .geometry.static import open_static
+from .hexagons import downsample_hex
 from .open import open_disp, open_disp_tree
 from .product import find_products, get_disp_info  # noqa: F401  (deprecated)
 from .quality import mask, quality_summary, valid_mask
@@ -58,6 +59,7 @@ __all__ = [
     "config",
     "correct",
     "downsample",
+    "downsample_hex",
     "empirical_variogram",
     "enu_to_los",
     "find_products",

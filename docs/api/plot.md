@@ -13,4 +13,6 @@ live in `disp_xr.plot` and are methods of the [accessor](accessor.md):
 
 ::: disp_xr.plot.plot_point
 
+::: disp_xr.plot.plot_hex
+
 ::: disp_xr.plot.diverging_cmap

@@ -63,7 +63,7 @@ Still open in M0: T1.4b (name maintainers), T3.4 badge and T3.5 branch protectio
 | F15 Plate motion | T13.5 | Done: `plate_motion_los`, `remove_plate_motion` (ITRF2014-PMM) |
 | F16 Search | T4.5 | Exists, S1 only (`download.py`) |
 | S1 Colored-noise velocity | T20, T21, T22, T23 | Done: OLS, one-series colored noise, per-pixel Whittle and MIDAS, frame GLS with coherence groups; quadtree groups wait for T28; noise-model policy proposed, awaiting confirmation |
-| S2 Downsampling | T26, T27, T28, T29 | Quality weights (T26), regular-grid downsampling (T27.1–T27.6) and variogram sigma (T27.3b) done; pyramid writer (T27.7), hexagonal downsampling (T27.8, planned), quadtree (T28) and trade study (T29) open |
+| S2 Downsampling | T26, T27, T28, T29 | Quality weights (T26), regular-grid downsampling (T27.1–T27.6), variogram sigma (T27.3b), pyramid writer (T27.7), bowser GeoZarr export (T27.9) and planar hexagons (T27.8, first part) done; H3 hexagons (T27.8), quadtree (T28) and trade study (T29) open |
 | S3 Temporal denoising | T30, T31 | Prototype outside repo (`00_tools/tests/temporal_denoising`) |
 | S4 Residual analysis | T32 | Residual statistics on branch |
 | C1 Zarr v3 output | T14.2, T14.2a | Not started |
@@ -107,8 +107,9 @@ Still open in M0: T1.4b (name maintainers), T3.4 badge and T3.5 branch protectio
 | `tutorial.py` | NFR Docs, tests | `make_disp_stack`: synthetic granules with a known truth (was `tests/fixtures/make_disp.py`); `correlated_noise`: a field with a known exponential covariance | T2.3, T16.3, T27.3b |
 | `export/geozarr.py` | C4 | `to_geozarr` (bowser and standard profiles), `display_factors`, `bowser_attrs`, `reference_lonlat`, `los_attrs`, `histogram_stats` | T27.9 |
 | `export/multiscales.py` | C4 | `build_overviews`, `to_pyramid`, `open_pyramid`, `MULTISCALES_CONVENTION` | T27.7, T27.9 |
+| `hexagons.py` | S2 (hexagon mode) | `downsample_hex`, `hex_axial`, `hex_centers`, `hexagon_vertices` | T27.8 |
 | `downsample.py` | S2 | `downsample`, `to_points` | T27 |
-| `residuals.py` | S2 (cell uncertainty), S4 | `empirical_variogram`, `fit_variogram`, `VariogramModel`, `mean_block_correlation`, `n_eff_correlated` | T27.3b, T32.1 |
+| `residuals.py` | S2 (cell uncertainty), S4 | `empirical_variogram`, `fit_variogram`, `VariogramModel`, `mean_block_correlation`, `mean_mask_correlation`, `n_eff_correlated` | T27.3b, T27.8, T32.1 |
 | `weights.py` | S2 | `quality_weights`, `residual_cycles`, `network_degree`, `residual_cycle_histogram` | T26 |
 | `plot.py` | F13 | `plot_map`, `plot_point`, `diverging_cmap` (`plot` extra, imported lazily) | T17 |
 | `accessor.py`, `_history.py`, `units.py`, `validate.py` | API rules | `.disp` accessor, operation history, unit conversion, validation | — |
@@ -166,6 +167,7 @@ Still open in M0: T1.4b (name maintainers), T3.4 badge and T3.5 branch protectio
 | Date | Trigger | Changes |
 | --- | --- | --- |
 | 2026-09-30 | First index | Created from `specs.md`, `todo.md`, `code_review.md` and the source on `main` |
+| 2026-10-03 | T27.8 planar part finished | `downsample_hex` (planar hexagons, lazily, blockwise bincount), `plot.plot_hex`, `mean_mask_correlation`; `downsample` and `downsample_hex` share `_aggregate_layers`; H3 next |
 | 2026-10-03 | T27.9 finished | `to_geozarr` and `export --format geozarr`; Zarr attributes stay JSON objects; checked with bowser's own server (`tests/bowser_check.py`); `docs/bowser.md` |
 | 2026-10-03 | T27.7 finished; T27.9 planned | Multiscale pyramid writer and reader (`export/multiscales.py`), `to_zarr(group=..., preset="whole")`; downsample derived variables get their own attributes; T27.9 (GeoZarr export bowser opens directly) planned after analyzing bowser `ops` (`0a61c6a`), comparison in `references.md` |
 | 2026-10-03 | T27.3b finished; T27.8 planned | `residuals.py` (variogram from log-uniform random pairs, model fit, block correlation); `downsample(variogram=...)` adds `<layer>_sigma_corr` and `n_eff_corr`; `tutorial.correlated_noise`; T27.8 hexagonal downsampling (planar, then H3) added to `specs.md` S2, `todo.md` and `references.md` |

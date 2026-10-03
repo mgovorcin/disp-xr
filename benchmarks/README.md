@@ -119,3 +119,21 @@ generation of the random data. Run on 2026-10-03, load 151:
 |---|---:|
 | wmean | 16.3 s |
 | wmedian | 28.8 s |
+
+Hexagons (plan task T27.8), `downsample_hex` at 1,064 m (the area of a 990 m
+square), same stack, run on 2026-10-03 afternoon at load 59 next to a rerun
+of the squares:
+
+| grid | wmean | wmedian |
+|---|---:|---:|
+| squares, factor 33 | 259.1 s | 261.8 s |
+| hexagons, 1,064 m (957 cells) | 11.0 s | 11.3 s |
+
+- The squares took 16 s and 29 s in the morning run; the code is the same
+  (`main` and the branch both took about 1 minute on a 100 x 500 x 500
+  stack in the afternoon), so the difference is the node, which was shared
+  with other jobs.
+- Hexagon sums use one `np.bincount` per dask block, then add the blocks.
+  flox's grouped sum took 15 to 23 s on 100 x 500 x 500 against 0.1 s for
+  this; the square block sums (`coarsen`) took 12 s. Using the same
+  bincount sums for squares is the next optimization.

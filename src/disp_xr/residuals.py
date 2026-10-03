@@ -44,6 +44,7 @@ __all__ = [
     "empirical_variogram",
     "fit_variogram",
     "mean_block_correlation",
+    "mean_mask_correlation",
     "n_eff_correlated",
 ]
 
@@ -298,6 +299,35 @@ def mean_block_correlation(
     dist = np.hypot(lags[:, None] * dy, lags[None, :] * dx)
     total = float(np.sum(weight[:, None] * weight[None, :] * model.correlation(dist)))
     n = factor * factor
+    return (total - n) / (n * (n - 1))
+
+
+def mean_mask_correlation(
+    model: VariogramModel,
+    mask: np.ndarray,
+    spacing: Union[float, tuple[float, float]],
+) -> float:
+    """Return the mean correlation between two distinct pixels of a cell shape.
+
+    ``mask`` marks the pixels of one full cell (a hexagon, for example). The
+    number of pixel pairs at each offset is the autocorrelation of the mask,
+    computed with an FFT, so the double sum over pairs costs one transform.
+    :func:`mean_block_correlation` is the square-block case.
+    """
+    mask = np.asarray(mask, dtype=np.float64)
+    n = mask.sum()
+    if n < 2:
+        return 0.0
+    dy, dx = (spacing, spacing) if np.isscalar(spacing) else spacing  # type: ignore[misc]
+    ny, nx = mask.shape
+    shape = (2 * ny - 1, 2 * nx - 1)
+    spectrum = np.fft.rfft2(mask, shape)
+    pairs = np.fft.irfft2(spectrum * np.conj(spectrum), shape)
+    pairs = np.rint(np.fft.fftshift(pairs))
+    ly = np.arange(-(ny - 1), ny)
+    lx = np.arange(-(nx - 1), nx)
+    dist = np.hypot(ly[:, None] * dy, lx[None, :] * dx)
+    total = float(np.sum(pairs * model.correlation(dist)))
     return (total - n) / (n * (n - 1))
 
 
