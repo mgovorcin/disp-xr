@@ -127,7 +127,7 @@ Facts about DISP-S1 granules found during this reading (to confirm in T2.2):
 
 Bugs and gaps found in the reference code:
 
-- bowser (`ops`, `0a61c6a`) writes `proj:`/`spatial:` attributes only on level 0 and the root, never reads `spatial:*`, `derived_from` or `transform`, chooses the level by comparing the pixel size in native CRS units with Web Mercator meters (so a geographic CRS always gets the coarsest level), keeps `spatial_ref` as a data variable, and has no Zarr tests. disp-xr writes every level self-contained, so its stores are readable by bowser and by strict GeoZarr readers.
+- bowser (`ops`, `0a61c6a`) writes `proj:`/`spatial:` attributes only on level 0 and the root, never reads `spatial:*`, `derived_from` or `transform`, chooses the level by comparing the pixel size in native CRS units with Web Mercator meters (so a geographic CRS always gets the coarsest level), keeps `spatial_ref` as a data variable, and has no Zarr tests. disp-xr writes every level self-contained, so its stores are readable by bowser and by strict GeoZarr readers. Verified on bowser's own server: none of disp-xr's extra metadata changes what bowser reads or shows, but dataset attributes must be JSON objects, not strings (see `docs/bowser.md`).
 - icechunk-multiscales-demo sets overview coordinates to the first pixel of each block while its transform implies block centers, and its array shapes (ceil) disagree with its coarsening (floor) when a size is not divisible.
 - topozarr coarsens by 2 only, with unweighted reductions and `boundary="trim"`.
 - serverless-datacube-demo commits whatever sessions came back, even after failed jobs, and uses the pre-1.0 Icechunk distributed API.

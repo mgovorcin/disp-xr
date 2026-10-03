@@ -7,7 +7,9 @@ axis for ``"timeseries"`` or 1,024 x 1,024 of one epoch for ``"maps"``.
 ``"ministack"`` is for stores appended to along time (Icechunk): chunk and
 shard hold all epochs of the first write, and the chunk is sized to about
 ``MINISTACK_READ_MB`` in space. ``"whole"`` stores each variable as one
-chunk, for small arrays such as coarse pyramid levels.
+chunk, for small arrays such as coarse pyramid levels. ``"tiles"`` is for
+map viewers that read one epoch per tile (bowser): chunks of one epoch by
+256 x 256 in shards of 4 epochs by 1,024 x 1,024.
 
 ``round_mantissa`` and the per-variable encoding idea are adapted from
 opera-utils (src/opera_utils/disp/_utils.py and _reformat.py, commit dff4b45),
@@ -34,8 +36,11 @@ from ._provenance import with_provenance
 
 __all__ = ["chunk_scheme", "round_mantissa", "to_netcdf", "to_zarr", "zarr_encoding"]
 
-Preset = Literal["timeseries", "maps", "ministack", "whole"]
+Preset = Literal["timeseries", "maps", "ministack", "whole", "tiles"]
 READ_CHUNK = {"timeseries": 64, "maps": 1024}
+# bowser's tuned layout (bowser geozarr.py ZarrWriteConfig).
+TILE_CHUNK = {"time": 1, "y": 256, "x": 256}
+TILE_SHARD_FACTOR = 4
 MINISTACK_READ_MB = 16
 DIMS = ("time", "y", "x")
 
@@ -80,15 +85,22 @@ def chunk_scheme(
     sized for the widest dtype among the ``(time, y, x)`` variables, so all
     variables share one grid.
     """
-    if preset not in (*READ_CHUNK, "ministack", "whole"):
+    if preset not in (*READ_CHUNK, "ministack", "whole", "tiles"):
         raise ValueError(
-            "preset must be 'timeseries', 'maps', 'ministack' or 'whole', "
-            f"not {preset!r}"
+            "preset must be 'timeseries', 'maps', 'ministack', 'whole' or "
+            f"'tiles', not {preset!r}"
         )
     shape = tuple(ds.sizes.get(d, 1) for d in DIMS)
     if preset == "whole":
         whole = dict(zip(DIMS, shape))
         return whole, dict(whole)
+    if preset == "tiles":
+        tile = {d: min(TILE_CHUNK[d], n) for d, n in zip(DIMS, shape)}
+        tile_shards = {
+            d: min(tile[d] * TILE_SHARD_FACTOR, math.ceil(n / tile[d]) * tile[d])
+            for d, n in zip(DIMS, shape)
+        }
+        return tile, tile_shards
     itemsize = max(
         (v.dtype.itemsize for v in ds.data_vars.values() if v.ndim >= 2), default=4
     )
@@ -154,9 +166,14 @@ def zarr_encoding(
 
 
 def _prepare(
-    ds: xr.Dataset, preset: Preset, keep_bits: Optional[int], target_mb: Optional[float]
+    ds: xr.Dataset,
+    preset: Preset,
+    keep_bits: Optional[int],
+    target_mb: Optional[float],
+    *,
+    json_native: bool = False,
 ) -> tuple[xr.Dataset, dict[str, int]]:
-    out = with_provenance(ds).drop_encoding()
+    out = with_provenance(ds, json_native=json_native).drop_encoding()
     _, shards = chunk_scheme(out, preset, target_mb)
     for name, var in out.data_vars.items():
         # The fill value goes into the encoding; xarray refuses it in both.
@@ -233,7 +250,7 @@ def to_zarr(
         DISP dataset with ``(time, y, x)`` and ``(y, x)`` variables.
     store : str, Path or zarr store
         Local path, URL (with ``storage_options``) or any zarr ``Store``.
-    preset : {"timeseries", "maps", "ministack", "whole"}
+    preset : {"timeseries", "maps", "ministack", "whole", "tiles"}
         Chunk layout; see the module docstring.
     mode : {"w-", "w"}
         Fail if the store (or ``group``) exists (default), or overwrite it.
@@ -252,7 +269,7 @@ def to_zarr(
         Write into this group of the store instead of the root.
 
     """
-    out, _ = _prepare(ds, preset, keep_bits, target_mb)
+    out, _ = _prepare(ds, preset, keep_bits, target_mb, json_native=True)
     out = _with_zarr_conventions(out)
     encoding = zarr_encoding(
         out, preset, compression_level=compression_level, target_mb=target_mb

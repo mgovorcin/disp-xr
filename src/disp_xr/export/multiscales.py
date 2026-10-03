@@ -201,7 +201,7 @@ def to_pyramid(
         Downsampling factors when ``data`` is a Dataset.
     mode : {"w-", "w"}
         Fail if the store exists (default), or overwrite it.
-    preset : {"timeseries", "maps", "ministack", "whole"}
+    preset : {"timeseries", "maps", "ministack", "whole", "tiles"}
         Chunk layout of level ``0`` and of levels too large for one chunk
         (see :func:`disp_xr.to_zarr`).
     small_mb : float, optional

@@ -13,6 +13,25 @@ provenance.
 
 ::: disp_xr.to_mintpy
 
+## GeoZarr for bowser
+
+::: disp_xr.export.geozarr
+    options:
+      members: false
+      show_root_heading: false
+
+::: disp_xr.to_geozarr
+
+::: disp_xr.export.geozarr
+    options:
+      show_root_heading: false
+      members:
+        - display_factors
+        - bowser_attrs
+        - reference_lonlat
+        - los_attrs
+        - histogram_stats
+
 ## Multiscale pyramids
 
 ::: disp_xr.export.multiscales
