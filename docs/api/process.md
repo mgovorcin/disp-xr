@@ -78,6 +78,21 @@ after. See [Concepts](../concepts.md).
 
 ::: disp_xr.to_points
 
+### Correlated-error sigma
+
+::: disp_xr.empirical_variogram
+
+::: disp_xr.fit_variogram
+
+::: disp_xr.VariogramModel
+
+::: disp_xr.residuals
+    options:
+      show_root_heading: false
+      members:
+        - mean_block_correlation
+        - n_eff_correlated
+
 ## Units, geometry and checks
 
 ::: disp_xr.to_units

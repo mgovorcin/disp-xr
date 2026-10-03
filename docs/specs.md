@@ -95,6 +95,7 @@ The goal is to take 30 m DISP to 1, 2 or 10 km for regional work, keeping spatia
 - Order: downsampling runs after ministack chaining and re-referencing. Averaging series with different reference dates gives wrong values.
 - Implementation: weighted reductions through `xarray.coarsen` and grouped reductions, chunked and lazy, with no Python recursion per cell.
 - Outputs: a point table (centroid, value, sigma, n, quality), ready for S1 fits, GNSS comparison and modeling. Regular-grid mode also returns coarse rasters, written as a multiscale pyramid (C4).
+- Hexagon mode: cells are hexagons instead of squares, either planar hexagons on the frame's UTM grid anchored at UTM (0, 0) (no new dependency) or Uber H3 global cells (optional `h3` extra, for merging frames across UTM zones). All six neighbors are equidistant and corner pixels are closer to the center than in a square of equal area (Birch et al. 2007), which suits variograms and GNSS cell comparison. Same per-cell statistics as regular-grid mode, output as a (cell, time) point table only: hexagons are not a raster, so they get no COG, pyramid or quadtree. `spacing` is the center-to-center distance (area 0.866 spacing²).
 
 #### Quality weights
 

@@ -24,6 +24,7 @@ from .open import open_disp, open_disp_tree
 from .product import find_products, get_disp_info  # noqa: F401  (deprecated)
 from .quality import mask, quality_summary, valid_mask
 from .reference import rereference
+from .residuals import VariogramModel, empirical_variogram, fit_variogram
 from .stack import (  # noqa: F401  (combine_disp_product is deprecated)
     NaNPolicy,
     combine_disp_product,
@@ -46,16 +47,19 @@ __all__ = [
     "NaNPolicy",
     "NoiseResult",
     "Trajectory",
+    "VariogramModel",
     "__version__",
     "build_virtual_frame",
     "config",
     "correct",
     "downsample",
+    "empirical_variogram",
     "enu_to_los",
     "find_products",
     "fit_noise",
     "fit_trajectory",
     "fit_velocity",
+    "fit_variogram",
     "mask",
     "open_disp",
     "open_disp_tree",
