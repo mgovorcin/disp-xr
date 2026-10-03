@@ -6,3 +6,4 @@
         - make_disp_stack
         - DispStack
         - VARIANTS
+        - correlated_noise

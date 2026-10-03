@@ -181,6 +181,7 @@ Nothing from these is imported; disp-xr copies an idea.
 | Project | Idea copied | Task |
 | --- | --- | --- |
 | [SARXarray](https://github.com/TUDelftGeodesy/sarxarray) (1.4.0, Aug 2026) | Accessor layout on an SAR stack, and `multi_look` by `coarsen` with chosen statistics | T9.2, T27.1 |
+| [H3](https://h3geo.org), matplotlib `hexbin`, PostGIS `ST_HexagonGrid` | Hexagonal binning: a global hierarchical hexagon grid (H3), and the planar hexagon lattice that `hexbin` and `ST_HexagonGrid` build (Carr et al. 1987). They count or average; disp-xr adds quality weights and per-cell sigmas, lazily on the stack. Why hexagons: Birch et al. 2007; global grids: Sahr et al. 2003 | T27.8 |
 | [stmtools](https://github.com/TUDelftGeodesy/stmtools) (0.1.4) | Point data as a (space, time) xarray Dataset with spatial ordering of points for chunk locality; enrichment from polygons and rasters | T27.5, T28.4, T25.1 |
 | [xDEM](https://github.com/GlacioHack/xdem) (0.2.3, Mar 2026) | Uncertainty of a spatial average with correlated errors: variogram-based effective sample count (Hugonnet et al. 2022, Rolstad et al. 2009). The simple n_eff = (Σw)² / Σw² ignores spatial correlation and gives cell sigmas that are too small at 1 to 10 km | T27.3b, T32.1 |
 | [xclim](https://github.com/Ouranosinc/xclim) (0.62.0) | A plain compute function wrapped by one decorator that checks units, sets CF attributes and appends history | T9.3 |

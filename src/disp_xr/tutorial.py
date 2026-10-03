@@ -27,7 +27,13 @@ import pandas as pd
 import xarray as xr
 from pyproj import CRS
 
-__all__ = ["VARIANTS", "DispStack", "disp_filename", "make_disp_stack"]
+__all__ = [
+    "VARIANTS",
+    "DispStack",
+    "correlated_noise",
+    "disp_filename",
+    "make_disp_stack",
+]
 
 SPACING = 30.0
 WAVELENGTH = 0.05546576
@@ -98,6 +104,53 @@ def disp_filename(
         f"OPERA_L3_DISP-S1_IW_F{frame_id:05d}_VV_{reference.strftime(fmt)}_"
         f"{secondary.strftime(fmt)}_v{version}_{production}.nc"
     )
+
+
+def correlated_noise(
+    shape: tuple[int, int],
+    *,
+    correlation_range: float,
+    sill: float = 1.0,
+    nugget: float = 0.0,
+    spacing: float = SPACING,
+    seed: int = 0,
+) -> np.ndarray:
+    """Return a Gaussian random field with a known exponential covariance.
+
+    The covariance is ``sill * exp(-3 h / correlation_range)`` (practical
+    range ``correlation_range``, the convention of
+    :class:`disp_xr.residuals.VariogramModel`) plus ``nugget`` of white
+    noise, so variogram and cell-sigma estimates can be checked against the
+    truth. Exact, by circulant embedding on a grid twice the size.
+
+    Parameters
+    ----------
+    shape : (int, int)
+        ``(ny, nx)`` in pixels.
+    correlation_range : float
+        Practical range, in the unit of ``spacing``.
+    sill : float
+        Variance of the correlated part.
+    nugget : float
+        Variance of the added white noise.
+    spacing : float
+        Pixel spacing.
+    seed : int
+        Random seed.
+
+    """
+    ny, nx = shape
+    my, mx = 2 * ny, 2 * nx
+    ly = np.minimum(np.arange(my), my - np.arange(my)) * spacing
+    lx = np.minimum(np.arange(mx), mx - np.arange(mx)) * spacing
+    cov = sill * np.exp(-3 * np.hypot(ly[:, None], lx[None, :]) / correlation_range)
+    eigen = np.clip(np.fft.fft2(cov).real, 0, None)
+    rng = np.random.default_rng(seed)
+    white = rng.standard_normal((my, mx))
+    field = np.fft.ifft2(np.sqrt(eigen) * np.fft.fft2(white)).real[:ny, :nx]
+    if nugget:
+        field = field + rng.normal(0, np.sqrt(nugget), shape)
+    return field
 
 
 def _dates(n_ministacks: int, epochs_per_ministack: int) -> tuple[list, list]:
