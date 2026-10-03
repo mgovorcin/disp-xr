@@ -192,6 +192,16 @@ def _batched(
     return coef, sigma, rms
 
 
+def check_not_denoised(obj: Union[xr.Dataset, xr.DataArray], allow: bool) -> None:
+    """Refuse data marked ``attrs["denoised"]`` unless ``allow`` (PRD S1)."""
+    denoised = obj.attrs.get("denoised")
+    if denoised and not allow:
+        raise ValueError(
+            f"The data are denoised ({denoised}); velocities and sigmas must come "
+            "from the raw series. Pass allow_denoised=True to fit anyway."
+        )
+
+
 @recorded
 def fit_trajectory(
     obj: Union[xr.Dataset, xr.DataArray],
@@ -200,6 +210,7 @@ def fit_trajectory(
     layer: str = "displacement",
     weights: Optional[xr.DataArray] = None,
     min_valid: int = 0,
+    allow_denoised: bool = False,
 ) -> xr.Dataset:
     """Fit a trajectory model to every pixel by ordinary least squares.
 
@@ -220,6 +231,9 @@ def fit_trajectory(
     min_valid : int
         Fewest valid epochs to fit a pixel; at least one more than the number
         of coefficients is always required.
+    allow_denoised : bool
+        Fit data marked ``attrs["denoised"]``. Off by default: fits use the
+        raw series (PRD S1).
 
     Returns
     -------
@@ -238,6 +252,7 @@ def fit_trajectory(
 
     """
     terms = terms or Trajectory()
+    check_not_denoised(obj, allow_denoised)
     da = obj[layer] if isinstance(obj, xr.Dataset) else obj
     if "time" not in da.dims:
         raise ValueError(f"fit_trajectory needs a time dimension, not {da.dims}")

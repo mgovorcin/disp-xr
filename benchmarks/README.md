@@ -76,3 +76,35 @@ flicker (kappa -1) and white noise, 30 realizations per length:
 Whittle is reliable from about 200 epochs; below, it underestimates `|kappa|`
 and its sigmas are too small. `fit_velocity(method="whittle")` warns below
 200 epochs.
+
+## `bench_gls.py` (plan task T23.6)
+
+`fit_velocity(method="gls")` on a 10.2-million-pixel frame (3200 x 3200 x 200
+epochs, 2% NaNs, generated lazily), five coherence groups, 16 exact noise fits
+per group. Run on 2026-10-03, load 160 to 190 on 224 cores, dask threaded
+scheduler limited to 32 threads:
+
+| step | time |
+|---|---:|
+| noise shape per group (80 exact fits, plus generating the blocks that hold the 240 candidate pixels) | 165 s |
+| exact GLS of every pixel | 1,090 s |
+
+Per 256 x 256 tile on one core (`_gls_block`): 0.7 s with no NaNs, 0.9 s with
+2%, 6.8 s with 20% (more missing epochs per pixel, larger Schur blocks).
+
+- The threaded run used about 300% CPU: most of the solve holds the GIL, and
+  the node was busy. The real cost is about 0.3 ms per pixel of CPU time, so
+  a dask distributed cluster with worker processes should take minutes, not
+  measured here:
+
+  ```python
+  from dask.distributed import Client
+  client = Client(n_workers=32, threads_per_worker=1)
+  vel = dxr.fit_velocity(ds, "gls", terms=terms).compute()
+  ```
+
+- Two problems found on the way, both fixed: picking sample pixels counted
+  the valid epochs of every pixel, reading the whole frame (428 s for the
+  noise step before); and a tile's temporaries reached about 1 GB, so dask's
+  default of one thread per core (224) exhausted memory. Pixels are now solved
+  in batches of 8,192.

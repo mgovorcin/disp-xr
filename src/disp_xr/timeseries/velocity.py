@@ -52,7 +52,7 @@ from .._chunks import time_contiguous
 from .._history import recorded
 from ._datetime import _decimal_year
 from .noise import _powerlaw_covariance, _sampling_grid
-from .trajectory import Trajectory, _solve, fit_trajectory
+from .trajectory import Trajectory, _solve, check_not_denoised, fit_trajectory
 
 logger = logging.getLogger(__name__)
 
@@ -295,11 +295,16 @@ def _whittle_block(
 @recorded
 def fit_velocity(
     obj: Union[xr.Dataset, xr.DataArray],
-    method: Literal["ols", "whittle", "midas"] = "whittle",
+    method: Literal["ols", "whittle", "midas", "gls"] = "whittle",
     *,
     terms: Optional[Trajectory] = None,
     layer: str = "displacement",
     min_valid: int = 0,
+    noise: str = "PLWN",
+    groups: Union[str, xr.DataArray] = "coherence",
+    n_groups: int = 5,
+    n_samples: int = 16,
+    allow_denoised: bool = False,
 ) -> xr.Dataset:
     """Estimate a velocity and its sigma for every pixel.
 
@@ -307,9 +312,12 @@ def fit_velocity(
     ----------
     obj : xr.Dataset or xr.DataArray
         Chained displacement ``(time, y, x)``, or a Dataset holding it.
-    method : {"whittle", "ols", "midas"}
+    method : {"whittle", "gls", "ols", "midas"}
         ``"whittle"`` (default): colored-noise sigmas, reliable from about
         200 epochs (6.5 years at 12 days); a warning is logged below.
+        ``"gls"``: exact generalized least squares, with the noise shape
+        estimated per group of pixels by exact maximum likelihood and the
+        amplitude per pixel; works on short records too, costs more.
         ``"midas"``: robust to unmodelled steps and outliers, for records of
         several years. ``"ols"``: fast, but its sigma ignores correlated
         noise and is several times too small. For shorter records use
@@ -321,15 +329,30 @@ def fit_velocity(
     layer : str
         Layer of a Dataset.
     min_valid : int
-        Fewest valid epochs to fit a pixel (``"ols"``, ``"whittle"``).
+        Fewest valid epochs to fit a pixel (``"ols"``, ``"whittle"``, ``"gls"``).
+    noise : {"PLWN", "FNWN", "RWFNWN", "WN", "auto"}
+        Noise model of ``"gls"``; ``"auto"`` picks FNWN, PLWN or RWFNWN per
+        group by the median BIC of its sampled pixels.
+    groups : "coherence" or xr.DataArray
+        ``"gls"`` groups: ``n_groups`` quantile bins of time-mean
+        ``temporal_coherence`` (needs the Dataset), or an integer label map
+        ``(y, x)``; ``-1`` leaves a pixel out.
+    n_groups, n_samples : int
+        Coherence bins, and pixels per group fitted to estimate its noise.
+    allow_denoised : bool
+        Fit data marked ``attrs["denoised"]``. Off by default: velocities and
+        their sigmas come from the raw series (PRD S1).
 
     Returns
     -------
     xr.Dataset
         ``velocity`` and ``velocity_sigma`` (unit per year) for every method;
         ``kappa``, ``sigma_powerlaw``, ``sigma_white`` and ``n_valid`` for
-        Whittle; ``outlier_fraction`` and ``velocity_scatter`` for MIDAS.
-        Lazy if the input is.
+        Whittle; ``outlier_fraction`` and ``velocity_scatter`` for MIDAS;
+        ``noise_amplitude``, ``noise_group``, ``kappa``, ``white_fraction``
+        and ``n_valid`` for GLS, with the group table in
+        ``attrs["noise_groups"]`` (JSON). Lazy if the input is, except the
+        sampled pixels GLS reads to estimate the noise.
 
     Examples
     --------
@@ -339,6 +362,7 @@ def fit_velocity(
     da = obj[layer] if isinstance(obj, xr.Dataset) else obj
     if "time" not in da.dims:
         raise ValueError(f"fit_velocity needs a time dimension, not {da.dims}")
+    check_not_denoised(obj, allow_denoised)
     units = da.attrs.get("units", "")
     rate = {"units": f"{units}/year"}
     terms = terms or Trajectory()
@@ -412,14 +436,29 @@ def fit_velocity(
         out = xr.Dataset(dict(zip(whittle_names, results)))
         for name in ("sigma_powerlaw", "sigma_white"):
             out[name].attrs = {"units": units}
+    elif method == "gls":
+        from .gls import gls_velocity
+
+        out = gls_velocity(
+            obj,
+            terms=terms,
+            noise=noise,
+            groups=groups,
+            n_groups=n_groups,
+            n_samples=n_samples,
+            layer=layer,
+            min_valid=min_valid,
+        )
     else:
-        raise ValueError(f"method must be 'ols', 'whittle' or 'midas', not {method!r}")
+        raise ValueError(
+            f"method must be 'ols', 'whittle', 'midas' or 'gls', not {method!r}"
+        )
     out["velocity"].attrs = {**rate, "long_name": "velocity"}
     out["velocity_sigma"].attrs = rate
     out = out.drop_vars([c for c in out.coords if "time" in out[c].dims])
     if "spatial_ref" in da.coords:
         out = out.assign_coords(spatial_ref=da.coords["spatial_ref"])
-    out.attrs = {"method": method}
+    out.attrs = {**out.attrs, "method": method}
     if method != "midas":
         out.attrs["terms"] = repr(terms)
     return out

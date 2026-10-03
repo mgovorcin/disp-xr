@@ -312,7 +312,7 @@ M0 comes first because nothing else is safe to refactor without tests. Each diam
 - [ ] Target dates for each milestone.
 - [ ] Memory budget per dask worker for the full-frame target.
 - [x] S1: should the S1 estimator live in disp-xr and geepers depend on it, or the reverse (one implementation shared by both)? Decided: inside disp-xr.
-- [ ] S1: run a noise-model selection (AIC/BIC) per cell, or fix PLWN as default?
+- [ ] S1: run a noise-model selection (AIC/BIC) per cell, or fix PLWN as default? Proposed in T23, awaiting confirmation: PLWN by default, with `fit_velocity(method="gls", noise="auto")` choosing FNWN, PLWN or RWFNWN per group by the median BIC of its sampled pixels.
 - [x] S2: default quality layers for the pixel weight? Decided: phase similarity, temporal coherence, time-series inversion residuals; cycle jumps in the residuals down-weight and never mask.
 - [ ] S2: default exponents, cycle penalty, f0, per-layer floors and the exclusion floor (set by the trade study).
 - [x] S2: quadtree split metric: velocity variance, displacement variance over time, or structure function? Decided: trade study of all three (see S2).
