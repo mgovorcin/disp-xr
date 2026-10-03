@@ -1,6 +1,6 @@
 # disp-xr project index
 
-**Last indexed:** 2026-10-03 · `main` on `origin` = `mgovorcin/disp-xr`, through T26 (quality weights)
+**Last indexed:** 2026-10-03 · `main` on `origin` = `mgovorcin/disp-xr`, through T27.1–T27.6 (regular-grid downsampling)
 
 How and when this file is rebuilt: see "Project Index (cyclical indexing)" in `CLAUDE.md` at the repository root.
 
@@ -63,7 +63,7 @@ Still open in M0: T1.4b (name maintainers), T3.4 badge and T3.5 branch protectio
 | F15 Plate motion | T13.5 | Done: `plate_motion_los`, `remove_plate_motion` (ITRF2014-PMM) |
 | F16 Search | T4.5 | Exists, S1 only (`download.py`) |
 | S1 Colored-noise velocity | T20, T21, T22, T23 | Done: OLS, one-series colored noise, per-pixel Whittle and MIDAS, frame GLS with coherence groups; quadtree groups wait for T28; noise-model policy proposed, awaiting confirmation |
-| S2 Downsampling | T26, T27, T28, T29 | Quality weights done (T26); downsampling (T27, T28) and trade study (T29) open |
+| S2 Downsampling | T26, T27, T28, T29 | Quality weights (T26) and regular-grid downsampling (T27.1–T27.6) done; variogram sigma (T27.3b), pyramid writer (T27.7), quadtree (T28) and trade study (T29) open |
 | S3 Temporal denoising | T30, T31 | Prototype outside repo (`00_tools/tests/temporal_denoising`) |
 | S4 Residual analysis | T32 | Residual statistics on branch |
 | C1 Zarr v3 output | T14.2, T14.2a | Not started |
@@ -105,6 +105,7 @@ Still open in M0: T1.4b (name maintainers), T3.4 badge and T3.5 branch protectio
 | `_chunks.py`, `_remote.py`, `_credentials.py` | F2, C1 | Chunk presets; remote access (ported) | — |
 | `search.py` (was `download.py`) | F16 | Ported CMR search, session seam, NISAR short name; bug 9 fixed | T5.2 (NISAR spec) |
 | `tutorial.py` | NFR Docs, tests | `make_disp_stack`: synthetic granules with a known truth (was `tests/fixtures/make_disp.py`) | T2.3, T16.3 |
+| `downsample.py` | S2 | `downsample`, `to_points` | T27 |
 | `weights.py` | S2 | `quality_weights`, `residual_cycles`, `network_degree`, `residual_cycle_histogram` | T26 |
 | `plot.py` | F13 | `plot_map`, `plot_point`, `diverging_cmap` (`plot` extra, imported lazily) | T17 |
 | `accessor.py`, `_history.py`, `units.py`, `validate.py` | API rules | `.disp` accessor, operation history, unit conversion, validation | — |
@@ -162,6 +163,7 @@ Still open in M0: T1.4b (name maintainers), T3.4 badge and T3.5 branch protectio
 | Date | Trigger | Changes |
 | --- | --- | --- |
 | 2026-09-30 | First index | Created from `specs.md`, `todo.md`, `code_review.md` and the source on `main` |
+| 2026-10-03 | T27.1–T27.6 finished | `downsample` and `to_points`; per-chunk block reductions without rechunking; T27.3b and T27.7 follow in their own PRs |
 | 2026-10-03 | T26 finished | `quality_weights`; real granules show residual clustering at 2 pi (not pi as planned), so cycles count 2 pi and the fixture follows; network degree from the dolphin config (`max_bandwidth = 3`) |
 | 2026-10-03 | T23 finished (coherence groups; quadtree after T28) | Grouped exact GLS with Schur-complement gaps; noise shape per group, amplitude per pixel; denoised-input guard; noise-model policy proposed in the PRD; benchmark and gallery |
 | 2026-10-03 | T22 finished | `fit_velocity` (OLS, Whittle, MIDAS); Whittle bias study (reliable from about 200 epochs); MIDAS on numbagg medians; benchmarks recorded |
