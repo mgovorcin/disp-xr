@@ -5,8 +5,9 @@ noise, how fast they are, and how long a record they need. The short answer:
 
 | Your case | Use |
 |---|---|
-| Full DISP-S1 record, 200 epochs or more (about 6.5 years at 12 days) | `fit_velocity(ds, "whittle")` |
-| Shorter record, any length from about 60 epochs | `fit_noise` (exact) on selected pixels or groups; consider `FNWN` for the shortest records |
+| Exact colored-noise sigmas for every pixel, any length from about 60 epochs | `fit_velocity(ds, "gls")` |
+| Full DISP-S1 record, 200 epochs or more (about 6.5 years at 12 days), fastest | `fit_velocity(ds, "whittle")` |
+| One pixel or station, to study its noise | `fit_noise` (exact); consider `FNWN` for the shortest records |
 | Unmodelled steps, outliers or unwrapping jumps, several years of data | `fit_velocity(ds, "midas")` as a robust check |
 | A quick map, or comparing pixels with each other | `fit_velocity(ds, "ols")`, but do not use its sigma |
 
@@ -19,6 +20,7 @@ The rest of this page explains why.
 | `fit_velocity(ds, "ols")` | least squares with your `Trajectory` | white noise only | none | fast, every pixel |
 | `fit_velocity(ds, "whittle")` | the same least-squares velocity | colored noise, per pixel | power law plus white (PLWN), estimated per pixel | moderate, every pixel |
 | `fit_velocity(ds, "midas")` | median of one-year slopes, outliers trimmed | MIDAS, deliberately conservative | none (empirical) | fast, every pixel |
+| `fit_velocity(ds, "gls")` | generalized least squares | colored noise, exact, per pixel | shape (kappa, white fraction) per group of pixels, by exact maximum likelihood on a sample; amplitude per pixel | exact fits of the samples, then about 1 s per 256 x 256 tile |
 | `fit_noise(times, y, model=...)` | generalized least squares | colored noise, exact | WN, FNWN, PLWN or RWFNWN | 0.1 to 1 s per series (n x n covariance) |
 
 ## Why not OLS sigmas
@@ -51,9 +53,20 @@ times. `fit_velocity(method="whittle")` logs a warning below 200 epochs.
 
 The exact estimate (`fit_noise`) stays calibrated down to 60 epochs, but it
 costs a factorization of an n x n matrix per likelihood evaluation, so it is
-for single pixels, GNSS stations or small groups, not whole frames. Fitting
-every pixel exactly is the plan for T23: noise estimated per group of
-pixels, then one exact solve per group.
+for single pixels, GNSS stations or small groups. `fit_velocity(ds, "gls")`
+brings it to whole frames: it fits a sample of each group's pixels exactly
+to get the group's noise shape, then solves every pixel by exact GLS with
+that shape and its own amplitude, so it inherits the exact estimate's
+behaviour on short records.
+
+## Groups for `"gls"`
+
+Pixels with similar noise should share a group. By default they are binned
+by time-mean `temporal_coherence` (`n_groups` quantile bins); you can pass
+any integer map `(y, x)` instead, for example regions you trust or, later,
+quadtree cells. More samples per group (`n_samples`, default 16) steady the
+shape estimate at the cost of more exact fits. Check `attrs["noise_groups"]`
+for each group's model, kappa and white fraction.
 
 ## Which noise model (`fit_noise`)
 
@@ -67,7 +80,9 @@ pixels, then one exact solve per group.
 When unsure, fit several and compare `res.bic` (lower is better): BIC
 penalizes extra noise parameters, so it prefers `FNWN` unless the data
 support a free kappa or a random walk. `fit_velocity(method="whittle")`
-always uses PLWN.
+always uses PLWN; `method="gls"` takes `noise=` with any of these, or
+`noise="auto"` to choose FNWN, PLWN or RWFNWN per group by the median BIC of
+its samples.
 
 ## When MIDAS
 

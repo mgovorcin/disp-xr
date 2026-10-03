@@ -44,6 +44,13 @@ after. See [Concepts](../concepts.md).
 
 ::: disp_xr.fit_velocity
 
+::: disp_xr.timeseries.gls
+    options:
+      members:
+        - coherence_groups
+        - estimate_group_noise
+        - NoiseShape
+
 ## Colored noise (one series)
 
 ::: disp_xr.timeseries.noise

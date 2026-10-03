@@ -37,6 +37,12 @@ All notable changes to disp-xr. The format follows
 - `fit_velocity(ds, method="ols" | "whittle" | "midas")` for every pixel:
   OLS, Whittle colored-noise sigmas (reliable from about 200 epochs), or the
   robust MIDAS estimator.
+- `fit_velocity(method="gls")`: exact colored-noise GLS for every pixel, with
+  the noise shape estimated per group of pixels (coherence bins or a label
+  map) by exact maximum likelihood and the amplitude per pixel;
+  `noise="auto"` picks the model per group by BIC.
+- `fit_velocity` and `fit_trajectory` refuse data marked denoised unless
+  `allow_denoised=True`.
 
 ### Changed
 

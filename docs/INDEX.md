@@ -1,6 +1,6 @@
 # disp-xr project index
 
-**Last indexed:** 2026-10-03 · `main` on `origin` = `mgovorcin/disp-xr`, through T22 (Whittle and MIDAS for every pixel)
+**Last indexed:** 2026-10-03 · `main` on `origin` = `mgovorcin/disp-xr`, through T23 (full-frame colored-noise GLS)
 
 How and when this file is rebuilt: see "Project Index (cyclical indexing)" in `CLAUDE.md` at the repository root.
 
@@ -28,7 +28,7 @@ The PRD also lives as a shared doc; `specs.md` is its copy in the repo and must 
 | --- | --- | --- |
 | M0 Foundation (v0.1) | T1–T8 | 5 / 8 (T2, T4, T5, T6, T7 done; T1 open only for T1.4b; T3 open for T3.4–T3.5) |
 | M1 Core API (v0.2) | T9–T18 | 7 / 10 (T9, T10, T11, T13, T14, T15, T17; T12 open only for T12.5, T16 only for ReadTheDocs publishing) |
-| M2 Analysis (v0.3) | T19–T34 | 3 / 16 (T20, T21, T22; started before the T18 review) |
+| M2 Analysis (v0.3) | T19–T34 | 4 / 16 (T20, T21, T22, T23; started before the T18 review) |
 | M3 Release (v1.0) | T35–T39 | 0 / 5 |
 
 Six local branches, stacked, not pushed:
@@ -62,7 +62,7 @@ Still open in M0: T1.4b (name maintainers), T3.4 badge and T3.5 branch protectio
 | F14 CLI | T15 | Done: `info`, `stack`, `export`, `geometry`, `search`, `virtual` |
 | F15 Plate motion | T13.5 | Done: `plate_motion_los`, `remove_plate_motion` (ITRF2014-PMM) |
 | F16 Search | T4.5 | Exists, S1 only (`download.py`) |
-| S1 Colored-noise velocity | T20, T21, T22, T23 | OLS (T20), one-series colored noise (T21), per-pixel Whittle and MIDAS (T22) done; frame GLS (T23) open |
+| S1 Colored-noise velocity | T20, T21, T22, T23 | Done: OLS, one-series colored noise, per-pixel Whittle and MIDAS, frame GLS with coherence groups; quadtree groups wait for T28; noise-model policy proposed, awaiting confirmation |
 | S2 Downsampling | T26, T27, T28, T29 | Not started |
 | S3 Temporal denoising | T30, T31 | Prototype outside repo (`00_tools/tests/temporal_denoising`) |
 | S4 Residual analysis | T32 | Residual statistics on branch |
@@ -109,7 +109,7 @@ Still open in M0: T1.4b (name maintainers), T3.4 badge and T3.5 branch protectio
 | `accessor.py`, `_history.py`, `units.py`, `validate.py` | API rules | `.disp` accessor, operation history, unit conversion, validation | — |
 | `config.py` | API rules | `donfig` settings, `DISP_XR_*` overrides | — |
 | `cli/__init__.py` | F14, F16 | `disp_xr` commands wrapping library functions | T15 |
-| `timeseries/` | F8, S1, S4 | `trajectory.py` (`fit_trajectory`), `noise.py` (`fit_noise`, from geepers), `velocity.py` (`fit_velocity`: OLS, Whittle, MIDAS), design matrix, legacy `fit_timeseries_block`; jax optional | T20, T21, T22, T32 |
+| `timeseries/` | F8, S1, S4 | `trajectory.py` (`fit_trajectory`), `noise.py` (`fit_noise`, from geepers), `velocity.py` (`fit_velocity`: OLS, Whittle, MIDAS, GLS), `gls.py` (grouped GLS), design matrix, legacy `fit_timeseries_block`; jax optional | T20, T21, T22, T23, T32 |
 | `utils.py` | — | Deprecated aliases only | T38 |
 | `quality_metrics.py`, `io.py`, `mintpy.py`, `static_layers.py`, `download.py` | — | Deprecated aliases | T38 |
 | `log/` | Infrastructure | Unchanged | — |
@@ -161,6 +161,7 @@ Still open in M0: T1.4b (name maintainers), T3.4 badge and T3.5 branch protectio
 | Date | Trigger | Changes |
 | --- | --- | --- |
 | 2026-09-30 | First index | Created from `specs.md`, `todo.md`, `code_review.md` and the source on `main` |
+| 2026-10-03 | T23 finished (coherence groups; quadtree after T28) | Grouped exact GLS with Schur-complement gaps; noise shape per group, amplitude per pixel; denoised-input guard; noise-model policy proposed in the PRD; benchmark and gallery |
 | 2026-10-03 | T22 finished | `fit_velocity` (OLS, Whittle, MIDAS); Whittle bias study (reliable from about 200 epochs); MIDAS on numbagg medians; benchmarks recorded |
 | 2026-10-02 | T21 finished | `fit_noise` and `NoiseResult` ported from geepers (Apache-2.0 attribution added); committed geepers reference; Whittle bias on short series recorded for T22 |
 | 2026-10-02 | T20 finished (M2 started before the T18 review, at the user's request) | `fit_trajectory`, `Trajectory`, `predict_trajectory`; hybrid grouped/batched solver; branch bug fixed (step and postseismic onsets); threadpoolctl dependency; benchmark and velocity gallery example |
