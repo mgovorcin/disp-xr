@@ -38,7 +38,9 @@ def _brute(values, weights, factor, stat):
                     order = np.argsort(v)
                     cw = np.cumsum(w[order])
                     value = v[order][np.argmax(cw >= 0.5 * cw[-1])]
-                spread = np.sqrt(max(np.sum(w * v**2) / w.sum() - mean**2, 0))
+                spread = np.sqrt(
+                    np.sum(w * (v - mean) ** 2) / w.sum()
+                )  # two-pass, exact
                 n_eff = w.sum() ** 2 / np.sum(w**2)
                 out["value"][t, i, j] = value
                 out["sigma"][t, i, j] = spread / np.sqrt(n_eff)

@@ -120,20 +120,34 @@ generation of the random data. Run on 2026-10-03, load 151:
 | wmean | 16.3 s |
 | wmedian | 28.8 s |
 
-Hexagons (plan task T27.8), `downsample_hex` at 1,064 m (the area of a 990 m
-square), same stack, run on 2026-10-03 afternoon at load 59 next to a rerun
-of the squares:
+### Hexagons and a correction (plan task T27.8)
+
+Wall-clock timings on the shared node were unreliable on 2026-10-03
+afternoon: the same `downsample` code took 16 s in the morning, 260 s in
+the afternoon and 1.2 s minutes later. The first compute of a process spends
+seconds getting memory from the busy node, so whichever method ran first
+looked slow. The numbers first reported for hexagons (11 s against 260 s for
+squares, and flox 15 to 23 s against 0.1 s for a bincount sum) had this
+order effect and are withdrawn.
+
+`bench_downsample.py` now warms up, alternates the order and keeps the best
+of two runs. Its afternoon result (100 x 1000 x 1000, load 52):
 
 | grid | wmean | wmedian |
 |---|---:|---:|
-| squares, factor 33 | 259.1 s | 261.8 s |
-| hexagons, 1,064 m (957 cells) | 11.0 s | 11.3 s |
+| squares, factor 33 | 1.2 s | 1.8 s |
+| hexagons, 1,064 m | 1.5 s | 51.2 s |
 
-- The squares took 16 s and 29 s in the morning run; the code is the same
-  (`main` and the branch both took about 1 minute on a 100 x 500 x 500
-  stack in the afternoon), so the difference is the node, which was shared
-  with other jobs.
-- Hexagon sums use one `np.bincount` per dask block, then add the blocks.
-  flox's grouped sum took 15 to 23 s on 100 x 500 x 500 against 0.1 s for
-  this; the square block sums (`coarsen`) took 12 s. Using the same
-  bincount sums for squares is the next optimization.
+The hexagon median sorts each epoch of the whole frame (the cells cross
+chunk borders), which the square median avoids; it is the slow path.
+Single-thread CPU time also drifted by 3x between runs, so only
+deterministic measures are recorded for the two optimizations:
+
+- **One pass for the five per-cell sums** (Σw, Σw², Σwv, Σwv², valid
+  count) per dask block, instead of five full-size temporaries and five
+  padded block sums: the graph for 20 x 1000 x 1000 shrank from 1,943 to
+  1,376 tasks (squares) and from 720 to 443 (hexagons).
+- **Windowed hexagon partial sums**: each block returns sums for the cells
+  of its rows of hexagons only. For a 7,000 x 9,000 frame with 200 epochs,
+  one block's partial is 10.5 MB instead of 138.5 MB at 1,064 m (13x),
+  2.9 MB instead of 35.9 MB at 2,128 m.
