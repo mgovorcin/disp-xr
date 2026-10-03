@@ -32,7 +32,9 @@ def stack(seed: int = 0) -> xr.DataArray:
     data = 0.005 * years[:, None, None] + 2e-3 * flicker
     data += 2e-3 * rng.standard_normal(SHAPE, dtype="f4")
     data[rng.random(SHAPE) < 0.02] = np.nan
-    return xr.DataArray(data.astype("f4"), dims=("time", "y", "x"), coords={"time": times})
+    return xr.DataArray(
+        data.astype("f4"), dims=("time", "y", "x"), coords={"time": times}
+    )
 
 
 def main() -> None:

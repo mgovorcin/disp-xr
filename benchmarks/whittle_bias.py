@@ -1,4 +1,4 @@
-"""How biased is the Whittle noise estimate at InSAR record lengths? (T22)
+"""How biased is the Whittle noise estimate at InSAR record lengths? (T22).
 
 Simulates 12-day series of a trend plus flicker (kappa -1) and white noise,
 and fits each with ``fit_noise(model="PLWN")`` by exact RMLE and by Whittle.
@@ -38,8 +38,14 @@ def one(args: tuple[int, int]) -> tuple[float, ...]:
     fast = fit_noise(times, y, terms=terms, model="PLWN", method="whittle")
     t2 = time.perf_counter()
     return (
-        exact.kappa, exact.velocity, exact.velocity_sigma,
-        fast.kappa, fast.velocity, fast.velocity_sigma, t1 - t0, t2 - t1,
+        exact.kappa,
+        exact.velocity,
+        exact.velocity_sigma,
+        fast.kappa,
+        fast.velocity,
+        fast.velocity_sigma,
+        t1 - t0,
+        t2 - t1,
     )
 
 
