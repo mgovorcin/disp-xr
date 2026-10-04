@@ -61,7 +61,8 @@ docs = [
   "ipykernel",
   "matplotlib",
 ]
-gnss = ["xvec", "geopandas"]
+# geepers is the GNSS engine (sources, downloads, sampling at stations).
+gnss = ["geepers>=0.3"]
 # H3 hexagons (downsample_hex(grid="h3")) and cell polygons (to_geodataframe).
 hex = ["h3>=4", "geopandas"]
 # MintPy is used only to read exports back in round-trip tests.
@@ -157,6 +158,10 @@ types-pyyaml = "*"
 # hex extra, so the H3 and GeoDataFrame tests run in every test environment
 h3-py = ">=4"
 geopandas = "*"
+
+# gnss extra: geepers is on PyPI only.
+[tool.pixi.feature.test.pypi-dependencies]
+geepers = ">=0.3"
 
 [tool.pixi.feature.docs.dependencies]
 mkdocs = "*"

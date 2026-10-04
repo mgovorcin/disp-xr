@@ -32,7 +32,7 @@ rest; install them with `pip install "disp_xr[extra1,extra2]"`.
 | `mintpy` | `mintpy` | reading the MintPy export with MintPy (writing it needs only h5py) |
 | `cloud` | `virtualizarr`, `icechunk`, `obstore` | `to_icechunk`, virtual stores |
 | `jax` | `jax` | `jax_solve_linear_system` |
-| `gnss` | `xvec`, `geopandas` | GNSS comparison (planned) |
+| `gnss` | `geepers` | GNSS series, LOS projection and DISP at stations (`disp_xr.gnss`) |
 | `hex` | `h3`, `geopandas` | H3 hexagons (`downsample_hex(grid="h3")`) and `to_geodataframe` |
 | `eof` | `xeofs` | EOF analysis (planned) |
 | `interactive` | `hvplot`, `datashader` | interactive full-frame browsing |

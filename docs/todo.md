@@ -383,15 +383,15 @@ Goal: the Cal/Val science features S1–S4, fit/predict estimators and the GNSS 
 
 ### T25. GNSS data access and sampling
 
-- [ ] **T25. GNSS data access and sampling** — Depends on: T19, T12 · PRD: F10
-  - Context: geepers has a `BaseGpsSource` ABC with UNR, UNR-grid and sideshow sources, and `processing.sample_insar` (median in a pixel or metre buffer around each station). The GNSS-source question in the PRD (UNR only or pluggable) is answered here. Recommendation: a `Protocol` with UNR first.
-  - Done when: `dxr.gnss.load(source="unr", bbox=..., start=..., end=...)` returns station ENU series. `gnss.to_los(stations, static)` projects them with T12, and `gnss.sample(ds, stations, buffer_m=...)` returns DISP series at the stations, re-referenced to the same reference date.
-  - [ ] T25.1 Define a `GnssSource` Protocol and the station data model: a vector data cube (station geometry by time, xvec, `gnss` extra) holding E/N/U series with sigmas, convertible to a DataFrame. Record the GNSS-source decision (a Protocol, UNR first) in the PRD and check the open question.
-  - [ ] T25.2 Implement a UNR source (port the minimal reader, cache downloads) behind the `gnss` extra.
-  - [ ] T25.3 Implement `to_los` with the LOS vectors at each station pixel (T12.2), propagating sigmas.
-  - [ ] T25.4 Implement `sample(ds, stations, buffer_m, stat="median")` as a vectorized window read with `xarray.sel` and an isel window.
-  - [ ] T25.5 Align time and reference: interpolate or select GNSS at DISP epochs and subtract the value at the DISP reference epoch.
-  - [ ] T25.6 Add tests with mocked UNR files and synthetic stations on fixtures.
+- [x] **T25. GNSS data access and sampling** — Depends on: T19, T12 · PRD: F10
+  - Context: geepers is the GNSS engine (decision 2026-10-03; PRD open question closed). Its `BaseGpsSource` sources (UNR, UNR grid, sideshow) download, cache and read station series, and `processing.sample_insar` takes the median of DISP in a pixel or meter window at each station. disp-xr does not re-implement them: its `gnss` module (`gnss` extra, `geepers>=0.3` from PyPI) turns geepers output into xarray and aligns it with DISP.
+  - Done when: `dxr.gnss.load(ds, source="unr", start=..., end=...)` returns a `(station, time)` Dataset of E/N/U series with sigmas, `gnss.to_los(stations, static)` projects them with T12, and `gnss.sample(ds, stations, buffer_m=...)` returns DISP series at the stations, re-referenced to the same reference date (`gnss.align`).
+  - [x] T25.1 Record the decision (PRD); `gnss.source(name)` returns a geepers source (or passes one through); `gnss.stations(ds | bbox)` lists stations in the frame. Done: decision in the PRD; `gnss.get_source` (UNR, UNR grid, sideshow, or a geepers source instance); `gnss.stations(ds)` keeps the stations inside the frame grid, with x, y.
+  - [x] T25.2 `gnss.load`: geepers `timeseries_many` to a `(station, time)` Dataset (east, north, up, sigmas, correlations; lon, lat, alt and projected x, y coordinates). Done: `gnss.load(ds | bbox | ids)` from geepers `timeseries_many`, `(station, time)` with sigmas and correlations.
+  - [x] T25.3 `gnss.to_los`: LOS unit vectors at each station pixel from the static layers (T12.2), sigma from geepers `uncertainty.get_sigma_los`. Done: `gnss.to_los` (LOS vector at the station pixel, `enu_to_los`, geepers `get_sigma_los`).
+  - [x] T25.4 `gnss.sample`: geepers `sample_insar` (meter windows when the installed geepers has `buffer_meters`, otherwise a pixel window of the same half-width). Done: `gnss.sample` uses geepers `XarrayReader.read_window` with `op=math.floor`: geepers rounds the pixel index from the corner-anchored transform, so `sample_insar` reads a neighboring pixel for stations in the right or lower half of their pixel (3 of 4 off-center test stations, in 0.3 and on main). To fix in geepers (`read_window` default `op`).
+  - [x] T25.5 `gnss.align`: GNSS at DISP epochs (nearest within a tolerance, or linear), minus its value at the DISP reference epoch. Done: `gnss.align`, nearest within a tolerance or linear (per station, `np.interp`; xarray `interp` returned NaN on the 2D array), minus the value at the reference epoch.
+  - [x] T25.6 Tests with an in-memory geepers source and synthetic stations on fixtures. Done: `tests/test_gnss.py` with an in-memory geepers `BaseGpsSource`; off-center stations in four quadrants.
 
 ### T26. Quality weights
 
@@ -490,6 +490,7 @@ Goal: the Cal/Val science features S1–S4, fit/predict estimators and the GNSS 
 - [ ] **T32. Residual analysis** — Depends on: T23, T25, T27 · PRD: S4
   - Context: keep what geepers `analysis.py` and `validation.py` already do (bias, MAD × 1.4826, RMSE, r², pairwise differential RMSE versus distance, distance-binned profiles with a requirement line, epoch RMSE, misfit semivariogram) and add four things. First, fit GNSS and DISP with the same estimator (T23). Second, normalized residuals and χ² per station. Third, per-epoch residual time series, spectra and common mode. Fourth, comparison at T27/T28 cell level.
   - Done when: `dxr.residuals.compare(ds, stations, ...)` returns an `xr.Dataset` and DataFrames with all metrics. Plot helpers reproduce the geepers figures, and results agree with geepers on a shared test case.
+  - Engine note (2026-10-03): geepers is the GNSS engine (T25); use its `analysis` and `validation` functions where they exist and add xarray adapters, rather than porting them.
   - [ ] T32.1 Port the summary statistics (bias, MAD, RMSE, r²), pairwise differential RMSE versus distance, epoch RMSE with a bad-acquisition flag, and the residual semivariogram, all vectorized and returned as Dataset or DataFrame. Distance and coherence binning uses flox `groupby` with bin edges checked so no data is dropped. The semivariogram reuses the T27.3b variogram code. xskillscore and xarray-einstats serve as test oracles.
   - [ ] T32.2 Velocity residuals from the same estimator on both sides (T23 on DISP at station pixels or cells, T21 on GNSS), with combined sigma.
   - [ ] T32.3 Compute normalized residuals and χ² per station, and flag outlier stations.
