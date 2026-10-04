@@ -171,6 +171,7 @@ Still open in M0: T1.4b (name maintainers), T3.4 badge and T3.5 branch protectio
 
 | Date | Trigger | Changes |
 | --- | --- | --- |
+| 2026-10-03 | Fix: numba threads | `config["numba_threads"]` (1) sets `NUMBA_NUM_THREADS` on import; numbagg in dask tasks opened a pool per core per thread and crashed on a 224-core node |
 | 2026-09-30 | First index | Created from `specs.md`, `todo.md`, `code_review.md` and the source on `main` |
 | 2026-10-03 | T25 finished; geepers is the GNSS engine | `gnss.py` adapters over geepers sources and reader; PRD GNSS-source question closed; geepers pixel-rounding bug worked around (floor) and flagged |
 | 2026-10-03 | T24 finished | `models.Trend`, lazy per-epoch `deramp` (accessor too), `Spline` and `Nearest` gridders; base drops zero-weight points |
