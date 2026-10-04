@@ -21,6 +21,7 @@ with config.set({"chunks.target_mb": 50}):
 | `cache.dir` | `None` | Downloaded static layers; `None` means `$XDG_CACHE_HOME/disp_xr` or `~/.cache/disp_xr` |
 | `threads` | `None` | Threads per worker for compiled kernels |
 | `num_workers` | 32 | Dask threads when disp-xr computes (plots, exports), unless dask's own `num_workers` is set |
+| `numba_threads` | 1 | Threads of numba kernels (numbagg) inside each dask task, set as `NUMBA_NUM_THREADS` on import unless that variable is set or numba is already loaded; numba's default of one per core made every dask thread open 224 threads on a large node and crash |
 
 ## Chunks
 

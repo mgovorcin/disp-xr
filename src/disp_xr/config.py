@@ -17,6 +17,8 @@ Examples
 """
 
 import functools
+import os
+import sys
 from collections.abc import Callable
 from typing import Any, TypeVar
 
@@ -48,9 +50,28 @@ DEFAULTS = {
     # memory maps per thread and hit vm.max_map_count (65,530), so thread
     # creation failed. 32 read the series in 16 s. None uses dask's default.
     "num_workers": 32,
+    # Threads of numba's parallel kernels (numbagg: MIDAS medians, xarray's
+    # median) inside each dask task. numba starts one per core by default, so
+    # every dask thread opened its own pool: 224 x 32 threads on the Aurora
+    # nodes, where thread creation failed and the process crashed. Dask
+    # already runs tasks in parallel. Applied as NUMBA_NUM_THREADS when
+    # disp_xr is imported, unless that variable is set or numba is already
+    # loaded; None leaves numba's default.
+    "numba_threads": 1,
 }
 
 config = Config("disp_xr", defaults=[DEFAULTS])
+
+
+def _cap_numba_threads() -> None:
+    """Set NUMBA_NUM_THREADS from the config, before numba is loaded."""
+    threads = config.get("numba_threads")
+    if threads is None or "NUMBA_NUM_THREADS" in os.environ or "numba" in sys.modules:
+        return
+    os.environ["NUMBA_NUM_THREADS"] = str(int(threads))
+
+
+_cap_numba_threads()
 
 
 def bounded_threads(func: F) -> F:
