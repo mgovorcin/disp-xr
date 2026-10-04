@@ -221,7 +221,7 @@ def plot_hex(
     """
     from matplotlib.collections import PolyCollection
 
-    from .hexagons import hexagon_vertices
+    from .hexagons import cell_polygons
 
     plt = _pyplot()
     da = hexes[layer]
@@ -241,9 +241,8 @@ def plot_hex(
         vmax = vmax or 1.0
     if ax is None:
         _, ax = plt.subplots(figsize=(7, 6), layout="constrained")
-    polygons = hexagon_vertices(
-        hexes["x"].values[finite], hexes["y"].values[finite], hexes.attrs["hex_spacing"]
-    )
+    outlines = cell_polygons(hexes)
+    polygons = [outlines[i] for i in np.flatnonzero(finite)]
     collection = PolyCollection(
         polygons, array=values[finite], cmap=cmap or diverging_cmap(), linewidths=0
     )
@@ -261,7 +260,11 @@ def plot_hex(
     ax.set_ylabel("y (m)", color=TEXT_SECONDARY)
     _style(ax)
     if title is None:
-        parts = [layer, f"{hexes.attrs['hex_spacing']:g} m hexagons"]
+        if "h3_resolution" in hexes.attrs:
+            size = f"H3 resolution {hexes.attrs['h3_resolution']}"
+        else:
+            size = f"{hexes.attrs['hex_spacing']:g} m hexagons"
+        parts = [layer, size]
         if "time" in da.coords and da["time"].ndim == 0:
             parts.append(_date(da["time"].values))
         title = ", ".join(parts)

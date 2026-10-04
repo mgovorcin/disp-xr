@@ -33,6 +33,7 @@ rest; install them with `pip install "disp_xr[extra1,extra2]"`.
 | `cloud` | `virtualizarr`, `icechunk`, `obstore` | `to_icechunk`, virtual stores |
 | `jax` | `jax` | `jax_solve_linear_system` |
 | `gnss` | `xvec`, `geopandas` | GNSS comparison (planned) |
+| `hex` | `h3`, `geopandas` | H3 hexagons (`downsample_hex(grid="h3")`) and `to_geodataframe` |
 | `eof` | `xeofs` | EOF analysis (planned) |
 | `interactive` | `hvplot`, `datashader` | interactive full-frame browsing |
 | `docs` | mkdocs and plugins | building this site |

@@ -87,6 +87,9 @@ after. See [Concepts](../concepts.md).
         - hex_axial
         - hex_centers
         - hexagon_vertices
+        - cell_polygons
+
+::: disp_xr.to_geodataframe
 
 ### Correlated-error sigma
 
