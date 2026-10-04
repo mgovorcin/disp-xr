@@ -54,7 +54,7 @@ Still open in M0: T1.4b (name maintainers), T3.4 badge and T3.5 branch protectio
 | F6 Correct | T13 | Done: `correct` (product layers, external troposphere) |
 | F7 Geometry | T12 | DISP-S1 done (`open_static`, `enu_to_los`); DISP-NISAR waits for a DISP-NI-STATIC granule (T12.5) |
 | F8 Time series | T20 | Done: `fit_trajectory`, `Trajectory`, `predict_trajectory` |
-| F9 Spatial models | T19, T24, T33 | Estimator base (T19), trends, de-ramping and gridders (T24) done; GNSS tie (T33) open |
+| F9 Spatial models | T19, T24, T33 | Estimator base (T19), trends, de-ramping and gridders (T24), GNSS tie (T33, gallery pending) done |
 | F10 GNSS | T25 | Done with geepers as the engine (`gnss` extra) |
 | F11 Multi-frame | T36 | Not started |
 | F12 Export | T14 | Done: GeoTIFF, Zarr v3, NetCDF, MintPy, Icechunk, virtual stores |
@@ -107,6 +107,7 @@ Still open in M0: T1.4b (name maintainers), T3.4 badge and T3.5 branch protectio
 | `tutorial.py` | NFR Docs, tests | `make_disp_stack`: synthetic granules with a known truth (was `tests/fixtures/make_disp.py`); `correlated_noise`: a field with a known exponential covariance | T2.3, T16.3, T27.3b |
 | `export/geozarr.py` | C4 | `to_geozarr` (bowser and standard profiles), `display_factors`, `bowser_attrs`, `reference_lonlat`, `los_attrs`, `histogram_stats` | T27.9 |
 | `export/multiscales.py` | C4 | `build_overviews`, `to_pyramid`, `open_pyramid`, `MULTISCALES_CONVENTION` | T27.7, T27.9 |
+| `models/gnss_tie.py` | F9 | `GNSSTie`, `fit_tie`, `apply_tie`, `cross_validate_tie`, `TieResult` | T33 |
 | `models/trend.py` | F9 | `Trend`, `deramp`, `polynomial_terms` | T24 |
 | `models/gridding.py` | F9 | `Spline`, `Nearest` | T24.4 |
 | `diagnostics.py` | S4 | `model_diagnostics`, `significance`, `anderson_darling` | T32.6b–c |
@@ -174,6 +175,7 @@ Still open in M0: T1.4b (name maintainers), T3.4 badge and T3.5 branch protectio
 
 | Date | Trigger | Changes |
 | --- | --- | --- |
+| 2026-10-03 | T33.1–T33.4 finished | `models/gnss_tie.py`: tie from `compare` output (velocity or epoch), station exclusion for deforming areas, lazy `apply_tie`, LOSO cross-validation; `gnss.sample` names a missing `units` |
 | 2026-10-03 | T31 finished | `denoise` (gated Kalman with RTS or fixed-lag, robust LOWESS) on acquisitions or grids; study scores reproduced (transient 92.8% / 82.2% / 74.5%) |
 | 2026-10-03 | T30 finished | `timeseries/temporal.py`: grid step from the 75th-percentile interval (study's pre segment), refused gaps, declared breaks on NumPy and xarray |
 | 2026-10-03 | T32.4, T32.6b–d finished | `diagnostics.py`; `residuals.residual_spectra`, `residuals.common_mode` (geepers CME); EOF example and allowed-to-fail CI job; T32 open for the requirement thresholds (T32.6) and the gallery (T32.7) |

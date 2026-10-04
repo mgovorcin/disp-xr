@@ -162,3 +162,10 @@ def test_sample_finds_the_pixel_holding_an_off_center_station(frame, dx, dy):
     np.testing.assert_allclose(
         got.values[0], frame.displacement.isel(y=30, x=20).values, equal_nan=True
     )
+
+
+def test_sample_needs_units(frame, fake):
+    cube = gnss.load(frame, source=fake)
+    bare = frame.assign(displacement=frame.displacement.drop_attrs())
+    with pytest.raises(ValueError, match="units"):
+        gnss.sample(bare, cube)

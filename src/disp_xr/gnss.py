@@ -308,6 +308,11 @@ def sample(
     else:
         table = pd.DataFrame(gnss)
     da = ds[layer]
+    if not da.attrs.get("units"):
+        raise ValueError(
+            f"{layer!r} has no units attribute (arithmetic can drop it); "
+            "set it, for example ds[layer].attrs['units'] = 'meters'"
+        )
     reader = XarrayReader(da)
     kwargs: dict[str, Any] = {}
     if "buffer_meters" in inspect.signature(reader.read_window).parameters and buffer_m:

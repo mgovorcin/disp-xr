@@ -507,11 +507,11 @@ Goal: the Cal/Val science features S1–S4, fit/predict estimators and the GNSS 
 - [ ] **T33. GNSS tie estimator** — Depends on: T24, T25 · PRD: F9
   - Context: fit the field DISP minus GNSS at the stations with a smooth estimator (T24 trend, optionally a `Chain` of trend plus a smooth interpolator), predict a correction field, and subtract it. It runs in velocity mode or per epoch.
   - Done when: `GNSSTie(degree=1).fit(gnss, ds).predict(ds)` passes the T19 shared suite and removes an injected long-wavelength error in fixtures. Leave-one-station-out cross-validation reports the improvement.
-  - [ ] T33.1 Build the residual at stations from T25 outputs (velocity or per epoch).
-  - [ ] T33.2 Implement `GNSSTie` as a `Chain` of `Trend` plus an optional smooth term, with weights from station sigmas.
-  - [ ] T33.3 Implement `apply_tie(ds, tie)` per epoch or velocity, recording history.
-  - [ ] T33.4 Add leave-one-station-out cross-validation reporting RMSE before and after.
-  - [ ] T33.5 Add tests and a gallery example.
+  - [x] T33.1 Build the residual at stations from T25 outputs (velocity or per epoch). Done: `fit_tie` takes `residuals.compare` output: the velocity residual (weights `1 / velocity_sigma^2`) or the residual of every epoch (weights `1 / sigma_gnss^2`).
+  - [x] T33.2 Implement `GNSSTie` as a `Chain` of `Trend` plus an optional smooth term, with weights from station sigmas. Done: `models.GNSSTie(degree=1, damping=None)`, a trend plus an optional damped spline; passes the shared suite. `exclude=` (station ids or a lon/lat polygon) leaves stations in deforming areas out of the fit: the tie field holds long-wavelength error only, local deformation stays in the product (remove-restore).
+  - [x] T33.3 Implement `apply_tie(ds, tie)` per epoch or velocity, recording history. Done: `apply_tie` (epoch mode lazily, as coefficients times monomials for trends; velocity mode on a velocity layer or as rate times time on displacement), recorded in history and `gnss_tie` attribute.
+  - [x] T33.4 Add leave-one-station-out cross-validation reporting RMSE before and after. Done: `cross_validate_tie` (leave-one-station-out RMSE before and after; excluded stations scored with the tie of all used ones). The docs warn that scores improve as the field gets more local partly by construction.
+  - [ ] T33.5 Add tests and a gallery example. Tests done (shared suite, a 1 cm planted ramp removed to under a quarter in epoch mode, velocity mode halves the error, LOSO halves the RMSE, an excluded anomalous station no longer tilts the field); gallery example waits for real GNSS (T29 frames).
 
 ### T34. Release v0.3 and GNSS validation gate
 
