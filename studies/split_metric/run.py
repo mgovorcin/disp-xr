@@ -321,11 +321,33 @@ SWEEP: dict[str, dict] = {
 SWEEP_SIZES = {2: 67}
 
 
+def best_metric(frame: str) -> str:
+    """Return the split metric ranked best at 2 km in ``results/<frame>.csv``.
+
+    The rank sums each metric's rank on velocity reconstruction, GNSS
+    agreement and the gradient profile (lower is better).
+    """
+    table = pd.read_csv(HERE / "results" / f"{frame}.csv")
+    rows = table[(table["size_km"] == 2) & table["method"].isin(METRICS)]
+    criteria = ["vel_rmse_mm_yr", "gnss_rms_mm_yr", "profile_rmse_mm_yr"]
+    ranks = rows.set_index("method")[criteria].rank().sum(axis=1)
+    return str(ranks.idxmin())
+
+
 def sweep_frame(frame: str, profiles: list[list[float]]) -> pd.DataFrame:
-    """Score every weight variant of ``SWEEP`` at ``SWEEP_SIZES``."""
+    """Score every weight variant of ``SWEEP`` at ``SWEEP_SIZES``.
+
+    Only the grid and the frame's best split metric are swept: the weights
+    change the cell means, not much which metric wins, and the sweep is the
+    costly part of the study.
+    """
+    methods = (best_metric(frame),)
+    print(f"{frame}: sweeping the grid and {methods[0]}", flush=True)
     tables = []
     for label, params in SWEEP.items():
-        table = run_frame(frame, profiles, sizes=SWEEP_SIZES, params=params)
+        table = run_frame(
+            frame, profiles, sizes=SWEEP_SIZES, methods=methods, params=params
+        )
         tables.append(table.assign(weights=label))
     return pd.concat(tables, ignore_index=True)
 
