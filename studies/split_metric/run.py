@@ -27,12 +27,13 @@ from __future__ import annotations
 import json
 import sys
 import time
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
 import xarray as xr
 import yaml
-from prepare import OUT
+from prepare import OUT, WORKERS
 from stations import HERE
 
 import disp_xr as dxr
@@ -331,12 +332,26 @@ def sweep_frame(frame: str, profiles: list[list[float]]) -> pd.DataFrame:
 
 def main(argv: list[str]) -> None:
     """Run the comparison (``--sweep``: the weight sweep) on the named frames."""
+    from distributed import Client, LocalCluster
+
     sweep = "--sweep" in argv
     names = [a for a in argv if a != "--sweep"]
     out = HERE / "results"
     out.mkdir(exist_ok=True)
     frames = yaml.safe_load((HERE / "frames.yaml").read_text())["disp_s1"]
-    for frame in names or list(frames):
+    # Processes: zarr decodes chunks in one thread per process.
+    with (
+        LocalCluster(
+            n_workers=WORKERS, threads_per_worker=2, memory_limit="8GB"
+        ) as cluster,
+        Client(cluster),
+    ):
+        run_frames(names or list(frames), frames, sweep, out)
+
+
+def run_frames(names: list[str], frames: dict, sweep: bool, out: Path) -> None:
+    """Write the results (or the sweep) of each named frame."""
+    for frame in names:
         profiles = frames[frame]["profiles"]
         if sweep:
             sweep_frame(frame, profiles).to_csv(out / f"{frame}_sweep.csv", index=False)
