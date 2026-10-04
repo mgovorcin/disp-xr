@@ -49,9 +49,12 @@ def test_granules_decode_to_their_filename_dates(two_ministacks):
     for path, secondary, reference in zip(
         two_ministacks.paths, two_ministacks.times[1:], two_ministacks.reference_times
     ):
+        # Files carry microseconds like real granules; names and the truth
+        # are whole seconds.
         ds = xr.open_dataset(path, engine="h5netcdf")
-        assert ds.time.values[0] == np.datetime64(secondary)
-        assert ds.reference_time.values[0] == np.datetime64(reference)
+        assert ds.time.dt.floor("s").values[0] == np.datetime64(secondary)
+        assert ds.reference_time.dt.floor("s").values[0] == np.datetime64(reference)
+        assert ds.time.dt.microsecond.values[0] == 435763
         assert secondary.strftime("%Y%m%dT%H%M%S") in path.name
 
 

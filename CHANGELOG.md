@@ -74,6 +74,10 @@ All notable changes to disp-xr. The format follows
   layer alike). Granules that differ only in float precision are now read
   together with a `MixedPrecisionWarning`, cast to float32 and listed in
   `attrs["mixed_precision"]`; virtual stores still refuse them.
+- Ministacks of DISP-S1 productions from November 2025 did not chain to
+  earlier ones (`MissingCrossoverError`): their time is float seconds since
+  2010 and decodes nanoseconds off. `open_disp` now reads times to the whole
+  second, as granule names give them.
 
 - The command line failed at start-up (logging formatter name).
 - `fit_timeseries_block` fitted each chunk's epochs separately when time was
