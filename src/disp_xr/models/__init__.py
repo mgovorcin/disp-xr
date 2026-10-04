@@ -13,13 +13,20 @@ from .base import (
     coordinates,
     cross_val_score,
 )
+from .gridding import Nearest, Spline
+from .trend import Trend, deramp, polynomial_terms
 
 __all__ = [
     "BaseEstimator",
     "Chain",
     "Mean",
+    "Nearest",
     "NotFittedError",
+    "Spline",
+    "Trend",
     "clone",
     "coordinates",
     "cross_val_score",
+    "deramp",
+    "polynomial_terms",
 ]

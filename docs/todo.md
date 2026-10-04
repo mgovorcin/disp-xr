@@ -373,13 +373,13 @@ Goal: the Cal/Val science features S1–S4, fit/predict estimators and the GNSS 
 
 ### T24. Spatial trend and gridding estimators
 
-- [ ] **T24. Spatial trend and gridding estimators** — Depends on: T19 · PRD: F9
+- [x] **T24. Spatial trend and gridding estimators** — Depends on: T19 · PRD: F9
   - Context: polynomial and planar trends are the simplest estimators and the building block of the GNSS tie. Per-epoch spatial de-ramping cut velocity scatter by 10–24% in the temporal-denoising study, more than any temporal filter.
   - Done when: `Trend(degree=n)` passes the T19 shared suite, and `deramp(ds, degree=1)` removes a synthetic ramp per epoch to float precision. `Spline().fit(coords, data).grid(like=ds)` reproduces a synthetic smooth field within tolerance.
-  - [ ] T24.1 Implement `Trend(degree)` with weighted least squares on coordinates normalized for conditioning.
-  - [ ] T24.2 Implement `deramp(ds, degree, mask=None)`, fitting per epoch over valid pixels lazily (fit on a decimated sample, predict on full chunks).
-  - [ ] T24.3 Add tests (shared suite, ramp removal, weights) and accessor wiring.
-  - [ ] T24.4 Implement a point-data gridder `Spline` (biharmonic Green's functions with damping, on `scipy.linalg`; verde `Spline` is the design reference only) and a nearest-neighbor fallback. Both pass the T19 shared suite, and `grid()` returns a DataArray with the CRS (PRD F9: gridding of point data).
+  - [x] T24.1 Implement `Trend(degree)` with weighted least squares on coordinates normalized for conditioning. Done: `models.Trend(degree)`, coordinates centered and scaled; recovers a quadratic in raw UTM to 1e-10.
+  - [x] T24.2 Implement `deramp(ds, degree, mask=None)`, fitting per epoch over valid pixels lazily (fit on a decimated sample, predict on full chunks). Done: `models.deramp` (and `ds.disp.deramp`): the normal equations are sums over every `stride`-th pixel (default 4), solved per epoch, the ramp subtracted from the full grid, all lazy; `mask` and `weights` for the fit; coefficients returned as `<layer>_ramp_coefficients`.
+  - [x] T24.3 Add tests (shared suite, ramp removal, weights) and accessor wiring. Done: shared suite for degrees 0 to 2, ramp removal to 1e-12, masked fit that keeps a subsidence bump, degree 2, weights, accessor.
+  - [x] T24.4 Implement a point-data gridder `Spline` (biharmonic Green's functions with damping, on `scipy.linalg`; verde `Spline` is the design reference only) and a nearest-neighbor fallback. Both pass the T19 shared suite, and `grid()` returns a DataArray with the CRS (PRD F9: gridding of point data). Done: `models.Spline(damping)` (Sandwell 1987 Green's functions, weighted least squares with `scipy.linalg.lstsq`, predictions in blocks) and `models.Nearest` (KD-tree); both pass the shared suite, the spline reproduces a smooth bump from 500 points within 2% RMS. Not done: the xarray-spatial cross-checks (not installed; the analytic tests stand in).
 
 ### T25. GNSS data access and sampling
 
