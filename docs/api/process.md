@@ -91,6 +91,21 @@ after. See [Concepts](../concepts.md).
 
 ::: disp_xr.timeseries.apply_segmented
 
+## Temporal denoising
+
+::: disp_xr.timeseries.denoise
+    options:
+      members: false
+      show_root_heading: false
+
+::: disp_xr.denoise
+
+::: disp_xr.timeseries.denoise.kalman_smooth
+
+::: disp_xr.timeseries.denoise.lowess
+
+::: disp_xr.timeseries.denoise.q_from_timescale
+
 ## Colored noise (one series)
 
 ::: disp_xr.timeseries.noise

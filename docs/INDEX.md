@@ -28,7 +28,7 @@ The PRD also lives as a shared doc; `specs.md` is its copy in the repo and must 
 | --- | --- | --- |
 | M0 Foundation (v0.1) | T1–T8 | 5 / 8 (T2, T4, T5, T6, T7 done; T1 open only for T1.4b; T3 open for T3.4–T3.5) |
 | M1 Core API (v0.2) | T9–T18 | 7 / 10 (T9, T10, T11, T13, T14, T15, T17; T12 open only for T12.5, T16 only for ReadTheDocs publishing) |
-| M2 Analysis (v0.3) | T19–T34 | 10 / 16 (T19, T20, T21, T22, T23, T24, T25, T26, T27, T30; started before the T18 review) |
+| M2 Analysis (v0.3) | T19–T34 | 11 / 16 (T19, T20, T21, T22, T23, T24, T25, T26, T27, T30, T31; started before the T18 review) |
 | M3 Release (v1.0) | T35–T39 | 0 / 5 |
 
 Six local branches, stacked, not pushed:
@@ -64,7 +64,7 @@ Still open in M0: T1.4b (name maintainers), T3.4 badge and T3.5 branch protectio
 | F16 Search | T4.5 | Exists, S1 only (`download.py`) |
 | S1 Colored-noise velocity | T20, T21, T22, T23 | Done: OLS, one-series colored noise, per-pixel Whittle and MIDAS, frame GLS with coherence groups; quadtree groups wait for T28; noise-model policy proposed, awaiting confirmation |
 | S2 Downsampling | T26, T27, T28, T29 | T26 and T27 done; quadtree (T28) done except its benchmark numbers; trade study (T29) open |
-| S3 Temporal denoising | T30, T31 | Grid, gaps and breaks done (T30); Kalman and LOWESS (T31) open, prototype in `00_tools/tests/temporal_denoising` |
+| S3 Temporal denoising | T30, T31 | Done: grid, gaps and breaks (T30), Kalman and LOWESS `denoise` (T31); the deforming-site check goes with T29 |
 | S4 Residual analysis | T32 | Residual statistics on branch |
 | C1 Zarr v3 output | T14.2, T14.2a | Not started |
 | C2 Icechunk store (opt-in) | T14.2b | Done: `to_icechunk` / `open_icechunk`, one commit per write, append along time, tags, snapshot id in provenance |
@@ -112,6 +112,7 @@ Still open in M0: T1.4b (name maintainers), T3.4 badge and T3.5 branch protectio
 | `diagnostics.py` | S4 | `model_diagnostics`, `significance`, `anderson_darling` | T32.6b–c |
 | `gnss.py` | F10 | `gnss.load`, `stations`, `get_source`, `to_los`, `sample`, `align` (geepers engine) | T25 |
 | `models/base.py` | F9, API (Estimators) | `BaseEstimator`, `Chain`, `Mean`, `coordinates`, `cross_val_score`, `clone` | T19 |
+| `timeseries/denoise.py` | S3 | `denoise`, `kalman_smooth`, `lowess`, `q_from_timescale` | T31 |
 | `timeseries/temporal.py` | S3 | `regular_time_grid`, `grid_step_days`, `gap_mask`, `split_at_breaks`, `apply_segmented` | T30 |
 | `quadtree.py` | S2 (quadtree) | `quadtree`, `Quadtree` (`points`, `leaf_id`, `to_raster`) | T28 |
 | `hexagons.py` | S2 (hexagon mode) | `downsample_hex` (planar and H3), `to_geodataframe`, `cell_polygons`, `hex_axial`, `hex_centers`, `hexagon_vertices` | T27.8 |
@@ -173,6 +174,7 @@ Still open in M0: T1.4b (name maintainers), T3.4 badge and T3.5 branch protectio
 
 | Date | Trigger | Changes |
 | --- | --- | --- |
+| 2026-10-03 | T31 finished | `denoise` (gated Kalman with RTS or fixed-lag, robust LOWESS) on acquisitions or grids; study scores reproduced (transient 92.8% / 82.2% / 74.5%) |
 | 2026-10-03 | T30 finished | `timeseries/temporal.py`: grid step from the 75th-percentile interval (study's pre segment), refused gaps, declared breaks on NumPy and xarray |
 | 2026-10-03 | T32.4, T32.6b–d finished | `diagnostics.py`; `residuals.residual_spectra`, `residuals.common_mode` (geepers CME); EOF example and allowed-to-fail CI job; T32 open for the requirement thresholds (T32.6) and the gallery (T32.7) |
 | 2026-10-03 | Fix: numba threads | `config["numba_threads"]` (1) sets `NUMBA_NUM_THREADS` on import; numbagg in dask tasks opened a pool per core per thread and crashed on a 224-core node |

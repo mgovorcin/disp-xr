@@ -40,6 +40,7 @@ from .stack import (  # noqa: F401  (combine_disp_product is deprecated)
 from .timeseries import (
     NoiseResult,
     Trajectory,
+    denoise,
     fit_noise,
     fit_trajectory,
     fit_velocity,
@@ -61,6 +62,7 @@ __all__ = [
     "build_virtual_frame",
     "config",
     "correct",
+    "denoise",
     "diagnostics",
     "downsample",
     "downsample_hex",

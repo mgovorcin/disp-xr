@@ -474,16 +474,16 @@ Goal: the Cal/Val science features S1–S4, fit/predict estimators and the GNSS 
 
 ### T31. Temporal denoising: Kalman and LOWESS
 
-- [ ] **T31. Temporal denoising: Kalman and LOWESS** — Depends on: T30 · PRD: S3
+- [x] **T31. Temporal denoising: Kalman and LOWESS** — Depends on: T30 · PRD: S3
   - Context: both methods ship in 1.0 with the same interface (PRD decision), ported from `tests/temporal_denoising/filters.py` and `fixed_lag.py`. Kalman: a local-linear-trend model with `q_from_timescale(tau, R)` (q = 3R/τ³), χ² gate 9, diffuse `p0_velocity`, RTS or fixed-lag smoother, and break covariance inflation. The covariance recursion is shared across pixels, leaving about 4 array ops per pixel per epoch. LOWESS: robust, bandwidth 60 d, 2 iterations, `max_gap_days`, evaluated natively at grid times. The study found no filter improves a velocity, so these are for display and resampling only.
   - Done when: `dxr.denoise(ds, method="kalman" | "lowess", grid=...)` returns a denoised series on acquisition or grid times. Ported versions of the study's `evaluate.score` tests (spike removed, step kept, transient kept) pass, with Kalman values within tolerance of the study (spike left about 0.2%, transient kept about 93%).
-  - [ ] T31.1 Port the Kalman filter with the shared covariance recursion and per-pixel state update over `(time, npix)`.
-  - [ ] T31.2 Add the RTS smoother and fixed-lag smoother (lag configurable; the study converges at about 3τ).
-  - [ ] T31.3 Propagate the Kalman state to grid times (prediction step only between acquisitions).
-  - [ ] T31.4 Port robust LOWESS, vectorized over pixels, with native grid evaluation and gap refusal from T30.
-  - [ ] T31.5 Expose `denoise(...)` and the accessor with one shared signature, and record the method and parameters in history. Set `attrs["denoised"] = method` on the output, which the fit functions check (T23.4).
-  - [ ] T31.6 Port `evaluate.score` as test utilities: inject spike, step and transient into fixture series and assert the thresholds.
-  - [ ] T31.7 Plan a check at a deforming site with topography-correlated troposphere (PRD open question): add it to the T29 frames, or document it as a known limitation.
+  - [x] T31.1 Port the Kalman filter with the shared covariance recursion and per-pixel state update over `(time, npix)`. Done: `timeseries.denoise.kalman_smooth`, vectorized over pixels. Each pixel keeps its own 2 x 2 covariance (three arrays) instead of the study's shared one: DISP pixels have their own missing epochs, and the study's production notes ask for a per-pixel gate (unwrap jumps) rather than its scene-wide median gate. `R` per pixel from the MAD of first differences, `q = 3R/tau^3`, diffuse start.
+  - [x] T31.2 Add the RTS smoother and fixed-lag smoother (lag configurable; the study converges at about 3τ). Done: RTS and fixed-lag (`lag`) smoothers; lag 8 is within 20% of RTS revision of lag 0 in the tests.
+  - [x] T31.3 Propagate the Kalman state to grid times (prediction step only between acquisitions). Done: grid dates merged into the time axis as epochs without a measurement (predicted, then smoothed), then refused by `gap_mask`.
+  - [x] T31.4 Port robust LOWESS, vectorized over pixels, with native grid evaluation and gap refusal from T30. Done: `timeseries.denoise.lowess`, vectorized over pixels, per-pixel bisquare robustness weights (Cleveland 1979; the study shared them across pixels), native evaluation at grid times, breaks by segment.
+  - [x] T31.5 Expose `denoise(...)` and the accessor with one shared signature, and record the method and parameters in history. Set `attrs["denoised"] = method` on the output, which the fit functions check (T23.4). Done: `dxr.denoise(obj, method, grid=None | 'auto' | dates, ...)` and `ds.disp.denoise`, recorded in history, `attrs['denoised']` set (fits refuse it).
+  - [x] T31.6 Port `evaluate.score` as test utilities: inject spike, step and transient into fixture series and assert the thresholds. Done: `tests/test_denoise.py` ports `evaluate.score`. Measured: Kalman tau 20 d spike -0.25%, step 100%, transient 92.8% (study 92.8%); tau 30 d transient 82.2% (study 82.2%); LOWESS spike 0.5%, transient 74.5% (study 74.9%).
+  - [x] T31.7 Plan a check at a deforming site with topography-correlated troposphere (PRD open question): add it to the T29 frames, or document it as a known limitation. Done: added to T29's frame choice (T29.1 already asks for a deforming site with topography-correlated troposphere); until then a known limitation in the `denoise` docs.
 
 ### T32. Residual analysis
 
