@@ -5,6 +5,7 @@ namespace as their plan tasks land (see docs/todo.md).
 """
 
 from . import accessor as _accessor  # noqa: F401  (registers .disp)
+from . import models
 from ._chunks import rechunk
 from ._version import __version__
 from .config import config
@@ -70,6 +71,7 @@ __all__ = [
     "fit_velocity",
     "fit_variogram",
     "mask",
+    "models",
     "open_disp",
     "open_disp_tree",
     "open_icechunk",

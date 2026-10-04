@@ -84,6 +84,7 @@ nav:
       - Overview: api/index.md
       - Find and open: api/open.md
       - Process: api/process.md
+      - Spatial models: api/models.md
       - Export: api/export.md
       - Icechunk and virtual stores: api/cloud.md
       - Plot: api/plot.md
