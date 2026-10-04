@@ -114,7 +114,7 @@ Still open in M0: T1.4b (name maintainers), T3.4 badge and T3.5 branch protectio
 | `quadtree.py` | S2 (quadtree) | `quadtree`, `Quadtree` (`points`, `leaf_id`, `to_raster`) | T28 |
 | `hexagons.py` | S2 (hexagon mode) | `downsample_hex` (planar and H3), `to_geodataframe`, `cell_polygons`, `hex_axial`, `hex_centers`, `hexagon_vertices` | T27.8 |
 | `downsample.py` | S2 | `downsample`, `to_points` | T27 |
-| `residuals.py` | S2 (cell uncertainty), S4 | `empirical_variogram`, `fit_variogram`, `VariogramModel`, `mean_block_correlation`, `mean_mask_correlation`, `n_eff_correlated` | T27.3b, T27.8, T32.1 |
+| `residuals.py` | S2 (cell uncertainty), S4 | `empirical_variogram`, `fit_variogram`, `VariogramModel`, `mean_block_correlation`, `mean_mask_correlation`, `n_eff_correlated`; `compare`, `Comparison` (geepers metrics) | T27.3b, T27.8, T32 |
 | `weights.py` | S2 | `quality_weights`, `residual_cycles`, `network_degree`, `residual_cycle_histogram` | T26 |
 | `plot.py` | F13 | `plot_map`, `plot_point`, `diverging_cmap` (`plot` extra, imported lazily) | T17 |
 | `accessor.py`, `_history.py`, `units.py`, `validate.py` | API rules | `.disp` accessor, operation history, unit conversion, validation | — |
@@ -173,6 +173,7 @@ Still open in M0: T1.4b (name maintainers), T3.4 badge and T3.5 branch protectio
 | --- | --- | --- |
 | 2026-10-03 | Fix: numba threads | `config["numba_threads"]` (1) sets `NUMBA_NUM_THREADS` on import; numbagg in dask tasks opened a pool per core per thread and crashed on a 224-core node |
 | 2026-09-30 | First index | Created from `specs.md`, `todo.md`, `code_review.md` and the source on `main` |
+| 2026-10-03 | T32.1–T32.3, T32.5 finished | `residuals.compare` / `Comparison` over geepers analysis and validation (geepers pinned to main until 0.4); normalized residuals, chi2, outlier and bad-epoch flags, cell mode |
 | 2026-10-03 | T25 finished; geepers is the GNSS engine | `gnss.py` adapters over geepers sources and reader; PRD GNSS-source question closed; geepers pixel-rounding bug worked around (floor) and flagged |
 | 2026-10-03 | T24 finished | `models.Trend`, lazy per-epoch `deramp` (accessor too), `Spline` and `Nearest` gridders; base drops zero-weight points |
 | 2026-10-03 | T19 finished | `models/` package: estimator base, `Chain`, `Mean`, coordinates helper, block cross-validation, shared estimator test suite |

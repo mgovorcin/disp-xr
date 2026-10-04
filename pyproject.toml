@@ -62,7 +62,8 @@ docs = [
   "matplotlib",
 ]
 # geepers is the GNSS engine (sources, downloads, sampling at stations).
-gnss = ["geepers>=0.3"]
+# 0.4 brings the analysis and validation functions disp_xr.analysis wraps.
+gnss = ["geepers>=0.4"]
 # H3 hexagons (downsample_hex(grid="h3")) and cell polygons (to_geodataframe).
 hex = ["h3>=4", "geopandas"]
 # MintPy is used only to read exports back in round-trip tests.
@@ -159,9 +160,10 @@ types-pyyaml = "*"
 h3-py = ">=4"
 geopandas = "*"
 
-# gnss extra: geepers is on PyPI only.
+# gnss extra: geepers is on PyPI only. Pinned to a main commit until 0.4 is
+# released (it carries the analysis and validation functions); then ">=0.4".
 [tool.pixi.feature.test.pypi-dependencies]
-geepers = ">=0.3"
+geepers = { git = "https://github.com/opera-adt/geepers.git", rev = "d5421787d9c41dbf7e4d0679249bb9d5145bcc40" }
 
 [tool.pixi.feature.docs.dependencies]
 mkdocs = "*"
