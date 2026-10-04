@@ -173,3 +173,9 @@ the number of dask threads. Each task now holds one band of rows (the cells
 whose center lies in it, plus a halo of one hexagon radius) for a few
 epochs, sized to about 128 MB. Results are identical to the whole-frame
 computation (tested). Its speed was not measured, for the reason above.
+
+**Quadtree (plan task T28.5).** `bench_downsample.py` also times
+`quadtree` (levels 3 to 8). Not run yet: on 2026-10-03 evening the page-touch
+check above took 61 s for 400 MB. The quadtree reads the data twice (the
+finest level's sums, from which every level and score follow, then the
+leaves' values), whatever the number of levels.

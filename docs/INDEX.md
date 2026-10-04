@@ -63,7 +63,7 @@ Still open in M0: T1.4b (name maintainers), T3.4 badge and T3.5 branch protectio
 | F15 Plate motion | T13.5 | Done: `plate_motion_los`, `remove_plate_motion` (ITRF2014-PMM) |
 | F16 Search | T4.5 | Exists, S1 only (`download.py`) |
 | S1 Colored-noise velocity | T20, T21, T22, T23 | Done: OLS, one-series colored noise, per-pixel Whittle and MIDAS, frame GLS with coherence groups; quadtree groups wait for T28; noise-model policy proposed, awaiting confirmation |
-| S2 Downsampling | T26, T27, T28, T29 | T26 and T27 done (quality weights, regular grid, variogram sigma, pyramids, bowser GeoZarr, planar and H3 hexagons); quadtree (T28) and trade study (T29) open |
+| S2 Downsampling | T26, T27, T28, T29 | T26 and T27 done; quadtree (T28) done except its benchmark numbers; trade study (T29) open |
 | S3 Temporal denoising | T30, T31 | Prototype outside repo (`00_tools/tests/temporal_denoising`) |
 | S4 Residual analysis | T32 | Residual statistics on branch |
 | C1 Zarr v3 output | T14.2, T14.2a | Not started |
@@ -107,6 +107,7 @@ Still open in M0: T1.4b (name maintainers), T3.4 badge and T3.5 branch protectio
 | `tutorial.py` | NFR Docs, tests | `make_disp_stack`: synthetic granules with a known truth (was `tests/fixtures/make_disp.py`); `correlated_noise`: a field with a known exponential covariance | T2.3, T16.3, T27.3b |
 | `export/geozarr.py` | C4 | `to_geozarr` (bowser and standard profiles), `display_factors`, `bowser_attrs`, `reference_lonlat`, `los_attrs`, `histogram_stats` | T27.9 |
 | `export/multiscales.py` | C4 | `build_overviews`, `to_pyramid`, `open_pyramid`, `MULTISCALES_CONVENTION` | T27.7, T27.9 |
+| `quadtree.py` | S2 (quadtree) | `quadtree`, `Quadtree` (`points`, `leaf_id`, `to_raster`) | T28 |
 | `hexagons.py` | S2 (hexagon mode) | `downsample_hex` (planar and H3), `to_geodataframe`, `cell_polygons`, `hex_axial`, `hex_centers`, `hexagon_vertices` | T27.8 |
 | `downsample.py` | S2 | `downsample`, `to_points` | T27 |
 | `residuals.py` | S2 (cell uncertainty), S4 | `empirical_variogram`, `fit_variogram`, `VariogramModel`, `mean_block_correlation`, `mean_mask_correlation`, `n_eff_correlated` | T27.3b, T27.8, T32.1 |
@@ -167,6 +168,7 @@ Still open in M0: T1.4b (name maintainers), T3.4 badge and T3.5 branch protectio
 | Date | Trigger | Changes |
 | --- | --- | --- |
 | 2026-09-30 | First index | Created from `specs.md`, `todo.md`, `code_review.md` and the source on `main` |
+| 2026-10-03 | T28.1–T28.4 finished | `quadtree.py`: composed level sums (two data passes), pluggable split metrics, top-down boolean selection, leaf table and leaf-id raster; T28.5 open for benchmark numbers (node allocation stalls) |
 | 2026-10-03 | T27 finished (T27.8 H3) | `downsample_hex(grid="h3")`, `to_geodataframe`, `cell_polygons`, `hex` extra; banded median writes by ownership |
 | 2026-10-03 | Hexagon median by bands | `_banded`: median and mode per band of rows with a halo, about 128 MB per task instead of a whole epoch of the frame; node allocation stalls explained in `benchmarks/README.md` |
 | 2026-10-03 | Downsampling performance | One-pass per-cell sums for squares and hexagons (graph 29% and 38% smaller), windowed hexagon partial sums (13x smaller per block on a full frame); timings reported for T27.8 withdrawn (node order effect), see `benchmarks/README.md` |

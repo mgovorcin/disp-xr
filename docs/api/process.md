@@ -80,6 +80,10 @@ after. See [Concepts](../concepts.md).
 
 ::: disp_xr.downsample_hex
 
+::: disp_xr.quadtree
+
+::: disp_xr.Quadtree
+
 ::: disp_xr.hexagons
     options:
       show_root_heading: false

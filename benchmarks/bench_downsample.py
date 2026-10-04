@@ -1,7 +1,8 @@
-"""Benchmark downsample on a 1000 x 1000 x 100 stack (plan tasks T27.6, T27.8).
+"""Benchmark downsampling on a 1000 x 1000 x 100 stack (T27.6, T27.8, T28.5).
 
 Weighted mean and weighted median at factor 33 (990 m squares), and with
-``downsample_hex`` at the equal-area spacing (1,064 m hexagons), per-epoch
+``downsample_hex`` at the equal-area spacing (1,064 m hexagons), and a
+quadtree from 240 m to 7.7 km (its time includes the score pass), per-epoch
 random weights, 10% NaNs, dask limited to ``config["num_workers"]`` threads.
 Run::
 
@@ -42,17 +43,27 @@ def main() -> None:
         f"load {os.getloadavg()[0]:.0f}"
     )
     spacing = 990.0 * np.sqrt(2 / np.sqrt(3))  # same area as a 990 m square
-    runs = {
-        f"square {stat}": lambda stat=stat: dxr.downsample(
-            ds, factor=33, stat=stat, weights=w
-        )
-        for stat in ("wmean", "wmedian")
-    } | {
-        f"hex {stat}": lambda stat=stat: dxr.downsample_hex(
-            ds, spacing=spacing, stat=stat, weights=w
-        )
-        for stat in ("wmean", "wmedian")
-    }
+    runs = (
+        {
+            f"square {stat}": lambda stat=stat: dxr.downsample(
+                ds, factor=33, stat=stat, weights=w
+            )
+            for stat in ("wmean", "wmedian")
+        }
+        | {
+            f"hex {stat}": lambda stat=stat: dxr.downsample_hex(
+                ds, spacing=spacing, stat=stat, weights=w
+            )
+            for stat in ("wmean", "wmedian")
+        }
+        | {
+            "quadtree": (
+                lambda: dxr.quadtree(
+                    ds, threshold=0.5, min_level=3, max_level=8, weights=w
+                ).points
+            )
+        }
+    )
     with dask.config.set(num_workers=config.get("num_workers")):
         # First allocations on a busy node are slow (seconds); warm up so the
         # first method timed is not penalized, then alternate the order and

@@ -27,6 +27,7 @@ from .geometry.static import open_static
 from .hexagons import downsample_hex, to_geodataframe
 from .open import open_disp, open_disp_tree
 from .product import find_products, get_disp_info  # noqa: F401  (deprecated)
+from .quadtree import Quadtree, quadtree
 from .quality import mask, quality_summary, valid_mask
 from .reference import rereference
 from .residuals import VariogramModel, empirical_variogram, fit_variogram
@@ -51,6 +52,7 @@ from .weights import quality_weights
 __all__ = [
     "NaNPolicy",
     "NoiseResult",
+    "Quadtree",
     "Trajectory",
     "VariogramModel",
     "__version__",
@@ -76,6 +78,7 @@ __all__ = [
     "open_virtual",
     "predict_trajectory",
     "quality_summary",
+    "quadtree",
     "quality_weights",
     "rechunk",
     "remove_plate_motion",
