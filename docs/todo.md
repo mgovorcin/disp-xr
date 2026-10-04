@@ -316,15 +316,15 @@ Goal: the Cal/Val science features S1–S4, fit/predict estimators and the GNSS 
 
 ### T19. Estimator base (fit / predict)
 
-- [ ] **T19. Estimator base (fit / predict)** — Depends on: T18 · PRD: F9, API (Estimators)
+- [x] **T19. Estimator base (fit / predict)** — Depends on: T18 · PRD: F9, API (Estimators)
   - Context: disp-xr implements its own estimators. verde is the design reference only and not a dependency (PRD decision). The shape: `fit(coords, data, weights=None)` returns self, `predict(coords)`, `grid(...)` and `score(...)`, fitted attributes end in `_`, and a `Chain` composes estimators.
   - Done when: a `BaseEstimator` and `Chain` exist with a dummy mean estimator that passes a shared estimator test suite.
-  - [ ] T19.1 Define the coords convention: a tuple `(easting, northing)` of arrays in the dataset CRS, plus helpers to build coords from an `xr.Dataset` or a point table.
-  - [ ] T19.2 Implement `BaseEstimator` with `get_params`, `set_params`, `__repr__`, input checks (shapes, NaN, weights ≥ 0) and a `score` default (weighted R²).
-  - [ ] T19.3 Implement `grid(region=None, spacing=None, like=None)`, which returns an `xr.DataArray` with the CRS.
-  - [ ] T19.4 Implement `Chain([...])`: each step fits the residual of the previous one; predict sums the steps.
-  - [ ] T19.5 Add a block k-fold spatial cross-validation helper `cross_val_score(est, coords, data, spacing)`.
-  - [ ] T19.6 Write a shared test suite in `tests/estimators/common.py` that later estimators reuse. Use xarray-spatial's IDW, kriging and spline as cross-checks where available (test-only).
+  - [x] T19.1 Define the coords convention: a tuple `(easting, northing)` of arrays in the dataset CRS, plus helpers to build coords from an `xr.Dataset` or a point table. Done: `models.coordinates` (raster -> 2D, point table or DataFrame -> 1D).
+  - [x] T19.2 Implement `BaseEstimator` with `get_params`, `set_params`, `__repr__`, input checks (shapes, NaN, weights ≥ 0) and a `score` default (weighted R²). Done: `models.BaseEstimator` (parameters from `__init__`, NaN and zero-weight points dropped, negative weights refused, `NotFittedError`, weighted R² `score`).
+  - [x] T19.3 Implement `grid(region=None, spacing=None, like=None)`, which returns an `xr.DataArray` with the CRS. Done: `grid(region=, spacing=, like=, crs=)`, north up, CRS from `like` or `crs`.
+  - [x] T19.4 Implement `Chain([...])`: each step fits the residual of the previous one; predict sums the steps. Done: `models.Chain`.
+  - [x] T19.5 Add a block k-fold spatial cross-validation helper `cross_val_score(est, coords, data, spacing)`. Done: `models.cross_val_score` (square blocks shuffled into folds) and `models.clone`.
+  - [x] T19.6 Write a shared test suite in `tests/estimators/common.py` that later estimators reuse. Use xarray-spatial's IDW, kriging and spline as cross-checks where available (test-only). Done: `tests/estimators/common.py` (`check_estimator`, `synthetic`), passed by `Mean`, a test plane and a `Chain`; the xarray-spatial cross-checks belong to the gridders (T24.4).
 
 ### T20. Trajectory model and OLS velocity
 
