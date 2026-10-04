@@ -1,4 +1,8 @@
-"""Spatial variograms of residual fields (PRD S2 cell uncertainty, plan task T27.3b).
+"""Residuals: spatial variograms (T27.3b) and DISP against GNSS (T32).
+
+:func:`compare` compares DISP with GNSS at the stations, with geepers
+computing the metrics (see its docstring). The rest of this docstring
+covers the variograms.
 
 The sigma of a cell mean computed as ``spread / sqrt(n)`` assumes independent
 pixels. InSAR errors (troposphere, unwrapping, orbits) are correlated over
@@ -34,13 +38,15 @@ from __future__ import annotations
 import json
 from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Literal, Optional, Union
+from typing import Any, Literal, Optional, Union
 
 import numpy as np
 import xarray as xr
 
 __all__ = [
+    "Comparison",
     "VariogramModel",
+    "compare",
     "empirical_variogram",
     "fit_variogram",
     "mean_block_correlation",
@@ -344,3 +350,235 @@ def n_eff_correlated(sum_w, sum_w2, rho_bar: float):
     """
     total2 = sum_w**2
     return total2 / (sum_w2 + (total2 - sum_w2) * rho_bar)
+
+
+# --- DISP against GNSS (PRD S4, plan task T32) ---------------------------------
+
+
+@dataclass
+class Comparison:
+    """DISP against GNSS at the stations; the metrics come from geepers.
+
+    Attributes are filled by :func:`compare`.
+    """
+
+    series: xr.Dataset
+    """``(station, time)``: ``insar``, ``gnss`` (on the DISP epochs and
+    reference), ``residual`` (insar - gnss) and ``sigma_gnss``."""
+    stations: Any
+    """DataFrame per station: velocities of both series from the same
+    estimator (geepers ``fit_velocities``) with sigmas, ``velocity_residual``,
+    ``velocity_sigma`` (combined), ``normalized_residual``, ``chi2`` (reduced,
+    of the displacement residual against the GNSS sigma), ``n_dates`` and
+    ``outlier``."""
+    pairs: Any
+    """geepers ``pairwise_differential_rmse``: RMSE of the relative misfit of
+    every station pair against distance."""
+    profile: Any
+    """geepers ``binned_rmse_profile`` of ``pairs`` (with ``requirement``
+    and ``fraction_passing`` when a requirement is given)."""
+    epochs: Any
+    """geepers ``epoch_rmse`` per DISP epoch, with ``flag`` for epochs above
+    the median plus ``epoch_flag`` x MAD of the RMSE."""
+    semivariogram: Any
+    """geepers ``misfit_semivariogram`` of ``pairs``."""
+    summary: dict
+    """geepers ``comparison_stats`` of the station velocities (bias, MAD,
+    RMSE, r², n)."""
+
+    def plot_velocities(self, **kwargs: Any) -> Any:
+        """Scatter GNSS against DISP velocities (geepers ``plot_velocity_scatter``)."""
+        from geepers.validation import plot_velocity_scatter
+
+        return plot_velocity_scatter(self.stations, **kwargs)
+
+    def plot_semivariogram(self, **kwargs: Any) -> Any:
+        """Plot the misfit semivariogram (geepers ``plot_semivariogram``)."""
+        from geepers.validation import plot_semivariogram
+
+        return plot_semivariogram(self.pairs, self.semivariogram, **kwargs)
+
+
+def _merged_tables(series: xr.Dataset) -> dict:
+    """Per-station DataFrames indexed by date with ``los_gps``, ``los_insar``."""
+    import pandas as pd
+
+    out = {}
+    for station in series["station"].values:
+        one = series.sel(station=station)
+        out[str(station)] = pd.DataFrame(
+            {"los_gps": one["gnss"].values, "los_insar": one["insar"].values},
+            index=pd.DatetimeIndex(one["time"].values, name="date"),
+        )
+    return out
+
+
+def _cell_series(cells: Any, gnss: xr.Dataset, layer: str) -> xr.DataArray:
+    """Values of the cell holding each station: ``(station, time)``."""
+    from scipy.spatial import cKDTree
+
+    if hasattr(cells, "leaf_id"):  # a Quadtree
+        leaf = cells.leaf_id.sel(x=gnss["x"], y=gnss["y"], method="nearest").values
+        points = cells.points
+        index = np.asarray(leaf, dtype=np.int64)
+    else:
+        points = cells
+        tree = cKDTree(np.column_stack([points["x"].values, points["y"].values]))
+        _, index = tree.query(np.column_stack([gnss["x"].values, gnss["y"].values]))
+    values = points[layer].isel(
+        point=xr.DataArray(np.maximum(index, 0), dims="station")
+    )
+    values = values.where(xr.DataArray(index >= 0, dims="station"))
+    values = values.drop_vars([c for c in values.coords if c not in ("time",)])
+    return values.assign_coords(station=gnss["station"].values).transpose(
+        "station", ...
+    )
+
+
+def compare(
+    data: Any,
+    gnss: xr.Dataset,
+    static: xr.Dataset,
+    *,
+    buffer_m: float = 0.0,
+    layer: str = "displacement",
+    velocity_method: str = "lsq",
+    tolerance: str = "1D",
+    min_common_dates: int = 3,
+    min_stations: int = 3,
+    n_bins: int = 10,
+    requirement: Optional[Any] = None,
+    outlier_sigma: float = 3.0,
+    epoch_flag: float = 3.0,
+) -> Comparison:
+    """Compare DISP with GNSS at the stations (or the cells holding them).
+
+    geepers computes the metrics (velocities from one estimator applied to
+    both series, pairwise differential RMSE against distance, its binned
+    profile and semivariogram, epoch RMSE, agreement statistics); disp-xr
+    prepares the series and adds normalized velocity residuals, reduced χ²
+    per station and flags.
+
+    Parameters
+    ----------
+    data : xr.Dataset, point table or Quadtree
+        DISP at 30 m (read at each station with :func:`disp_xr.gnss.sample`),
+        or downsampled cells: a point table from :func:`disp_xr.to_points`
+        or :func:`disp_xr.downsample_hex` (the nearest cell center) or a
+        :class:`disp_xr.Quadtree` (the leaf holding the station).
+    gnss : xr.Dataset
+        :func:`disp_xr.gnss.load` output for the same frame.
+    static : xr.Dataset
+        LOS layers for :func:`disp_xr.gnss.to_los`.
+    buffer_m : float
+        Window radius for sampling 30 m data.
+    layer : str
+        DISP layer.
+    velocity_method : {"lsq", "midas", "trend"}
+        Estimator for both series (geepers ``fit_velocities``); MIDAS needs
+        about a year of data.
+    tolerance : str
+        Largest gap between a DISP epoch and a GNSS day.
+    min_common_dates, min_stations, n_bins
+        Passed to geepers (pairs, epochs, profile).
+    requirement : callable, optional
+        ``requirement(distance_km) -> rmse`` threshold for the profile, in
+        the units of the data.
+    outlier_sigma : float
+        Stations with ``|normalized_residual|`` or ``sqrt(chi2)`` above this
+        are flagged.
+    epoch_flag : float
+        Epochs whose RMSE exceeds the median plus this many MADs are flagged.
+
+    Returns
+    -------
+    Comparison
+
+    """
+    from geepers.analysis import (
+        binned_rmse_profile,
+        epoch_rmse,
+        pairwise_differential_rmse,
+    )
+    from geepers.validation import (
+        comparison_stats,
+        fit_velocities,
+        misfit_semivariogram,
+    )
+
+    from . import gnss as gnss_mod
+
+    if isinstance(data, xr.Dataset) and {"y", "x"} <= set(data.dims):
+        insar = gnss_mod.sample(data, gnss, buffer_m=buffer_m, layer=layer)
+        times = data["time"]
+    else:
+        insar = _cell_series(data, gnss, layer)
+        times = insar["time"]
+    projected = gnss_mod.to_los(gnss, static)
+    gnss_los = gnss_mod.align(projected["los"], times, tolerance=tolerance)
+    series = xr.Dataset(
+        {
+            "insar": insar.drop_vars(
+                [c for c in insar.coords if c not in ("station", "time")]
+            ),
+            "gnss": gnss_los.drop_vars(
+                [c for c in gnss_los.coords if c not in ("station", "time")]
+            ),
+        }
+    )
+    if "sigma_los" in projected:
+        sigma = projected["sigma_los"].reindex(
+            time=series["time"].values,
+            method="nearest",
+            tolerance=np.timedelta64(1, "D"),
+        )
+        series["sigma_gnss"] = sigma.drop_vars(
+            [c for c in sigma.coords if c not in ("station", "time")]
+        )
+    series["residual"] = series["insar"] - series["gnss"]
+    series = series.assign_coords(
+        {c: gnss[c] for c in ("lon", "lat", "x", "y") if c in gnss.coords}
+    )
+
+    tables = _merged_tables(series)
+    coords = {
+        str(s): (float(lo), float(la))
+        for s, lo, la in zip(
+            series["station"].values, gnss["lon"].values, gnss["lat"].values
+        )
+    }
+    stations = fit_velocities(tables, method=velocity_method)
+    stations["velocity_residual"] = (
+        stations["insar_velocity"] - stations["gps_velocity"]
+    )
+    stations["velocity_sigma"] = np.hypot(
+        stations["insar_sigma"], stations["gps_sigma"]
+    )
+    stations["normalized_residual"] = (
+        stations["velocity_residual"] / stations["velocity_sigma"]
+    )
+    resid = series["residual"] - series["residual"].mean("time")
+    if "sigma_gnss" in series:
+        z2 = (resid / series["sigma_gnss"]) ** 2
+        count = z2.notnull().sum("time")
+        chi2 = z2.sum("time") / (count - 1).where(count > 1)
+        stations["chi2"] = chi2.to_series().reindex(stations.index).to_numpy()
+    else:
+        stations["chi2"] = np.nan
+    stations["outlier"] = (stations["normalized_residual"].abs() > outlier_sigma) | (
+        np.sqrt(stations["chi2"]) > outlier_sigma
+    )
+    pairs = pairwise_differential_rmse(
+        tables, coords, min_common_dates=min_common_dates
+    )
+    profile = binned_rmse_profile(pairs, n_bins=n_bins, requirement=requirement)
+    epochs = epoch_rmse(tables, min_stations=min_stations)
+    if len(epochs):
+        median = epochs["rmse"].median()
+        mad = 1.4826 * (epochs["rmse"] - median).abs().median()
+        epochs["flag"] = epochs["rmse"] > median + epoch_flag * mad
+    semivariogram = misfit_semivariogram(pairs) if len(pairs) else pairs
+    summary = comparison_stats(
+        stations["gps_velocity"].to_numpy(), stations["insar_velocity"].to_numpy()
+    )
+    return Comparison(series, stations, pairs, profile, epochs, semivariogram, summary)

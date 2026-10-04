@@ -29,3 +29,21 @@ residual = insar - gps_on_disp
 ::: disp_xr.gnss.sample
 
 ::: disp_xr.gnss.align
+
+## DISP against GNSS
+
+`dxr.residuals.compare` reads DISP at the stations (or the downsampled cell
+holding each one), puts GNSS on the DISP epochs and reference, and lets
+geepers compute the metrics.
+
+```python
+result = dxr.residuals.compare(ds, gps, static, buffer_m=100,
+                               requirement=lambda d: (3 + 0.5 * d**0.5) / 1000)
+result.stations          # velocities, normalized residuals, chi2, outliers
+result.profile           # pairwise RMSE against distance, with the requirement
+result.plot_velocities()
+```
+
+::: disp_xr.residuals.compare
+
+::: disp_xr.residuals.Comparison

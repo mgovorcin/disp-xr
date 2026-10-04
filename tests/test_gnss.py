@@ -8,45 +8,9 @@ import xarray as xr
 import disp_xr as dxr
 
 geepers = pytest.importorskip("geepers")
-gpd = pytest.importorskip("geopandas")
-from geepers.gps_sources.base import BaseGpsSource  # noqa: E402
-from shapely.geometry import Point  # noqa: E402
+from fixtures.fake_gnss import FakeSource  # noqa: E402
 
 from disp_xr import gnss  # noqa: E402
-
-
-class FakeSource(BaseGpsSource):
-    """A geepers source with in-memory stations (no network)."""
-
-    def __init__(self, table, series, cache_dir):
-        super().__init__(cache_dir=cache_dir)
-        self.table = table
-        self.series = series
-
-    def _read_station_data(self):
-        return gpd.GeoDataFrame(
-            self.table,
-            geometry=[Point(lo, la) for lo, la in zip(self.table.lon, self.table.lat)],
-            crs="EPSG:4326",
-        )
-
-    def timeseries(
-        self,
-        station_id,
-        /,
-        frame="ENU",  # noqa: ARG002
-        start_date=None,
-        end_date=None,
-        zero_by="mean",  # noqa: ARG002
-        download_if_missing=True,  # noqa: ARG002
-        **kwargs,  # noqa: ARG002
-    ):
-        df = self.series[station_id].copy()
-        if start_date:
-            df = df[df.date >= pd.Timestamp(start_date)]
-        if end_date:
-            df = df[df.date <= pd.Timestamp(end_date)]
-        return df.reset_index(drop=True)
 
 
 @pytest.fixture
