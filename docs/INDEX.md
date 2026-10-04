@@ -109,6 +109,7 @@ Still open in M0: T1.4b (name maintainers), T3.4 badge and T3.5 branch protectio
 | `export/multiscales.py` | C4 | `build_overviews`, `to_pyramid`, `open_pyramid`, `MULTISCALES_CONVENTION` | T27.7, T27.9 |
 | `models/trend.py` | F9 | `Trend`, `deramp`, `polynomial_terms` | T24 |
 | `models/gridding.py` | F9 | `Spline`, `Nearest` | T24.4 |
+| `diagnostics.py` | S4 | `model_diagnostics`, `significance`, `anderson_darling` | T32.6b–c |
 | `gnss.py` | F10 | `gnss.load`, `stations`, `get_source`, `to_los`, `sample`, `align` (geepers engine) | T25 |
 | `models/base.py` | F9, API (Estimators) | `BaseEstimator`, `Chain`, `Mean`, `coordinates`, `cross_val_score`, `clone` | T19 |
 | `quadtree.py` | S2 (quadtree) | `quadtree`, `Quadtree` (`points`, `leaf_id`, `to_raster`) | T28 |
@@ -171,6 +172,7 @@ Still open in M0: T1.4b (name maintainers), T3.4 badge and T3.5 branch protectio
 
 | Date | Trigger | Changes |
 | --- | --- | --- |
+| 2026-10-03 | T32.4, T32.6b–d finished | `diagnostics.py`; `residuals.residual_spectra`, `residuals.common_mode` (geepers CME); EOF example and allowed-to-fail CI job; T32 open for the requirement thresholds (T32.6) and the gallery (T32.7) |
 | 2026-10-03 | Fix: numba threads | `config["numba_threads"]` (1) sets `NUMBA_NUM_THREADS` on import; numbagg in dask tasks opened a pool per core per thread and crashed on a 224-core node |
 | 2026-09-30 | First index | Created from `specs.md`, `todo.md`, `code_review.md` and the source on `main` |
 | 2026-10-03 | T32.1–T32.3, T32.5 finished | `residuals.compare` / `Comparison` over geepers analysis and validation (geepers pinned to main until 0.4); normalized residuals, chi2, outlier and bad-epoch flags, cell mode |
