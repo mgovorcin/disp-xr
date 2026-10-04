@@ -79,7 +79,7 @@ def _brute(ds, w, spacing, stat):
                 order = np.argsort(v)
                 cw = np.cumsum(wt[order])
                 out[t, k] = v[order][np.argmax(cw >= 0.5 * cw[-1])]
-            spread = np.sqrt(max(np.sum(wt * v**2) / wt.sum() - mean**2, 0))
+            spread = np.sqrt(np.sum(wt * (v - mean) ** 2) / wt.sum())  # two-pass
             sigma[t, k] = spread / np.sqrt(wt.sum() ** 2 / np.sum(wt**2))
     return cells, out, sigma, modes
 
@@ -209,3 +209,19 @@ def test_plot_hex(stack_dir):
     ax = dxr.plot.plot_hex(hexes)
     assert len(ax.collections) == 1
     assert "300 m hexagons" in ax.get_title(loc="left")
+
+
+def test_group_sum_windows_match_dense():
+    from disp_xr.hexagons import _group_sum, _id_range, _labels, _row_windows
+
+    ds, _ = _dataset(nt=4, ny=200, nx=40)
+    bounds = _id_range(ds, SPACING)
+    n_ids = bounds[2] * bounds[3]
+    labels = _labels(ds, SPACING, bounds)
+    values = ds.displacement.fillna(0.0)
+    dense = _group_sum(values, labels, n_ids)  # numpy path
+    lazy = _group_sum(values.chunk({"y": 13, "x": 17}), labels, n_ids)
+    np.testing.assert_allclose(lazy.compute(), dense, rtol=1e-12)
+    # Each block's partial covers a window of cells, not all of them.
+    _, width = _row_windows(labels, values.chunk({"y": 13}).chunks[1])
+    assert width < n_ids / 5

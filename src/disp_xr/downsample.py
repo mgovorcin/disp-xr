@@ -233,12 +233,72 @@ def _resolve_weights(
     return w, static
 
 
+SUMS = ("sum_w", "sum_w2", "sum_wv", "sum_wvv", "n_valid")
+
+
+def _pixel_sums(v: np.ndarray, w: np.ndarray, reduce: Callable) -> np.ndarray:
+    """Return Σw, Σw², Σwv, Σwv² and the valid count per cell, in one pass.
+
+    ``reduce`` sums a pixel array into cells. Stacked on a new first axis in
+    the order of ``SUMS``. One pass over ``v`` and ``w`` instead of five
+    full-size temporaries is what makes downsampling memory-bound rather
+    than memory-starved on a busy node.
+    """
+    ok = np.isfinite(v)
+    w0 = np.where(ok, w, 0.0)
+    vz = np.where(ok, v, 0.0)
+    wv = w0 * vz
+    return np.stack(
+        [reduce(w0), reduce(w0 * w0), reduce(wv), reduce(wv * vz), reduce(ok * 1.0)]
+    )
+
+
+def _block_cell_sums(
+    v: xr.DataArray, w: xr.DataArray, factor: int
+) -> tuple[xr.DataArray, ...]:
+    """Per-block Σw, Σw², Σwv, Σwv² and valid count, lazily (see ``SUMS``)."""
+    order = [d for d in v.dims if d not in ("y", "x")] + ["y", "x"]
+    vp = _aligned(_pad(v.transpose(*order), factor, np.nan), factor)
+    wp = _pad(w.transpose(*order), factor, 0.0)
+
+    def reduce(a: np.ndarray) -> np.ndarray:
+        *lead, by, bx = a.shape
+        return a.reshape(*lead, by // factor, factor, bx // factor, factor).sum(
+            axis=(-3, -1)
+        )
+
+    def kernel(vb: np.ndarray, wb: np.ndarray) -> np.ndarray:
+        return _pixel_sums(vb, wb, reduce)
+
+    if vp.chunks is None:
+        stacked = kernel(np.asarray(vp.data), np.asarray(wp.data))
+    else:
+        import dask.array as da
+
+        data = vp.data
+        weights = da.asarray(wp.data).rechunk(data.chunks)
+        stacked = da.map_blocks(
+            kernel,
+            data,
+            weights,
+            new_axis=0,
+            chunks=((len(SUMS),),)
+            + data.chunks[:-2]
+            + tuple(tuple(c // factor for c in ch) for ch in data.chunks[-2:]),
+            dtype=np.float64,
+        )
+    coords = {d: vp[d] for d in order[:-2] if d in vp.coords}
+    return tuple(
+        xr.DataArray(stacked[i], dims=order, coords=coords) for i in range(len(SUMS))
+    )
+
+
 def _aggregate_layers(
     ds: xr.Dataset,
     w: xr.DataArray,
     *,
     layers: list[str],
-    group_sum: Callable[[xr.DataArray], xr.DataArray],
+    cell_sums: Callable[[xr.DataArray, xr.DataArray], tuple[xr.DataArray, ...]],
     median: Callable[[xr.DataArray, xr.DataArray], xr.DataArray],
     full: float,
     stat: Stat,
@@ -248,7 +308,8 @@ def _aggregate_layers(
 ) -> tuple[dict[str, xr.DataArray], dict[str, xr.DataArray]]:
     """Per-cell value, sigma and counts of float layers, for any cell shape.
 
-    ``group_sum`` sums pixels into cells, ``median`` returns the weighted
+    ``cell_sums(v, w)`` returns the per-cell sums named in ``SUMS``,
+    ``median`` returns the weighted
     median per cell, ``full`` is the pixel count of a full cell, and
     ``rho_bar`` the mean pixel correlation of a full cell under a variogram.
     Returns the per-layer variables and those shared by all layers.
@@ -261,22 +322,22 @@ def _aggregate_layers(
             fill = v.attrs.get("_FillValue", v.encoding.get("_FillValue"))
             v = v.where(v != fill) if fill is not None else v
         v = v.astype(np.float64)
-        wv = w.broadcast_like(v).where(v.notnull(), 0.0)
+        wb = w.broadcast_like(v)
         if v.chunks is not None:
-            wv = wv.chunk(v.chunksizes)
-        valid = v.notnull()
-        sum_w = group_sum(wv)
-        sum_w2 = group_sum(wv**2)
-        sum_wv = group_sum(wv * v.fillna(0.0))
-        sum_wvv = group_sum(wv * v.fillna(0.0) ** 2)
-        n_valid = group_sum(valid.astype(np.int32))
+            wb = wb.chunk(v.chunksizes)
+        sum_w, sum_w2, sum_wv, sum_wvv, n_valid = cell_sums(v, wb)
+        n_valid = n_valid.astype(np.int32)
         mean = sum_wv / sum_w.where(sum_w > 0)
-        spread = np.sqrt((sum_wvv / sum_w.where(sum_w > 0) - mean**2).clip(min=0.0))
+        mean_square = sum_wvv / sum_w.where(sum_w > 0)
+        # E[v²] - E[v]² cancels; below this relative size it is rounding.
+        variance = mean_square - mean**2
+        variance = variance.where(variance > 1e-12 * mean_square, 0.0)
+        spread = np.sqrt(variance)
         n_eff = sum_w**2 / sum_w2.where(sum_w2 > 0)
         if stat == "wmean":
             value = mean
         else:
-            value = median(v, wv)
+            value = median(v, wb.where(v.notnull(), 0.0))
             value = value.drop_vars([c for c in value.coords if c not in value.dims])
         keep = (1.0 - n_valid / full) <= nan_threshold
         keep &= sum_w > 0
@@ -440,7 +501,7 @@ def downsample(
         ds,
         w,
         layers=layers,
-        group_sum=lambda da: _block_sum(da, f),
+        cell_sums=lambda v, w: _block_cell_sums(v, w, f),
         median=lambda v, wv: _block_reduce(
             [v, wv], f, _weighted_median_blocks, np.float64
         ),

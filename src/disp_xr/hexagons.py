@@ -35,9 +35,11 @@ from ._history import recorded
 from .config import bounded_threads
 from .downsample import (
     CATEGORICAL_DEFAULTS,
+    SUMS,
     Categorical,
     Stat,
     _aggregate_layers,
+    _pixel_sums,
     _resolve_weights,
 )
 from .residuals import VariogramModel, mean_mask_correlation
@@ -130,41 +132,97 @@ def _bincount_cells(values: np.ndarray, labels: np.ndarray, n_ids: int) -> np.nd
     return sums.reshape(*lead, n_ids)
 
 
-def _group_sum(da: xr.DataArray, labels: np.ndarray, n_ids: int) -> xr.DataArray:
-    """Sum a ``(..., y, x)`` DataArray into cells, lazily for dask input.
+def _row_windows(labels: np.ndarray, ychunks) -> tuple[np.ndarray, int]:
+    """Return the first cell id of each row of blocks, and the window width."""
+    edges = np.concatenate([[0], np.cumsum(ychunks)])
+    bands = [labels[a:b] for a, b in zip(edges[:-1], edges[1:])]
+    starts = np.array([band.min() for band in bands])
+    stops = np.array([band.max() + 1 for band in bands])
+    return starts, int((stops - starts).max())
 
-    Each dask block is summed into all cells with one ``np.bincount``, then
-    the blocks are added. About 100x faster than flox's grouped sum here
-    (cell ids are known up front and dense).
+
+def _group_reduce(
+    arrays: list[xr.DataArray], labels: np.ndarray, n_ids: int, kernel, k: int
+) -> xr.DataArray:
+    """Reduce ``(..., y, x)`` arrays into cells with ``kernel``, lazily for dask.
+
+    ``kernel(*blocks, reduce)`` returns ``k`` stacked per-cell results, where
+    ``reduce`` sums a pixel array into cells. Cell ids grow with the hexagon
+    row, so the pixels of one row of dask blocks fall in a contiguous window
+    of ids, known from ``labels``. Each block is reduced into its window with
+    ``np.bincount``; the blocks of a row are added, and the row windows are
+    overlap-added into all cells. The partial sums then hold about one copy
+    of the output, not one per block (a frame at 1 km has about 84,000
+    cells). Returns dims ``("stat", ..., "cell")``.
     """
-    order = [d for d in da.dims if d not in ("y", "x")] + ["y", "x"]
-    da = da.transpose(*order)
+    order = [d for d in arrays[0].dims if d not in ("y", "x")] + ["y", "x"]
+    arrays = [a.transpose(*order) for a in arrays]
     lead_dims = order[:-2]
-    data = da.data
+    data = arrays[0].data
     if isinstance(data, np.ndarray):
-        result = _bincount_cells(data.astype(np.float64), labels, n_ids)
+        result = kernel(
+            *(np.asarray(a.data) for a in arrays),
+            lambda a: _bincount_cells(a, labels, n_ids),
+        )
     else:
         import dask.array as darr
 
         ychunks, xchunks = data.chunks[-2:]
+        starts, width = _row_windows(labels, ychunks)
+        datas = [darr.asarray(a.data).rechunk(data.chunks) for a in arrays]
         lab = darr.from_array(labels, chunks=(ychunks, xchunks))
 
-        def block(v: np.ndarray, lb: np.ndarray) -> np.ndarray:
-            out = _bincount_cells(v.astype(np.float64), lb, n_ids)
-            return out.reshape(*out.shape[:-1], 1, 1, n_ids)
+        def block(*blocks: np.ndarray, block_info=None) -> np.ndarray:
+            *values, lb = blocks
+            row = block_info[0]["chunk-location"][-2]
+            local = lb - starts[row]
+            out = kernel(*values, lambda a: _bincount_cells(a, local, width))
+            return out.reshape(*out.shape[:-1], 1, 1, width)
 
         partial = darr.map_blocks(
             block,
-            data,
+            *datas,
             lab,
-            new_axis=data.ndim,
-            chunks=data.chunks[:-2]
-            + ((1,) * len(ychunks), (1,) * len(xchunks), (n_ids,)),
+            new_axis=[0, data.ndim + 1],
+            chunks=((k,),)
+            + data.chunks[:-2]
+            + ((1,) * len(ychunks), (1,) * len(xchunks), (width,)),
             dtype=np.float64,
         )
-        result = partial.sum(axis=(-3, -2))
-    coords = {d: da[d] for d in lead_dims if d in da.coords}
-    return xr.DataArray(result, dims=(*lead_dims, "cell"), coords=coords)
+        rows = partial.sum(axis=-2).rechunk({partial.ndim - 3: -1})
+
+        def overlap_add(windows: np.ndarray) -> np.ndarray:
+            out = np.zeros((*windows.shape[:-2], n_ids))
+            for i, start in enumerate(starts):
+                stop = min(start + width, n_ids)
+                out[..., start:stop] += windows[..., i, : stop - start]
+            return out
+
+        result = darr.map_blocks(
+            overlap_add,
+            rows,
+            drop_axis=rows.ndim - 2,
+            chunks=rows.chunks[:-2] + ((n_ids,),),
+            dtype=np.float64,
+        )
+    coords = {d: arrays[0][d] for d in lead_dims if d in arrays[0].coords}
+    return xr.DataArray(result, dims=("stat", *lead_dims, "cell"), coords=coords)
+
+
+def _group_sum(da: xr.DataArray, labels: np.ndarray, n_ids: int) -> xr.DataArray:
+    """Sum a ``(..., y, x)`` DataArray into cells."""
+    out = _group_reduce(
+        [da], labels, n_ids, lambda v, reduce: reduce(v.astype(np.float64))[None], 1
+    )
+    return out.isel(stat=0, drop=True)
+
+
+def _hex_cell_sums(
+    v: xr.DataArray, w: xr.DataArray, labels: np.ndarray, n_ids: int
+) -> tuple[xr.DataArray, ...]:
+    """Per-cell Σw, Σw², Σwv, Σwv² and valid count in one pass (see ``SUMS``)."""
+    stacked = _group_reduce([v, w], labels, n_ids, _pixel_sums, len(SUMS))
+    return tuple(stacked.isel(stat=i, drop=True) for i in range(len(SUMS)))
 
 
 def _hex_mask(spacing: float, dy: float, dx: float) -> np.ndarray:
@@ -342,7 +400,7 @@ def downsample_hex(
         ds,
         w,
         layers=layers,
-        group_sum=group_sum,
+        cell_sums=lambda v, w: _hex_cell_sums(v, w, labels, n_ids),
         median=lambda v, wv: _per_epoch(
             _weighted_median_cells, [v, wv, labels_da], n_ids, np.float64, n_ids=n_ids
         ),

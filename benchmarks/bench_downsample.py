@@ -41,24 +41,32 @@ def main() -> None:
         f"stack {SHAPE}, factor 33, {os.cpu_count()} cores, "
         f"load {os.getloadavg()[0]:.0f}"
     )
+    spacing = 990.0 * np.sqrt(2 / np.sqrt(3))  # same area as a 990 m square
+    runs = {
+        f"square {stat}": lambda stat=stat: dxr.downsample(
+            ds, factor=33, stat=stat, weights=w
+        )
+        for stat in ("wmean", "wmedian")
+    } | {
+        f"hex {stat}": lambda stat=stat: dxr.downsample_hex(
+            ds, spacing=spacing, stat=stat, weights=w
+        )
+        for stat in ("wmean", "wmedian")
+    }
     with dask.config.set(num_workers=config.get("num_workers")):
-        for stat in ("wmean", "wmedian"):
-            start = time.perf_counter()
-            out = dxr.downsample(ds, factor=33, stat=stat, weights=w).compute()
-            print(
-                f"{stat:>8}: {time.perf_counter() - start:6.1f} s -> {dict(out.sizes)}",
-                flush=True,
-            )
-        spacing = 990.0 * np.sqrt(2 / np.sqrt(3))  # same area as a 990 m square
-        for stat in ("wmean", "wmedian"):
-            start = time.perf_counter()
-            out = dxr.downsample_hex(ds, spacing=spacing, stat=stat, weights=w)
-            out = out.compute()
-            print(
-                f"hex {stat:>8}: {time.perf_counter() - start:6.1f} s -> "
-                f"{dict(out.sizes)}",
-                flush=True,
-            )
+        # First allocations on a busy node are slow (seconds); warm up so the
+        # first method timed is not penalized, then alternate the order and
+        # keep the best of two runs.
+        dxr.downsample(ds, factor=33, weights=w).compute()
+        best: dict[str, float] = {}
+        for order in (list(runs), list(reversed(runs))):
+            for name in order:
+                start = time.perf_counter()
+                runs[name]().compute()
+                elapsed = time.perf_counter() - start
+                best[name] = min(best.get(name, np.inf), elapsed)
+        for name, elapsed in best.items():
+            print(f"{name:>15}: {elapsed:6.1f} s", flush=True)
 
 
 if __name__ == "__main__":
