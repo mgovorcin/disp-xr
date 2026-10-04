@@ -1,0 +1,200 @@
+"""GNSS adapters over geepers (plan task T25)."""
+
+import numpy as np
+import pandas as pd
+import pytest
+import xarray as xr
+
+import disp_xr as dxr
+
+geepers = pytest.importorskip("geepers")
+gpd = pytest.importorskip("geopandas")
+from geepers.gps_sources.base import BaseGpsSource  # noqa: E402
+from shapely.geometry import Point  # noqa: E402
+
+from disp_xr import gnss  # noqa: E402
+
+
+class FakeSource(BaseGpsSource):
+    """A geepers source with in-memory stations (no network)."""
+
+    def __init__(self, table, series, cache_dir):
+        super().__init__(cache_dir=cache_dir)
+        self.table = table
+        self.series = series
+
+    def _read_station_data(self):
+        return gpd.GeoDataFrame(
+            self.table,
+            geometry=[Point(lo, la) for lo, la in zip(self.table.lon, self.table.lat)],
+            crs="EPSG:4326",
+        )
+
+    def timeseries(
+        self,
+        station_id,
+        /,
+        frame="ENU",  # noqa: ARG002
+        start_date=None,
+        end_date=None,
+        zero_by="mean",  # noqa: ARG002
+        download_if_missing=True,  # noqa: ARG002
+        **kwargs,  # noqa: ARG002
+    ):
+        df = self.series[station_id].copy()
+        if start_date:
+            df = df[df.date >= pd.Timestamp(start_date)]
+        if end_date:
+            df = df[df.date <= pd.Timestamp(end_date)]
+        return df.reset_index(drop=True)
+
+
+@pytest.fixture
+def frame(stack_dir):
+    return dxr.stack_disp(dxr.open_disp(stack_dir))
+
+
+def _station_lonlat(ds, rows_cols):
+    from pyproj import Transformer
+
+    to_ll = Transformer.from_crs(ds.rio.crs, "EPSG:4326", always_xy=True)
+    out = []
+    for r, c in rows_cols:
+        out.append(to_ll.transform(float(ds.x[c]), float(ds.y[r])))
+    return out
+
+
+@pytest.fixture
+def fake(frame, tmp_path):
+    inside = _station_lonlat(frame, [(10, 12), (40, 50)])
+    lonlat = [*inside, (inside[0][0] + 1.0, inside[0][1])]  # one far east
+    ids = ["AAA1", "BBB2", "FAR3"]
+    table = pd.DataFrame(
+        {
+            "id": ids,
+            "lon": [p[0] for p in lonlat],
+            "lat": [p[1] for p in lonlat],
+            "alt": 0.0,
+        }
+    )
+    days = pd.date_range("2019-12-01", "2021-12-31", freq="D")
+    years = np.asarray((days - days[0]).days) / 365.25
+    series = {}
+    for k, sid in enumerate(ids):
+        series[sid] = pd.DataFrame(
+            {
+                "date": days,
+                "east": 0.002 * years * (k + 1),
+                "north": -0.001 * years,
+                "up": 0.01 * years * (k + 1),
+                "sigma_east": 0.001,
+                "sigma_north": 0.001,
+                "sigma_up": 0.003,
+                "corr_en": 0.1,
+                "corr_eu": 0.0,
+                "corr_nu": 0.0,
+            }
+        )
+    return FakeSource(table, series, cache_dir=tmp_path / "cache")
+
+
+def _static(ds, east=-0.6, north=-0.1):
+    up = np.sqrt(1 - east**2 - north**2)
+    shape = (ds.sizes["y"], ds.sizes["x"])
+    return xr.Dataset(
+        {
+            "los_east": (("y", "x"), np.full(shape, east)),
+            "los_north": (("y", "x"), np.full(shape, north)),
+            "los_up": (("y", "x"), np.full(shape, up)),
+        },
+        coords={"y": ds.y, "x": ds.x},
+    ).rio.write_crs(ds.rio.crs)
+
+
+def test_stations_inside_the_frame(frame, fake):
+    table = gnss.stations(frame, source=fake)
+    assert sorted(table.id) == ["AAA1", "BBB2"]
+    assert {"x", "y"} <= set(table.columns)
+
+
+def test_load_builds_a_station_time_cube(frame, fake):
+    cube = gnss.load(frame, source=fake, start="2020-01-01")
+    assert cube.east.dims == ("station", "time")
+    assert sorted(cube.station.values) == ["AAA1", "BBB2"]
+    assert str(cube.time.values[0])[:10] == "2020-01-01"
+    assert {"sigma_up", "corr_en", "lon", "lat", "x", "y"} <= set(cube.variables)
+    assert cube.attrs["gnss_source"] == "FakeSource"
+    by_id = gnss.load(["BBB2"], source=fake)
+    assert list(by_id.station.values) == ["BBB2"]
+    with pytest.raises(ValueError, match="source must be"):
+        gnss.get_source("ngl")
+
+
+def test_to_los_projects_and_propagates_sigma(frame, fake):
+    cube = gnss.load(frame, source=fake)
+    out = gnss.to_los(cube, _static(frame))
+    e, n, u = -0.6, -0.1, np.sqrt(1 - 0.37)
+    expected = e * cube.east + n * cube.north + u * cube.up
+    xr.testing.assert_allclose(
+        out.los.drop_vars(["los_east", "los_north", "los_up"]), expected
+    )
+    from geepers.uncertainty import get_sigma_los
+
+    ref = get_sigma_los(np.array([e, n, u]), 0.001, 0.001, 0.003, 0.1, 0.0, 0.0)
+    np.testing.assert_allclose(out.sigma_los.values, ref)
+    with pytest.raises(ValueError, match="x and y"):
+        gnss.to_los(cube.drop_vars(["x", "y"]), _static(frame))
+
+
+def test_sample_reads_the_station_window(frame, fake):
+    cube = gnss.load(frame, source=fake)
+    at_pixel = gnss.sample(frame, cube)
+    assert at_pixel.dims == ("station", "time")
+    k = list(at_pixel.station.values).index("AAA1")
+    np.testing.assert_allclose(
+        at_pixel.values[k], frame.displacement.isel(y=10, x=12).values, equal_nan=True
+    )
+    windowed = gnss.sample(frame, cube, buffer_m=60.0)  # two pixels at 30 m
+    block = frame.displacement.isel(y=slice(8, 13), x=slice(10, 15))
+    expected = block.median(("y", "x"), skipna=True).values
+    if (
+        "buffer_meters"
+        not in __import__("inspect")
+        .signature(__import__("geepers.processing", fromlist=["x"]).sample_insar)
+        .parameters
+    ):
+        np.testing.assert_allclose(windowed.values[k], expected, equal_nan=True)
+    assert windowed.attrs["gnss_buffer_m"] == 60.0
+
+
+def test_align_on_disp_epochs_and_reference(frame, fake):
+    cube = gnss.load(frame, source=fake)
+    los = gnss.to_los(cube, _static(frame))["los"]
+    aligned = gnss.align(los, frame.time)
+    assert aligned.sizes["time"] == frame.sizes["time"]
+    np.testing.assert_allclose(aligned.isel(time=0), 0.0, atol=1e-12)
+    linear = gnss.align(los, frame.time, method="linear")
+    np.testing.assert_allclose(linear.values, aligned.values, atol=2e-5)
+    # An epoch beyond the GNSS record stays NaN.
+    late = frame.time.values.copy()
+    late[-1] = np.datetime64("2030-01-01")
+    assert np.isnan(gnss.align(los, late).isel(time=-1)).all()
+    with pytest.raises(ValueError, match="method"):
+        gnss.align(los, frame.time, method="cubic")
+
+
+@pytest.mark.parametrize(
+    "dx, dy", [(-10.0, 10.0), (10.0, 10.0), (-10.0, -10.0), (10.0, -10.0)]
+)
+def test_sample_finds_the_pixel_holding_an_off_center_station(frame, dx, dy):
+    """geepers rounds the pixel index; a point in the right or lower half of
+    its 30 m pixel must still read that pixel."""
+    from pyproj import Transformer
+
+    to_ll = Transformer.from_crs(frame.rio.crs, "EPSG:4326", always_xy=True)
+    lon, lat = to_ll.transform(float(frame.x[20]) + dx, float(frame.y[30]) + dy)
+    table = pd.DataFrame({"id": ["S"], "lon": [lon], "lat": [lat]})
+    got = gnss.sample(frame, table)
+    np.testing.assert_allclose(
+        got.values[0], frame.displacement.isel(y=30, x=20).values, equal_nan=True
+    )

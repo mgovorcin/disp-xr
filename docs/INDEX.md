@@ -28,7 +28,7 @@ The PRD also lives as a shared doc; `specs.md` is its copy in the repo and must 
 | --- | --- | --- |
 | M0 Foundation (v0.1) | T1–T8 | 5 / 8 (T2, T4, T5, T6, T7 done; T1 open only for T1.4b; T3 open for T3.4–T3.5) |
 | M1 Core API (v0.2) | T9–T18 | 7 / 10 (T9, T10, T11, T13, T14, T15, T17; T12 open only for T12.5, T16 only for ReadTheDocs publishing) |
-| M2 Analysis (v0.3) | T19–T34 | 8 / 16 (T19, T20, T21, T22, T23, T24, T26, T27; started before the T18 review) |
+| M2 Analysis (v0.3) | T19–T34 | 9 / 16 (T19, T20, T21, T22, T23, T24, T25, T26, T27; started before the T18 review) |
 | M3 Release (v1.0) | T35–T39 | 0 / 5 |
 
 Six local branches, stacked, not pushed:
@@ -55,7 +55,7 @@ Still open in M0: T1.4b (name maintainers), T3.4 badge and T3.5 branch protectio
 | F7 Geometry | T12 | DISP-S1 done (`open_static`, `enu_to_los`); DISP-NISAR waits for a DISP-NI-STATIC granule (T12.5) |
 | F8 Time series | T20 | Done: `fit_trajectory`, `Trajectory`, `predict_trajectory` |
 | F9 Spatial models | T19, T24, T33 | Estimator base (T19), trends, de-ramping and gridders (T24) done; GNSS tie (T33) open |
-| F10 GNSS | T25 | Not started |
+| F10 GNSS | T25 | Done with geepers as the engine (`gnss` extra) |
 | F11 Multi-frame | T36 | Not started |
 | F12 Export | T14 | Done: GeoTIFF, Zarr v3, NetCDF, MintPy, Icechunk, virtual stores |
 | F13 Plot | T17 | Done: `plot_map`, `plot_point`, accessor, interactive gallery page |
@@ -109,6 +109,7 @@ Still open in M0: T1.4b (name maintainers), T3.4 badge and T3.5 branch protectio
 | `export/multiscales.py` | C4 | `build_overviews`, `to_pyramid`, `open_pyramid`, `MULTISCALES_CONVENTION` | T27.7, T27.9 |
 | `models/trend.py` | F9 | `Trend`, `deramp`, `polynomial_terms` | T24 |
 | `models/gridding.py` | F9 | `Spline`, `Nearest` | T24.4 |
+| `gnss.py` | F10 | `gnss.load`, `stations`, `get_source`, `to_los`, `sample`, `align` (geepers engine) | T25 |
 | `models/base.py` | F9, API (Estimators) | `BaseEstimator`, `Chain`, `Mean`, `coordinates`, `cross_val_score`, `clone` | T19 |
 | `quadtree.py` | S2 (quadtree) | `quadtree`, `Quadtree` (`points`, `leaf_id`, `to_raster`) | T28 |
 | `hexagons.py` | S2 (hexagon mode) | `downsample_hex` (planar and H3), `to_geodataframe`, `cell_polygons`, `hex_axial`, `hex_centers`, `hexagon_vertices` | T27.8 |
@@ -171,6 +172,7 @@ Still open in M0: T1.4b (name maintainers), T3.4 badge and T3.5 branch protectio
 | Date | Trigger | Changes |
 | --- | --- | --- |
 | 2026-09-30 | First index | Created from `specs.md`, `todo.md`, `code_review.md` and the source on `main` |
+| 2026-10-03 | T25 finished; geepers is the GNSS engine | `gnss.py` adapters over geepers sources and reader; PRD GNSS-source question closed; geepers pixel-rounding bug worked around (floor) and flagged |
 | 2026-10-03 | T24 finished | `models.Trend`, lazy per-epoch `deramp` (accessor too), `Spline` and `Nearest` gridders; base drops zero-weight points |
 | 2026-10-03 | T19 finished | `models/` package: estimator base, `Chain`, `Mean`, coordinates helper, block cross-validation, shared estimator test suite |
 | 2026-10-03 | T28.1–T28.4 finished | `quadtree.py`: composed level sums (two data passes), pluggable split metrics, top-down boolean selection, leaf table and leaf-id raster; T28.5 open for benchmark numbers (node allocation stalls) |

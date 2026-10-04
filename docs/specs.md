@@ -54,7 +54,7 @@ Every row ships by 1.0. Priority gives the build order: P0 first, because later 
 | F7 | Geometry | Static layers: LOS unit vectors, incidence/azimuth, DEM, layover/shadow (DISP-S1-STATIC, or stitched CSLC-S1-STATIC); water mask from the granules | P1 | `static_layers` |
 | F8 | Time series | Velocity and seasonal fits (linear, annual, semiannual, steps) with uncertainties | P0 | Branch `timeseries_fitting` |
 | F9 | Spatial models | Native fit/predict estimators (verde API as reference, no dependency): planar/polynomial trend, GNSS tie (fit DISP minus GNSS, predict correction), gridding of point data | P0 | none |
-| F10 | GNSS | Load GNSS time series (UNR), project to LOS, sample DISP at stations | P0 | none |
+| F10 | GNSS | Load GNSS time series, project to LOS, sample DISP at stations, with geepers as the engine (`gnss` extra) | P0 | geepers |
 | F11 | Multi-frame | Mosaic adjacent frames on a common grid. The default CRS is the UTM zone that holds the largest share of valid pixels; the caller can pass another. A mosaic wider than two UTM zones requires an explicit CRS. Regional products are downsampled per frame first (S2) and mosaicked at the coarse level, so 30 m data is never reprojected for them | P2 | none |
 | F12 | Export | GeoTIFF, Zarr, NetCDF, MintPy HDF5 | P1 | `io`, `mintpy` |
 | F13 | Plot | Quick-look maps and point time series via the accessor | P2 | none |
@@ -258,7 +258,7 @@ disp-xr checked every project on the [xarray ecosystem page](https://docs.xarray
 | [rioxarray](https://github.com/corteva/rioxarray) 0.23 or later | CRS and transform; also writes the Zarr `spatial:` and `proj:` conventions | Core |
 | [flox](https://github.com/xarray-contrib/flox) | Grouped reductions per ministack, bin and cell | Core |
 | [numbagg](https://github.com/numbagg/numbagg) | Faster NaN-aware reductions when installed; never imported directly | Recommended |
-| [xvec](https://github.com/xarray-contrib/xvec) | GNSS stations as a vector data cube (station geometry by time) | `gnss` extra |
+| [geepers](https://github.com/opera-adt/geepers) | GNSS engine: station sources (UNR, UNR grid, sideshow), downloads and caching, DISP sampling at stations, LOS uncertainty | `gnss` extra |
 | [xeofs](https://github.com/xarray-contrib/xeofs) | EOF analysis in the gallery; quiet since early 2025, so core code never imports it | `eof` extra |
 | [odc-geo](https://github.com/opendatacube/odc-geo) | Lazy reprojection to a common grid for mosaics, to evaluate | Optional |
 | [hvplot](https://github.com/holoviz/hvplot) | Interactive full-frame browsing in the gallery | `interactive` extra |
@@ -305,7 +305,7 @@ M0 comes first because nothing else is safe to refactor without tests. Each diam
 - [x] Scope of 1.0: DISP-S1 only, or must DISP-NISAR be supported at launch? Decided: both.
 - [x] Accessor name: `.disp`, or something less likely to clash? Decided: `.disp` (no installed library uses it; a test guards against clashes).
 - [x] Should verde be a hard dependency, or should estimators follow its API without importing it? Decided: no dependency; disp-xr implements its own fit/predict estimators, using verde only as a design reference.
-- [ ] GNSS source: UNR only, or pluggable (UNR, NGL, local CSV)?
+- [x] GNSS source: UNR only, or pluggable (UNR, NGL, local CSV)? Decided (2026-10-03): geepers is the GNSS engine. Its sources (UNR, UNR grid, sideshow, behind `BaseGpsSource`) load the series and its sampler reads DISP at the stations; disp-xr's `gnss` module adapts them to xarray `(station, time)` datasets and aligns them with DISP epochs and reference. No GNSS reader is re-implemented in disp-xr.
 - [x] Keep MintPy export in core, or move it to an optional extra? Decided: `mintpy` extra.
 - [x] Download: keep `download.py`, or defer to another package? Decided: the CMR search code stays in disp-xr as `search.py` (ported with attribution, extended to DISP-NISAR); `download.py` remains one release as a deprecated shim.
 - [x] Home organization: opera-adt or OPERA Cal/Val? Decided: OPERA Cal/Val.
