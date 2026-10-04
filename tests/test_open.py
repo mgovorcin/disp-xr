@@ -6,7 +6,7 @@ import pytest
 import xarray as xr
 
 from disp_xr.open import open_disp
-from disp_xr.product import MixedProductionError, find_products
+from disp_xr.product import MixedPrecisionWarning, find_products
 
 
 def _no_compute(_dsk, _keys, **_kwargs):
@@ -95,9 +95,12 @@ def test_attrs(ds):
     assert ds.attrs["product_versions"] == ["1.0"]
 
 
-def test_refuses_mixed_productions(disp_stacks):
-    with pytest.raises(MixedProductionError):
-        open_disp(disp_stacks["mixed_dtype"].paths[0].parent)
+def test_mixed_precision_productions_warn(disp_stacks):
+    # The two productions differ only in displacement precision: read with a
+    # warning (see test_product for values and refusals).
+    with pytest.warns(MixedPrecisionWarning):
+        ds = open_disp(disp_stacks["mixed_dtype"].paths[0].parent)
+    assert ds.displacement.dtype == "float32"
 
 
 def test_opens_nisar_sas_output(disp_stacks):

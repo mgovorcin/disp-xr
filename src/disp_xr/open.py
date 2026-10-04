@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Optional, Union
 
 import h5py
+import numpy as np
 import pandas as pd
 import rioxarray  # noqa: F401  (registers the .rio accessor)
 import xarray as xr
@@ -76,7 +77,11 @@ def open_disp(
         Lowest product version to keep.
     check : bool
         Refuse granules of mixed productions (see
-        :func:`disp_xr.product.check_granules`).
+        :func:`disp_xr.product.check_granules`). Productions that differ only
+        in the precision of a float layer (DISP-S1 displacement is float32
+        before November 2025 and float64 after) are read together with a
+        :class:`~disp_xr.product.MixedPrecisionWarning`; those layers are cast
+        to float32 and listed in ``attrs["mixed_precision"]``.
 
     Returns
     -------
@@ -99,8 +104,9 @@ def open_disp(
         if isinstance(paths, pd.DataFrame)
         else find_products(paths, frame_id=frame_id, min_version=min_version)
     )
+    mixed: list[str] = []
     if check:
-        check_granules(df)
+        mixed = check_granules(df, allow_mixed_precision=True).attrs["mixed_precision"]
     (product,) = df["product"].unique()
     spec = PRODUCTS[product]
     available = spec.displacement_layers + spec.quality_layers
@@ -116,6 +122,9 @@ def open_disp(
         corr = corr[[v for v in spec.correction_layers if v in corr]]
         ds = xr.merge([ds, corr], join="exact", compat="override")
 
+    for name in mixed:
+        if name in ds:
+            ds[name] = ds[name].astype(np.float32)
     ds = ds.set_coords("reference_time")
     first = ds[keep[0]] if keep else next(iter(ds.data_vars.values()))
     ds = ds.chunk(
@@ -134,6 +143,8 @@ def open_disp(
         # Provenance for exports: granule names, not paths (paths are local).
         input_granules=[Path(str(f)).name for f in files],
     )
+    if mixed:
+        ds.attrs["mixed_precision"] = mixed
     logger.info(f"Opened {len(files)} {product} granules, frame {ds.attrs['frame_id']}")
     return ds
 
