@@ -63,6 +63,28 @@ with warnings.catch_warnings():
 ds.attrs["mixed_precision"]  # ['displacement']
 ```
 
-**Open question for OPERA.** Is the float64 displacement intended? Its
-granules are larger, and float32 already holds more precision than the
-measurement has.
+## DISP-S1 time encoding changed in November 2025
+
+**What changed.** The same productions also encode `time` and
+`reference_time` differently. The earlier granules store 0 seconds since the
+acquisition time itself (`seconds since 2024-10-03 14:08:37.435763`), which
+decodes exactly. The later granules store float seconds since 2010
+(`seconds since 2010-01-01 00:00:00.000000`), which decodes a few
+nanoseconds off: `2024-10-03 14:08:37.435763008`.
+
+**Why it matters.** Ministacks are chained through exact dates: each
+ministack's reference date must be an epoch of the previous one. In F11116
+the November 2025 ministack references 2024-10-03, but that date read from
+the April 2025 granule differs by 8 ns, so `stack_disp` raised
+`MissingCrossoverError`.
+
+**What disp-xr does.** `open_disp` reads `time` and `reference_time` to the
+whole second (floored), as granule names give them
+(`20241003T140837Z`). Epochs of one frame are days apart, so nothing below a
+second is used.
+
+## Open questions for OPERA
+
+- Is the float64 displacement intended? Its granules are larger, and float32
+  already holds more precision than the measurement has.
+- Could the time encoding stay one style across productions?

@@ -5,6 +5,7 @@ import numpy as np
 import pytest
 import xarray as xr
 
+import disp_xr as dxr
 from disp_xr.open import open_disp
 from disp_xr.product import MixedPrecisionWarning, find_products
 
@@ -93,6 +94,18 @@ def test_attrs(ds):
     assert ds.attrs["product"] == "DISP-S1"
     assert ds.attrs["frame_id"] == 11116
     assert ds.attrs["product_versions"] == ["1.0"]
+
+
+def test_times_link_across_time_encodings(disp_stacks):
+    # The 2026 style encodes time as float seconds since 2010, which decodes
+    # nanoseconds off the 2025 style; times to the second link the ministacks.
+    with pytest.warns(MixedPrecisionWarning):
+        ds = open_disp(disp_stacks["mixed_dtype"].paths[0].parent)
+    assert (ds.time.dt.microsecond == 0).all()
+    later_refs = set(ds.reference_time.values) - {ds.reference_time.values.min()}
+    assert later_refs <= set(ds.time.values)  # the first is the stack's start
+    stacked = dxr.stack_disp(ds)
+    assert stacked.sizes["time"] == ds.sizes["time"] + 1
 
 
 def test_mixed_precision_productions_warn(disp_stacks):

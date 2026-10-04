@@ -37,7 +37,9 @@ __all__ = [
 
 SPACING = 30.0
 WAVELENGTH = 0.05546576
-FIRST_DATE = datetime(2020, 1, 1, 0, 1, 53)
+# Microseconds as in real granules: a float time since 2010 (the 2026 style)
+# then decodes a few nanoseconds off, as real ones do.
+FIRST_DATE = datetime(2020, 1, 1, 0, 1, 53, 435763)
 REVISIT_DAYS = 12
 PRODUCTION_2025 = "20250412T164531Z"
 PRODUCTION_2026 = "20260920T055848Z"
@@ -290,8 +292,8 @@ def _write_granule(
         time_units = f"seconds since {EPOCH_2026}"
         ref_units = time_units
     else:
-        time_units = f"seconds since {secondary:%Y-%m-%d %H:%M:%S}.000000"
-        ref_units = f"seconds since {reference:%Y-%m-%d %H:%M:%S}.000000"
+        time_units = f"seconds since {secondary:%Y-%m-%d %H:%M:%S.%f}"
+        ref_units = f"seconds since {reference:%Y-%m-%d %H:%M:%S.%f}"
     time_enc = {"calendar": "standard", "dtype": "float64"}
     encoding["time"] = {"units": time_units, **time_enc}
     encoding["reference_time"] = {"units": ref_units, **time_enc}
@@ -421,8 +423,9 @@ def _write_stack(
         paths.append(path)
     return DispStack(
         paths=paths,
-        times=times,
-        reference_times=pd.DatetimeIndex(references),
+        # disp-xr reads times to the second, as granule names give them.
+        times=times.floor("s"),
+        reference_times=pd.DatetimeIndex(references).floor("s"),
         cumulative=cumulative,
         velocity=velocity,
         annual_amplitude=amplitude,

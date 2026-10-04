@@ -87,7 +87,8 @@ def open_disp(
     -------
     xr.Dataset
         Dims ``(time, y, x)``; coordinates ``time``, ``reference_time``, ``x``,
-        ``y`` and ``spatial_ref``; one variable per layer, each with
+        ``y`` and ``spatial_ref`` (times to the second, as in granule
+        names); one variable per layer, each with
         ``grid_mapping``. No pixel is read until computed. Layers keep their
         stored dtype: float layers use NaN for no data, integer layers (masks,
         labels, counts) keep the product's nodata value, given in their
@@ -125,6 +126,11 @@ def open_disp(
     for name in mixed:
         if name in ds:
             ds[name] = ds[name].astype(np.float32)
+    # Whole seconds, as in granule names. Productions encode time differently
+    # (seconds since the acquisition, or float seconds since 2010, which
+    # decodes nanoseconds off), and ministacks are linked by exact dates.
+    ds["time"] = ds["time"].dt.floor("s")
+    ds["reference_time"] = ds["reference_time"].dt.floor("s")
     ds = ds.set_coords("reference_time")
     first = ds[keep[0]] if keep else next(iter(ds.data_vars.values()))
     ds = ds.chunk(
