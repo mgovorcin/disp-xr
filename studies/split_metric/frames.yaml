@@ -1,7 +1,9 @@
 # T29 split-metric and weight-defaults study: test frames (T29.1).
 #
 # Paths are where the stacks live on aurora; set DISP_XR_STUDY_DATA to a
-# directory holding <frame>/*.nc to run elsewhere. Bounds are the frame grid
+# directory holding <frame>/*.nc to run elsewhere. `static` is the directory
+# of the LOS layers: DISP-S1-STATIC files (downloaded there if missing), or
+# los_east/los_north/los_up GeoTIFFs on the frame grid. Bounds are the frame grid
 # in degrees (west, south, east, north), read from the granules.
 
 disp_s1:
@@ -18,6 +20,11 @@ disp_s1:
     granules: 269
     dates: [2016-09-27, 2026-02-19]
     version: "1.0"
+    static: /u/aurora-r0/govorcin/01_OPERA/DISP/data/static/F08882
+    # Gradient profiles (T29.4), [lon0, lat0, lon1, lat1]: across the
+    # northwest Harris County subsidence (Katy to Jersey Village and Spring).
+    profiles:
+      - [-96.10, 29.70, -95.30, 30.10]
   F11116:
     role: tectonic, topography-correlated troposphere
     site: Central California (Parkfield, creeping San Andreas, San Joaquin Valley)
@@ -32,6 +39,14 @@ disp_s1:
     granules: 389
     dates: [2016-07-05, 2026-04-26]
     version: "1.0"
+    static: /u/aurora-r0/govorcin/01_OPERA/DISP/data/static/F11116
+    # 30 km profiles across the creeping San Andreas at a quarter, half and
+    # three quarters of the trace from San Juan Bautista (36.845 N, 121.537
+    # W) to Parkfield (35.900 N, 120.433 W), both on the fault.
+    profiles:
+      - [-121.383, 36.515, -121.139, 36.702]
+      - [-121.107, 36.279, -120.863, 36.466]
+      - [-120.831, 36.043, -120.587, 36.230]
   F39362:
     role: quiet (troposphere control)
     site: Canberra, Southern Tablelands and the Snowy Mountains (Australia)
@@ -45,6 +60,13 @@ disp_s1:
     dates: [2016-07-12, 2025-04-20]
     # Stakeholder run outside North America: pre-release product version.
     version: "0.10"
+    # No DISP-S1-STATIC outside North America: LOS layers of the stakeholder
+    # run (from CSLC-S1-STATIC bursts), on the same grid as the granules.
+    static: /u/aurora-r0/govorcin/01_OPERA/STAKEHOLDER/AUSTRALIA/canberra/static_lyrs
+    # From the coast at Batemans Bay up to the Snowy Mountains near
+    # Kosciuszko: about 1500 m of relief, no deformation expected.
+    profiles:
+      - [150.17, -35.71, 148.40, -36.40]
 
 # Candidates for T35.5 (re-run on DISP-NISAR). Frames of the Whirlwind
 # campaign (03_DISP_NI/Whirlwind), which already has GNSS for each of them.
