@@ -46,12 +46,14 @@ import xarray as xr
 __all__ = [
     "Comparison",
     "VariogramModel",
+    "common_mode",
     "compare",
     "empirical_variogram",
     "fit_variogram",
     "mean_block_correlation",
     "mean_mask_correlation",
     "n_eff_correlated",
+    "residual_spectra",
 ]
 
 ModelKind = Literal["spherical", "exponential", "gaussian"]
@@ -582,3 +584,128 @@ def compare(
         stations["gps_velocity"].to_numpy(), stations["insar_velocity"].to_numpy()
     )
     return Comparison(series, stations, pairs, profile, epochs, semivariogram, summary)
+
+
+def _residual_array(source: Any) -> xr.DataArray:
+    return source.series["residual"] if isinstance(source, Comparison) else source
+
+
+def residual_spectra(
+    source: Any,
+    *,
+    frequencies: Optional[np.ndarray] = None,
+    detrend: bool = True,
+) -> xr.DataArray:
+    """Return the Lomb-Scargle power spectrum of each station's residual series.
+
+    Lomb-Scargle handles the irregular DISP epochs (gaps, 12 and 24 day
+    revisits) without resampling. Peaks at 1 and 2 cycles per year are
+    seasonal signal one series has and the other lacks; a red spectrum
+    (power rising to low frequencies) is correlated error.
+
+    Parameters
+    ----------
+    source : Comparison or xr.DataArray
+        :func:`compare` output, or a ``(station, time)`` residual.
+    frequencies : array, optional
+        Frequencies in cycles per year; default from one cycle over the
+        record to the Nyquist frequency of the median epoch spacing.
+    detrend : bool
+        Remove each series' linear trend first.
+
+    Returns
+    -------
+    xr.DataArray
+        ``(station, frequency)`` power (normalized, 0 to 1).
+
+    """
+    from scipy.signal import lombscargle
+
+    resid = _residual_array(source)
+    years = (
+        (resid["time"].values - resid["time"].values[0])
+        / np.timedelta64(1, "D")
+        / 365.25
+    )
+    if frequencies is None:
+        span = years[-1] - years[0]
+        step = np.median(np.diff(years))
+        frequencies = np.linspace(1.0 / span, 0.5 / step, 200)
+    angular = 2 * np.pi * np.asarray(frequencies, dtype=np.float64)
+    power = np.full((resid.sizes["station"], angular.size), np.nan)
+    values = resid.transpose("station", "time").values
+    for k, series in enumerate(values):
+        ok = np.isfinite(series)
+        if ok.sum() < 4:
+            continue
+        t, y = years[ok], series[ok]
+        if detrend:
+            y = y - np.polyval(np.polyfit(t, y, 1), t)
+        power[k] = lombscargle(t, y - y.mean(), angular, normalize=True)
+    return xr.DataArray(
+        power,
+        dims=("station", "frequency"),
+        coords={"station": resid["station"].values, "frequency": frequencies},
+        name="power",
+        attrs={"frequency_units": "cycles per year", "method": "Lomb-Scargle"},
+    )
+
+
+def common_mode(
+    source: Any, n_components: int = 1, min_coverage: float = 0.5
+) -> xr.Dataset:
+    """Return the common-mode residual across stations (geepers ``estimate_cme``).
+
+    A signal shared by all stations' residuals (a reference or datum shift,
+    a frame-wide atmospheric or orbit error) is a product error that the
+    station-by-station metrics miss.
+
+    Parameters
+    ----------
+    source : Comparison or xr.DataArray
+        :func:`compare` output, or a ``(station, time)`` residual.
+    n_components : int
+        Principal components to keep.
+    min_coverage : float
+        Stations observed in fewer than this share of epochs are left out.
+
+    Returns
+    -------
+    xr.Dataset
+        ``common_mode`` ``(time, component)``, ``spatial_response``
+        ``(station, component)``, ``cleaned`` ``(station, time)`` (residual
+        minus the common mode) and ``explained_variance`` ``(component)``.
+
+    """
+    from geepers.cme import estimate_cme
+
+    resid = _residual_array(source)
+    table = resid.transpose("time", "station").to_pandas()
+    result = estimate_cme(table, n_components=n_components, min_coverage=min_coverage)
+    comp = np.arange(n_components)
+    return (
+        xr.Dataset(
+            {
+                "common_mode": (("time", "component"), result.common_mode.to_numpy()),
+                "spatial_response": (
+                    ("used_station", "component"),
+                    result.spatial_response.to_numpy(),
+                ),
+                "cleaned": (
+                    ("time", "used_station"),
+                    result.cleaned.to_numpy(),
+                ),
+                "explained_variance": (
+                    "component",
+                    np.asarray(result.explained_variance),
+                ),
+            },
+            coords={
+                "time": resid["time"].values,
+                "component": comp,
+                "used_station": result.spatial_response.index.to_numpy(),
+            },
+        )
+        .rename({"used_station": "station"})
+        .transpose("station", "time", "component")
+    )

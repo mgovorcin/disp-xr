@@ -192,6 +192,11 @@ icechunk = ">=2.0.3"
 obstore = "*"
 virtualizarr = ">=2.4"
 
+# eof extra (xeofs): the residual EOF example, run in its own CI job.
+[tool.pixi.feature.eof.dependencies]
+xeofs = "*"
+matplotlib-base = "*"
+
 [tool.pixi.feature.plot.dependencies]
 matplotlib = "*"
 
@@ -225,6 +230,8 @@ test = { features = ["test"], solve-group = "default" }
 docs = { features = ["docs", "interactive"], solve-group = "default" }
 # Icechunk and VirtualiZarr (cloud extra); CI runs its tests in one job.
 test-cloud = { features = ["test", "cloud"], solve-group = "default" }
+# The residual EOF example (xeofs); CI reports its breakage without failing.
+eof = { features = ["test", "eof"], solve-group = "default" }
 dev = { features = ["test", "aws", "cloud", "plot", "mintpy", "notebooks", "interactive"], solve-group = "default" }
 
 [tool.setuptools]

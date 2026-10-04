@@ -82,3 +82,22 @@ jobs:
       # Executes the gallery examples; a broken example or reference fails.
       - name: Build the docs
         run: pixi run -e docs mkdocs build --strict
+
+  eof-example:
+    name: eof example (xeofs, allowed to fail)
+    runs-on: ubuntu-latest
+    # xeofs has been quiet since early 2025: report breakage, never block.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - uses: prefix-dev/setup-pixi@v0.10.2
+        with:
+          environments: eof
+          locked: true
+          cache: true
+
+      - name: Run the residual EOF example
+        run: pixi run -e eof python examples/eof_residuals.py

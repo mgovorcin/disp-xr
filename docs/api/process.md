@@ -61,6 +61,19 @@ after. See [Concepts](../concepts.md).
         - estimate_group_noise
         - NoiseShape
 
+## Model diagnostics
+
+::: disp_xr.diagnostics
+    options:
+      members: false
+      show_root_heading: false
+
+::: disp_xr.diagnostics.model_diagnostics
+
+::: disp_xr.diagnostics.significance
+
+::: disp_xr.diagnostics.anderson_darling
+
 ## Colored noise (one series)
 
 ::: disp_xr.timeseries.noise

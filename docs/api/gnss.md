@@ -47,3 +47,10 @@ result.plot_velocities()
 ::: disp_xr.residuals.compare
 
 ::: disp_xr.residuals.Comparison
+
+::: disp_xr.residuals.residual_spectra
+
+::: disp_xr.residuals.common_mode
+
+An EOF analysis of trajectory residuals with xeofs (`eof` extra) is in
+`examples/eof_residuals.py`; it runs in its own CI job.

@@ -1,7 +1,9 @@
 """DISP against GNSS with geepers metrics (plan task T32)."""
 
 import numpy as np
+import pandas as pd
 import pytest
+import xarray as xr
 
 import disp_xr as dxr
 
@@ -77,3 +79,40 @@ def test_plots(frame, gps):
     result = compare(frame, gps, vertical_los(frame))
     assert result.plot_velocities() is not None
     assert result.plot_semivariogram() is not None
+
+
+def _residuals(n_station=5, nt=90, seed=3):
+    rng = np.random.default_rng(seed)
+    times = pd.date_range("2020-01-01", periods=nt, freq="12D")
+    years = np.arange(nt) * 12 / 365.25
+    common = 0.004 * np.sin(2 * np.pi * 2 * years)  # semiannual, all stations
+    values = common[None] + 0.001 * rng.standard_normal((n_station, nt))
+    return (
+        xr.DataArray(
+            values,
+            dims=("station", "time"),
+            coords={"station": [f"S{k}" for k in range(n_station)], "time": times},
+        ),
+        common,
+    )
+
+
+def test_spectra_find_the_semiannual_signal():
+    from disp_xr.residuals import residual_spectra
+
+    resid, _ = _residuals()
+    power = residual_spectra(resid)
+    peak = power.frequency[int(power.mean("station").argmax("frequency"))]
+    assert float(peak) == pytest.approx(2.0, abs=0.1)
+    assert power.dims == ("station", "frequency")
+
+
+def test_common_mode_recovers_the_shared_signal():
+    from disp_xr.residuals import common_mode
+
+    resid, common = _residuals()
+    out = common_mode(resid)
+    assert float(out.explained_variance[0]) > 0.8
+    r = np.corrcoef(out.common_mode.isel(component=0), common)[0, 1]
+    assert abs(r) > 0.98
+    assert float(np.abs(out.cleaned).max()) < 0.006

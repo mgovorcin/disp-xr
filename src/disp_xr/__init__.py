@@ -5,7 +5,7 @@ namespace as their plan tasks land (see docs/todo.md).
 """
 
 from . import accessor as _accessor  # noqa: F401  (registers .disp)
-from . import gnss, models
+from . import diagnostics, gnss, models
 from ._chunks import rechunk
 from ._version import __version__
 from .config import config
@@ -61,6 +61,7 @@ __all__ = [
     "build_virtual_frame",
     "config",
     "correct",
+    "diagnostics",
     "downsample",
     "downsample_hex",
     "empirical_variogram",
