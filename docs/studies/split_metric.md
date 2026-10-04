@@ -24,13 +24,12 @@ dates, product version and why each was chosen) are in
 | Frame | Role | Site | Granules | Dates | GNSS used / inside |
 | --- | --- | --- | --- | --- | --- |
 | F08882 | subsidence | Houston, upper Texas Gulf Coast | 269 | 2016-09 to 2026-02 | 97 / 144 |
-| F11116 | tectonic, topography-correlated troposphere | Central California: creeping San Andreas, San Joaquin Valley | 314 | 2016-07 to 2024-10 | 130 / 149 |
+| F11116 | tectonic, topography-correlated troposphere | Central California: creeping San Andreas, San Joaquin Valley | 389 | 2016-07 to 2026-04 | 126 / 151 |
 | F39362 | quiet (troposphere control) | Canberra and the Snowy Mountains | 247 | 2016-07 to 2025-04 | 25 / 34 |
 
-- F11116 has 389 granules on disk from three productions. The 75 granules
-  produced in November 2025 and August 2026 store displacement as float64,
-  and `open_disp` refuses to mix productions, so the study uses the 314
-  granules of April 2025 (up to 2024-10-03).
+- F11116 spans the November 2025 production change: 75 of its 389
+  granules store displacement as float64, the rest as float32. They are read
+  together (see the product notes).
 - F08882 is also the cal-disp frame, so GNSS results can be compared with
   that work.
 - F11116 has a sharp velocity step at the creeping fault trace, the
