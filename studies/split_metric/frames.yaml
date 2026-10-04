@@ -36,8 +36,12 @@ disp_s1:
       topography-correlated troposphere asked for in T31.7.
     path: /u/aurora-r0/govorcin/01_OPERA/DISP/data/F11116
     bounds: [-123.00, 35.27, -119.75, 37.18]
-    granules: 389
-    dates: [2016-07-05, 2026-04-26]
+    # 389 granules on disk from three productions: 314 of April 2025
+    # (float32, up to 2024-10-03) and 75 of November 2025 and August 2026
+    # (float64), which open_disp refuses to mix. The study uses April 2025.
+    granules: 314
+    production: "202504"
+    dates: [2016-07-05, 2024-10-03]
     version: "1.0"
     static: /u/aurora-r0/govorcin/01_OPERA/DISP/data/static/F11116
     # 30 km profiles across the creeping San Andreas at a quarter, half and

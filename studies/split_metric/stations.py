@@ -32,9 +32,25 @@ def frame_dir(frame: str, entry: dict) -> Path:
     return Path(root) / frame if root else Path(entry["path"])
 
 
+def frame_files(frame: str, entry: dict) -> list[Path]:
+    """Return the frame's granules, of one production when ``production`` is set.
+
+    ``production`` is a prefix of the generation time in the file name (the
+    last time stamp, for example ``202504`` for April 2025).
+    """
+    files = sorted(frame_dir(frame, entry).glob("*.nc"))
+    if "production" in entry:
+        files = [
+            f for f in files if f.stem.split("_")[-1].startswith(entry["production"])
+        ]
+    if not files:
+        raise FileNotFoundError(f"no granules for {frame}")
+    return files
+
+
 def station_table(frame: str, entry: dict) -> pd.DataFrame:
     """Return the station list of one frame with coverage and the use flag."""
-    first = sorted(frame_dir(frame, entry).glob("*.nc"))[0]
+    first = frame_files(frame, entry)[0]
     grid = dxr.open_disp([first], check=False)
     start, end = (pd.Timestamp(d) for d in entry["dates"])
     cube = gnss.load(grid, start=str(start.date()), end=str(end.date()))

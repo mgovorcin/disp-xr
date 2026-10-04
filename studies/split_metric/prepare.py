@@ -43,7 +43,7 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 import yaml
-from stations import HERE, frame_dir
+from stations import HERE, frame_files
 
 import disp_xr as dxr
 from disp_xr.product import PRODUCTS
@@ -129,7 +129,7 @@ def build(frame: str, entry: dict) -> None:
     """Write the stack and the velocity of one frame."""
     out = OUT / frame
     out.mkdir(parents=True, exist_ok=True)
-    files = sorted(frame_dir(frame, entry).glob("*.nc"))
+    files = frame_files(frame, entry)
     floors = product_floors(files)
     ds = dxr.open_disp(files, layers=LAYERS, corrections=True)
     spec = PRODUCTS[ds.attrs["product"]]

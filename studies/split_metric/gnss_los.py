@@ -18,7 +18,7 @@ import pandas as pd
 import rioxarray
 import xarray as xr
 import yaml
-from stations import HERE, frame_dir
+from stations import HERE, frame_files
 
 import disp_xr as dxr
 from disp_xr import gnss
@@ -43,7 +43,7 @@ def los_layers(grid: xr.Dataset, static: Path) -> xr.Dataset:
 def station_los(frame: str, entry: dict) -> pd.DataFrame:
     """Return the LOS velocity of the used stations of one frame."""
     used = pd.read_csv(HERE / "stations" / f"{frame}.csv").query("use")
-    first = sorted(frame_dir(frame, entry).glob("*.nc"))[0]
+    first = frame_files(frame, entry)[0]
     grid = dxr.open_disp([first], check=False)
     start, end = (str(pd.Timestamp(d).date()) for d in entry["dates"])
     cube = gnss.load(grid, start=start, end=end)
