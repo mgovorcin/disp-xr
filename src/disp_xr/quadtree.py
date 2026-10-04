@@ -41,6 +41,7 @@ from typing import Literal, NamedTuple, Optional, Union
 import numpy as np
 import xarray as xr
 
+from ._chunks import data_chunks
 from ._history import record
 from .config import bounded_threads
 from .downsample import SUMS, _block_cell_sums, _block_sum, _resolve_weights
@@ -174,23 +175,26 @@ def _select(
     threshold: float,
     min_level: int,
     max_level: int,
-    min_count: dict[int, float],
+    min_count: dict[int, np.ndarray],
 ) -> dict[int, np.ndarray]:
-    """Return the leaf mask of each level, top-down."""
+    """Return the leaf mask of each level, top-down.
+
+    ``min_count[k]`` is the number of reliable pixels each cell of level
+    ``k`` needs to be a child of a split: a share of its pixels inside the
+    frame, 0 for cells outside it (which never block a split).
+    """
     active = np.ones_like(scores[max_level], dtype=bool)
     leaves: dict[int, np.ndarray] = {}
     for k in range(max_level, min_level - 1, -1):
         split = np.zeros_like(active)
         if k > min_level:
-            child = reliable[k - 1]
+            child_ok = reliable[k - 1] >= min_count[k - 1]
             cy, cx = active.shape
-            pad = np.zeros((2 * cy, 2 * cx), child.dtype)
-            pad[: child.shape[0], : child.shape[1]] = child[: 2 * cy, : 2 * cx]
-            child_min = pad.reshape(cy, 2, cx, 2).min(axis=(1, 3))
+            pad = np.ones((2 * cy, 2 * cx), dtype=bool)
+            pad[: child_ok.shape[0], : child_ok.shape[1]] = child_ok[: 2 * cy, : 2 * cx]
+            all_ok = pad.reshape(cy, 2, cx, 2).all(axis=(1, 3))
             with np.errstate(invalid="ignore"):
-                split = (
-                    active & (scores[k] > threshold) & (child_min >= min_count[k - 1])
-                )
+                split = active & (scores[k] > threshold) & all_ok
         leaves[k] = active & ~split & (reliable[k] > 0)
         if k > min_level:
             below = scores[k - 1].shape
@@ -200,11 +204,47 @@ def _select(
     return leaves
 
 
+def _threshold_for(
+    n_points: int,
+    scores: dict[int, np.ndarray],
+    reliable: dict[int, np.ndarray],
+    min_level: int,
+    max_level: int,
+    min_count: dict[int, np.ndarray],
+) -> float:
+    """Return the threshold whose leaf count is closest to ``n_points``.
+
+    The leaf count does not grow with the threshold, and it only changes at
+    score values, so a bisection over the sorted scores finds it.
+    """
+
+    def count(threshold: float) -> int:
+        leaves = _select(scores, reliable, threshold, min_level, max_level, min_count)
+        return int(sum(mask.sum() for mask in leaves.values()))
+
+    finite = [a[np.isfinite(a)] for k, a in scores.items() if k > min_level]
+    candidates = np.concatenate([[-np.inf], np.unique(np.concatenate(finite))])
+    lo, hi = 0, candidates.size - 1
+    if count(candidates[hi]) >= n_points:
+        return float(candidates[hi])
+    while hi - lo > 1:
+        mid = (lo + hi) // 2
+        if count(candidates[mid]) > n_points:
+            lo = mid
+        else:
+            hi = mid
+    above, below = count(candidates[lo]), count(candidates[hi])
+    return float(
+        candidates[lo] if above - n_points < n_points - below else candidates[hi]
+    )
+
+
 @bounded_threads
 def quadtree(
     ds: xr.Dataset,
     *,
-    threshold: float,
+    threshold: Optional[float] = None,
+    n_points: Optional[int] = None,
     metric: Metric = "displacement",
     min_level: int = 3,
     max_level: int = 8,
@@ -219,9 +259,14 @@ def quadtree(
     ----------
     ds : xr.Dataset
         Chained, re-referenced data with ``y``, ``x`` (and ``time``).
-    threshold : float
+    threshold : float, optional
         Split score above which a cell splits (see the module docstring for
         the unit of each metric).
+    n_points : int, optional
+        Number of leaves wanted instead of a threshold: the threshold whose
+        leaf count is closest is chosen (recorded as ``quadtree_threshold``).
+        Counts outside what ``min_level`` and ``max_level`` allow give the
+        nearest extreme. Pass ``threshold`` or ``n_points``, not both.
     metric : {"displacement", "velocity", "structure"} or callable
         Split metric.
     min_level, max_level : int
@@ -229,9 +274,10 @@ def quadtree(
         ``2**max_level`` pixels on a side (3 and 8 are 240 m and 7.7 km at
         30 m).
     min_reliable : float
-        Share of a child's pixels that must be reliable (static weight above
-        0 and data at some epoch) in each of the four children for a cell to
-        split.
+        Share of a child's pixels inside the frame that must be reliable
+        (static weight above 0 and data at some epoch) in each of the four
+        children for a cell to split. Children outside the frame are
+        ignored, so cells on the frame edge split like the others.
     layer : str
         Layer to aggregate and score.
     weights : "quality", xr.DataArray or None
@@ -253,10 +299,15 @@ def quadtree(
     --------
     >>> tree = dxr.quadtree(ds, threshold=0.005)  # doctest: +SKIP
     >>> tree.points.level.to_series().value_counts()  # doctest: +SKIP
+    >>> tree = dxr.quadtree(ds, n_points=5000)  # doctest: +SKIP
 
     """
     import dask
 
+    if (threshold is None) == (n_points is None):
+        raise ValueError("pass threshold or n_points, not both or neither")
+    if n_points is not None and n_points < 1:
+        raise ValueError(f"n_points must be positive, not {n_points}")
     if not 0 <= min_level <= max_level:
         raise ValueError(
             f"need 0 <= min_level <= max_level, not {min_level}, {max_level}"
@@ -270,7 +321,7 @@ def quadtree(
     v = ds[layer].astype(np.float64)
     wb = w.broadcast_like(v)
     if v.chunks is not None:
-        wb = wb.chunk(v.chunksizes)
+        wb = wb.chunk(data_chunks(v))
     f0 = 2**min_level
     sums = _block_cell_sums(v, wb, f0)
     finest = xr.Dataset(dict(zip(SUMS, sums)))
@@ -282,6 +333,7 @@ def quadtree(
     finest["static_wx"] = _block_sum(static * xx, f0)
     finest["static_wy"] = _block_sum(static * yy, f0)
     finest["reliable"] = _block_sum(reliable_px, f0)
+    finest["inside"] = _block_sum(xr.ones_like(static, dtype=np.float64), f0)
     if velocity is not None:
         vel = velocity.astype(np.float64)
         ok = vel.notnull() & (static > 0)
@@ -301,10 +353,17 @@ def quadtree(
     computed = dask.compute(
         {k: s.data for k, s in lazy_scores.items()},
         {k: lv["reliable"].data for k, lv in levels.items()},
+        {k: lv["inside"].data for k, lv in levels.items()},
     )
     scores = {k: np.asarray(a, dtype=np.float64) for k, a in computed[0].items()}
     reliable = {k: np.asarray(a) for k, a in computed[1].items()}
-    min_count = {k: min_reliable * 4**k for k in levels}
+    # A share of the pixels inside the frame: edge cells can split too.
+    min_count = {k: min_reliable * np.asarray(a) for k, a in computed[2].items()}
+    if threshold is None:
+        assert n_points is not None
+        threshold = _threshold_for(
+            n_points, scores, reliable, min_level, max_level, min_count
+        )
     leaves = _select(scores, reliable, threshold, min_level, max_level, min_count)
 
     dy = float(ds["y"][1] - ds["y"][0])

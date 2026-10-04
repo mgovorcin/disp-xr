@@ -80,12 +80,17 @@ class _Reference:
         rs, cs = self.block(k, i, j)
         return int(self.reliable[rs, cs].sum())
 
+    def n_inside(self, k, i, j):
+        rs, cs = self.block(k, i, j)
+        return self.reliable[rs, cs].size
+
     def visit(self, k, i, j):
         threshold, _, min_level, _, min_reliable = self.args
         if k > min_level:
             kids = [(2 * i + a, 2 * j + b) for a in (0, 1) for b in (0, 1)]
             enough = all(
-                self.n_reliable(k - 1, a, b) >= min_reliable * 4 ** (k - 1)
+                self.n_reliable(k - 1, a, b)
+                >= min_reliable * self.n_inside(k - 1, a, b)
                 for a, b in kids
             )
             with np.errstate(invalid="ignore"):
@@ -185,12 +190,58 @@ def test_velocity_and_custom_metric():
     assert calls.count(True) == 1  # min_level has no children
 
 
+@pytest.mark.parametrize("metric", ["displacement", "structure"])
+def test_n_points_picks_the_closest_threshold(metric):
+    ds, w = _dataset()
+    args = {"metric": metric, "min_level": 1, "max_level": 4, "weights": w}
+    counts = {}
+    for target in (40, 120, 400):
+        tree = quadtree(ds, n_points=target, **args)
+        n = tree.points.sizes["point"]
+        threshold = tree.points.attrs["quadtree_threshold"]
+        # Same leaves as asking for that threshold directly.
+        again = quadtree(ds, threshold=threshold, **args)
+        np.testing.assert_array_equal(again.leaf_id.values, tree.leaf_id.values)
+        # No other score value as threshold gets closer to the target.
+        for nearby in (np.nextafter(threshold, -np.inf), threshold * 1.05):
+            if np.isfinite(nearby):
+                other = quadtree(ds, threshold=nearby, **args).points.sizes["point"]
+                assert abs(n - target) <= abs(other - target)
+        counts[target] = n
+    assert counts[40] <= counts[120] <= counts[400]
+
+
+def test_n_points_out_of_range():
+    ds, w = _dataset()
+    args = {"min_level": 1, "max_level": 4, "weights": w}
+    coarse = quadtree(ds, n_points=1, **args)
+    assert set(coarse.points.level.values) == {4}
+    fine = quadtree(ds, n_points=10**6, **args)
+    finest = quadtree(ds, threshold=-1.0, **args)
+    assert fine.points.sizes["point"] == finest.points.sizes["point"]
+
+
+def test_edge_cells_split():
+    # Cells larger than the frame, or hanging over its edge, split like the
+    # others: children outside the frame do not block the split.
+    ds, w = _dataset(ny=45, nx=70)
+    ds = ds.fillna(0.0)  # no hole: only the frame edge could block a split
+    tree = quadtree(ds, threshold=-1.0, min_level=1, max_level=7, weights=w)
+    assert set(tree.points.level.values) == {1}
+
+
 def test_errors():
     ds, w = _dataset()
     with pytest.raises(ValueError, match="velocity="):
         quadtree(ds, threshold=1.0, metric="velocity", weights=w)
     with pytest.raises(ValueError, match="min_level"):
         quadtree(ds, threshold=1.0, min_level=4, max_level=2, weights=w)
+    with pytest.raises(ValueError, match="not both"):
+        quadtree(ds, weights=w)
+    with pytest.raises(ValueError, match="not both"):
+        quadtree(ds, threshold=1.0, n_points=10, weights=w)
+    with pytest.raises(ValueError, match="positive"):
+        quadtree(ds, n_points=0, weights=w)
     with pytest.raises(ValueError, match="unknown metric"):
         quadtree(ds, threshold=1.0, metric="curvature", weights=w)
 
