@@ -136,7 +136,7 @@ class BaseEstimator:
             Values at ``coords`` (same shape); NaN points are skipped.
         weights : array-like, optional
             Non-negative weights (same shape), for example ``1 / sigma**2``;
-            NaN weights skip the point.
+            points with a zero or NaN weight are skipped.
 
         """
         easting, northing, shape = _flat(coords)
@@ -154,8 +154,10 @@ class BaseEstimator:
             if np.any(w < 0):
                 raise ValueError("weights must be non-negative")
         ok = np.isfinite(easting) & np.isfinite(northing) & np.isfinite(values)
-        ok &= np.isfinite(w)
-        if not ok.any() or w[ok].sum() <= 0:
+        # Zero-weight points carry no information; dropping them keeps
+        # estimators that place something at each point (splines) consistent.
+        ok &= np.isfinite(w) & (w > 0)
+        if not ok.any():
             raise ValueError("no point with data and a positive weight")
         self.region_ = (
             float(easting[ok].min()),

@@ -101,6 +101,12 @@ class DispDatasetAccessor(_Common):
         """Re-reference displacement (see :func:`disp_xr.reference.rereference`)."""
         return rereference(self._obj, method, **kwargs)
 
+    def deramp(self, degree: int = 1, **kwargs: Any) -> xr.Dataset:
+        """Remove a polynomial ramp per epoch (see :func:`disp_xr.models.deramp`)."""
+        from .models import deramp
+
+        return deramp(self._obj, degree, **kwargs)
+
     def quality_summary(self, **kwargs: Any) -> xr.Dataset:
         """Per-pixel quality summary (see :func:`disp_xr.quality.quality_summary`)."""
         return quality_summary(self._obj, **kwargs)
