@@ -14,18 +14,28 @@ from .estimate_fit import (
     sincos_to_amplitude_phase,
 )
 from .noise import NoiseResult, fit_noise
+from .temporal import (
+    apply_segmented,
+    gap_mask,
+    grid_step_days,
+    regular_time_grid,
+    split_at_breaks,
+)
 from .trajectory import Trajectory, fit_trajectory, predict_trajectory
 from .velocity import fit_velocity
 
 __all__ = [
     "NoiseResult",
     "Trajectory",
+    "apply_segmented",
     "create_design_matrix",
     "fit_timeseries",
     "fit_noise",
     "fit_timeseries_block",
     "fit_trajectory",
     "fit_velocity",
+    "gap_mask",
+    "grid_step_days",
     "get_coefficient_names",
     "get_predicted",
     "get_residuals_analysis",
@@ -33,6 +43,8 @@ __all__ = [
     "jax_solve_linear_system",
     "lscov_2d",
     "predict_trajectory",
+    "regular_time_grid",
+    "split_at_breaks",
     "sincos_to_amplitude_phase",
 ]
 

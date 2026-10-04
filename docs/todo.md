@@ -464,13 +464,13 @@ Goal: the Cal/Val science features S1–S4, fit/predict estimators and the GNSS 
 
 ### T30. Temporal grid, gaps and breaks
 
-- [ ] **T30. Temporal grid, gaps and breaks** — Depends on: T18 · PRD: S3
+- [x] **T30. Temporal grid, gaps and breaks** — Depends on: T18 · PRD: S3
   - Context: from the `tests/temporal_denoising` study: use 15 d grids for true 12 d sampling and 30 d for 24 d sampling. Gaps longer than `max_gap_days` stay NaN ("refused, not interpolated"). Breaks come from a declared list (catalogs or user input). Automatic detection is out of scope for 1.0.
   - Done when: `regular_time_grid(times, step=None)` picks 15 or 30 d from the median sampling, `gap_mask(times, grid, max_gap_days)` refuses gaps, and `split_at_breaks` / `apply_segmented` work on `xr.Dataset` time series.
-  - [ ] T30.1 Implement grid selection from the median sampling interval, with an override.
-  - [ ] T30.2 Implement the gap mask: grid points farther than `max_gap_days / 2` from any acquisition are NaN.
-  - [ ] T30.3 Port the break helpers from the study (`split_at_breaks`, `apply_segmented`) to work on `(time, npix)` arrays.
-  - [ ] T30.4 Add tests on the irregular `pre`-segment sampling pattern from the study (mixed 12 d and 24 d sampling, one 288 d gap).
+  - [x] T30.1 Implement grid selection from the median sampling interval, with an override. Done: `timeseries.grid_step_days` and `regular_time_grid(times, step=None)`. The step comes from the 75th percentile of the intervals, not the median: the study's `pre` segment has a 12 d median but 14 intervals of 24 d, and the study recommends 30 d there; 15 d per 12 d of that percentile (36 d sampling gives 45 d).
+  - [x] T30.2 Implement the gap mask: grid points farther than `max_gap_days / 2` from any acquisition are NaN. Done: `timeseries.gap_mask` (True inside a refused gap); default `max_gap_days` four times the typical interval.
+  - [x] T30.3 Port the break helpers from the study (`split_at_breaks`, `apply_segmented`) to work on `(time, npix)` arrays. Done: `split_at_breaks`, `break_epochs` and `apply_segmented` on NumPy `(time, ...)` arrays and on xarray objects with `time`.
+  - [x] T30.4 Add tests on the irregular `pre`-segment sampling pattern from the study (mixed 12 d and 24 d sampling, one 288 d gap). Done: `tests/test_temporal.py` on the real `pre` dates (30 d grid, 60 points at 15 d, only the 288 d hole refused, the 48 d gap bridged, a break inside the hole lands on 2018-06-11).
 
 ### T31. Temporal denoising: Kalman and LOWESS
 
