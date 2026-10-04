@@ -51,6 +51,23 @@ scores = models.cross_val_score(est, coords, points.velocity.values, spacing=500
 
 ::: disp_xr.models.Nearest
 
+## GNSS tie
+
+::: disp_xr.models.gnss_tie
+    options:
+      members: false
+      show_root_heading: false
+
+::: disp_xr.models.fit_tie
+
+::: disp_xr.models.apply_tie
+
+::: disp_xr.models.cross_validate_tie
+
+::: disp_xr.models.GNSSTie
+
+::: disp_xr.models.TieResult
+
 ## Helpers
 
 ::: disp_xr.models.coordinates
