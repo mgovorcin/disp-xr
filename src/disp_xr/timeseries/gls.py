@@ -32,7 +32,7 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 
-from .._chunks import time_contiguous
+from .._chunks import data_chunks, time_contiguous
 from .noise import NOISE_MODELS, _powerlaw_covariance, _sampling_grid, fit_noise
 from .trajectory import Trajectory
 
@@ -336,7 +336,7 @@ def gls_velocity(
     column = terms.names.index("linear_trend")
     labels = labels.where(labels.isin(group_ids), -1)
     if da.chunks is not None:
-        labels = labels.chunk({d: da.chunksizes[d] for d in labels.dims})
+        labels = labels.chunk({d: data_chunks(da)[d] for d in labels.dims})
     velocity, sigma, amplitude, count = xr.apply_ufunc(
         _gls_block,
         da,

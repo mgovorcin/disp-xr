@@ -32,6 +32,7 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 
+from ._chunks import data_chunks
 from ._history import recorded
 from .config import bounded_threads
 from .residuals import VariogramModel, mean_block_correlation, n_eff_correlated
@@ -324,7 +325,7 @@ def _aggregate_layers(
         v = v.astype(np.float64)
         wb = w.broadcast_like(v)
         if v.chunks is not None:
-            wb = wb.chunk(v.chunksizes)
+            wb = wb.chunk(data_chunks(v))
         sum_w, sum_w2, sum_wv, sum_wvv, n_valid = cell_sums(v, wb)
         n_valid = n_valid.astype(np.int32)
         mean = sum_wv / sum_w.where(sum_w > 0)
