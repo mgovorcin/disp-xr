@@ -237,7 +237,7 @@ def _hex_mask(spacing: float, dy: float, dx: float) -> np.ndarray:
 
 def _group_sorted(labels: np.ndarray, values: np.ndarray, weights: np.ndarray):
     """Sort valid entries by (label, value); return them and the group starts."""
-    ok = np.isfinite(values) & (weights > 0)
+    ok = np.isfinite(values) & (weights > 0) & (labels >= 0)
     lab, val, w = labels[ok], values[ok], weights[ok]
     order = np.lexsort((val, lab))
     lab, val, w = lab[order], val[order], w[order]
@@ -274,7 +274,7 @@ def _mode_cells(values: np.ndarray, labels: np.ndarray, n_ids: int, fill) -> np.
     flat_l = labels.ravel()
     out = np.full((flat_v.shape[0], n_ids), fill, dtype=values.dtype)
     for i in range(flat_v.shape[0]):
-        keep = flat_v[i] != fill
+        keep = (flat_v[i] != fill) & (flat_l >= 0)
         lab, val = flat_l[keep], flat_v[i][keep]
         if lab.size == 0:
             continue
@@ -294,24 +294,112 @@ def _mode_cells(values: np.ndarray, labels: np.ndarray, n_ids: int, fill) -> np.
     return out.reshape(*lead, n_ids)
 
 
-def _per_epoch(func, arrays: list[xr.DataArray], size: int, dtype, **kwargs):
-    """Apply a whole-frame cell reduction per epoch, lazily."""
-    spatial = {"y": -1, "x": -1}
-    prepared = []
-    for a in arrays:
-        if a.chunks is not None:
-            a = a.chunk({**spatial, **({"time": 1} if "time" in a.dims else {})})
-        prepared.append(a)
-    return xr.apply_ufunc(
-        func,
-        *prepared,
-        input_core_dims=[["y", "x"]] * len(prepared),
-        output_core_dims=[["cell"]],
-        dask="parallelized",
-        output_dtypes=[dtype],
-        dask_gufunc_kwargs={"output_sizes": {"cell": size}},
-        kwargs=kwargs,
+def _banded(
+    func,
+    arrays: list[xr.DataArray],
+    labels: np.ndarray,
+    n_ids: int,
+    halo: int,
+    dtype,
+    missing,
+    target_mb: float = 128.0,
+    **kwargs,
+) -> xr.DataArray:
+    """Apply a whole-cell reduction (median, mode) by bands of rows, lazily.
+
+    A hexagon crosses chunk borders, so its median needs all its pixels in
+    one task. Each band of rows owns the cells whose center falls in it, and
+    reads ``halo`` extra rows on both sides, enough for every pixel of those
+    cells; ``func(*blocks, local_labels, width)`` sees the band's pixels with
+    labels local to the band's window of ids, and -1 for cells another band
+    owns. One task then holds a band of the frame for a few epochs instead of
+    whole epochs of the frame.
+    """
+    order = [d for d in arrays[0].dims if d not in ("y", "x")] + ["y", "x"]
+    arrays = [a.transpose(*order) for a in arrays]
+    lead_dims = order[:-2]
+    data = arrays[0].data
+    coords = {d: arrays[0][d] for d in lead_dims if d in arrays[0].coords}
+    if isinstance(data, np.ndarray):
+        result = func(*(np.asarray(a.data) for a in arrays), labels, n_ids, **kwargs)
+        return xr.DataArray(result, dims=(*lead_dims, "cell"), coords=coords)
+
+    import dask.array as darr
+
+    ny, nx = labels.shape
+    band = max(data.chunks[-2][0], halo)
+    itemsize = 8 * len(arrays)
+    per_epoch = (band + 2 * halo) * nx * itemsize
+    lead_chunk = {
+        i: max(1, int(target_mb * 1e6 // per_epoch)) if i == 0 else -1
+        for i in range(data.ndim - 2)
+    }
+    chunks = {**lead_chunk, data.ndim - 2: band, data.ndim - 1: -1}
+    datas = [darr.asarray(a.data).rechunk(chunks) for a in arrays]
+    ychunks = datas[0].chunks[-2]
+    edges = np.concatenate([[0], np.cumsum(ychunks)])
+    # Owner band of each cell: the band holding the row of its center.
+    rows = np.arange(ny)
+    first_row = np.full(n_ids, ny, dtype=np.int64)
+    last_row = np.full(n_ids, -1, dtype=np.int64)
+    flat = labels.ravel()
+    row_of = np.repeat(rows, nx)
+    np.minimum.at(first_row, flat, row_of)
+    np.maximum.at(last_row, flat, row_of)
+    center_row = (first_row + last_row) // 2
+    owner = np.searchsorted(edges[1:], center_row, side="right")
+    present = last_row >= 0
+    lo = np.array(
+        [
+            np.flatnonzero(present & (owner == k)).min(initial=0)
+            for k in range(len(ychunks))
+        ]
     )
+    hi = np.array(
+        [
+            np.flatnonzero(present & (owner == k)).max(initial=-1) + 1
+            for k in range(len(ychunks))
+        ]
+    )
+    hi = np.maximum(hi, lo)
+    width = max(int((hi - lo).max()), 1)
+    if (last_row - first_row)[present].max() > 2 * halo:
+        raise AssertionError("halo smaller than a cell")
+    depth = {data.ndim - 2: halo}
+    padded = [darr.overlap.overlap(d, depth=depth, boundary="none") for d in datas]
+    lab = darr.from_array(labels, chunks=(ychunks, (nx,)))
+    lab = darr.overlap.overlap(lab, depth={0: halo}, boundary="none")
+
+    def block(*blocks: np.ndarray, block_info=None) -> np.ndarray:
+        *values, lb = blocks
+        k = block_info[0]["chunk-location"][-2]
+        local = np.where((lb >= lo[k]) & (lb < hi[k]), lb - lo[k], -1)
+        out = func(*values, local, width, **kwargs)
+        return out.reshape(*out.shape[:-1], 1, width)
+
+    partial = darr.map_blocks(
+        block,
+        *padded,
+        lab,
+        chunks=datas[0].chunks[:-2] + ((1,) * len(ychunks), (width,)),
+        dtype=dtype,
+    )
+    windows = partial.rechunk({partial.ndim - 2: -1})
+
+    def assemble(win: np.ndarray) -> np.ndarray:
+        out = np.full((*win.shape[:-2], n_ids), missing, dtype=dtype)
+        for k in range(win.shape[-2]):
+            out[..., lo[k] : hi[k]] = win[..., k, : hi[k] - lo[k]]
+        return out
+
+    result = darr.map_blocks(
+        assemble,
+        windows,
+        drop_axis=windows.ndim - 2,
+        chunks=windows.chunks[:-2] + ((n_ids,),),
+        dtype=dtype,
+    )
+    return xr.DataArray(result, dims=(*lead_dims, "cell"), coords=coords)
 
 
 @bounded_threads
@@ -389,7 +477,8 @@ def downsample_hex(
     bounds = _id_range(ds, spacing)
     n_ids = bounds[2] * bounds[3]
     labels = _labels(ds, spacing, bounds)
-    labels_da = xr.DataArray(labels, dims=("y", "x"))
+    # Rows a hexagon reaches above or below its center, plus one.
+    halo = int(np.ceil(spacing / SQRT3 / dy)) + 1
 
     def group_sum(da: xr.DataArray) -> xr.DataArray:
         return _group_sum(da, labels, n_ids)
@@ -401,8 +490,8 @@ def downsample_hex(
         w,
         layers=layers,
         cell_sums=lambda v, w: _hex_cell_sums(v, w, labels, n_ids),
-        median=lambda v, wv: _per_epoch(
-            _weighted_median_cells, [v, wv, labels_da], n_ids, np.float64, n_ids=n_ids
+        median=lambda v, wv: _banded(
+            _weighted_median_cells, [v, wv], labels, n_ids, halo, np.float64, np.nan
         ),
         full=full,
         stat=stat,
@@ -420,8 +509,8 @@ def downsample_hex(
             hit = ((var != fill) & (var != 0)).astype(np.uint8)
             reduced = (group_sum(hit) > 0).astype(np.uint8)
         else:
-            reduced = _per_epoch(
-                _mode_cells, [var, labels_da], n_ids, var.dtype, n_ids=n_ids, fill=fill
+            reduced = _banded(
+                _mode_cells, [var], labels, n_ids, halo, var.dtype, fill, fill=fill
             )
         out[name] = reduced.drop_attrs().assign_attrs(var.attrs, reduction=how)
     total = group_sum(static)

@@ -225,3 +225,49 @@ def test_group_sum_windows_match_dense():
     # Each block's partial covers a window of cells, not all of them.
     _, width = _row_windows(labels, values.chunk({"y": 13}).chunks[1])
     assert width < n_ids / 5
+
+
+def test_banded_median_and_mode_match_whole_frame():
+    from disp_xr.hexagons import (
+        _banded,
+        _id_range,
+        _labels,
+        _mode_cells,
+        _weighted_median_cells,
+    )
+
+    ds, w = _dataset(nt=5, ny=150, nx=31, seed=4)
+    bounds = _id_range(ds, SPACING)
+    n_ids = bounds[2] * bounds[3]
+    labels = _labels(ds, SPACING, bounds)
+    halo = int(np.ceil(SPACING / np.sqrt(3) / 30.0)) + 1
+    v = ds.displacement
+    for chunks in ({"y": 10}, {"y": 37, "time": 2}):
+        whole = _banded(
+            _weighted_median_cells, [v, w], labels, n_ids, halo, float, np.nan
+        )
+        banded = _banded(
+            _weighted_median_cells,
+            [v.chunk(chunks), w.chunk(chunks)],
+            labels,
+            n_ids,
+            halo,
+            float,
+            np.nan,
+        )
+        np.testing.assert_array_equal(banded.compute(), whole)
+        mask = ds.recommended_mask
+        mode_whole = _banded(
+            _mode_cells, [mask], labels, n_ids, halo, np.uint8, 255, fill=255
+        )
+        mode_banded = _banded(
+            _mode_cells,
+            [mask.chunk(chunks)],
+            labels,
+            n_ids,
+            halo,
+            np.uint8,
+            255,
+            fill=255,
+        )
+        np.testing.assert_array_equal(mode_banded.compute(), mode_whole)

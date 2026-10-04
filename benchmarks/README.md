@@ -151,3 +151,25 @@ deterministic measures are recorded for the two optimizations:
   of its rows of hexagons only. For a 7,000 x 9,000 frame with 200 epochs,
   one block's partial is 10.5 MB instead of 138.5 MB at 1,064 m (13x),
   2.9 MB instead of 35.9 MB at 2,128 m.
+
+**Why timings swung on 2026-10-03.** Touching 400 MB of new memory took
+17 s on the node that afternoon (about 0.1 s normally): 789 of 1,007 GB
+were in use and transparent huge pages are set to `always`, so page faults
+stalled in the kernel. Any step that allocates (concatenating chunks,
+temporaries) was slowed by up to 100x, depending on the moment. Check the
+node before timing anything:
+
+```python
+import numpy as np, time
+t = time.perf_counter(); z = np.zeros(50_000_000); z[::512] = 1
+print(time.perf_counter() - t)  # well under 1 s on a healthy node
+```
+
+**Hexagon median by bands.** The weighted median (and the mode) of a
+hexagon needs all its pixels in one task, and hexagons cross chunk borders.
+It used to take one whole epoch of the frame per task: values, weights and
+labels, 1.5 GB for a 7,000 x 9,000 frame before sorting temporaries, times
+the number of dask threads. Each task now holds one band of rows (the cells
+whose center lies in it, plus a halo of one hexagon radius) for a few
+epochs, sized to about 128 MB. Results are identical to the whole-frame
+computation (tested). Its speed was not measured, for the reason above.
