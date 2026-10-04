@@ -136,6 +136,32 @@ print(h3_cells.sizes["point"], "H3 cells at resolution 9")
 gdf[["h3_cell", "displacement", "n_eff", "geometry"]].head()
 
 # %% [markdown]
+# ## Quadtree
+#
+# `quadtree` keeps large cells where the data are smooth and splits them
+# where they vary. Levels are factor-2 cells from 2^min_level pixels; a cell
+# splits while its score is above the threshold and its four children keep
+# enough reliable pixels. With `metric="displacement"` the score is the RMS
+# weighted spread of the pixels in the cell, in meters. `to_raster` paints
+# the leaves back on the 30 m grid.
+
+# %%
+tree = dxr.quadtree(ds, threshold=0.002, min_level=2, max_level=5)
+leaves = tree.points.compute()
+print(leaves.level.to_series().value_counts().sort_index().rename("leaves"))
+fig, axes = plt.subplots(1, 2, figsize=(11, 4.2), layout="constrained")
+(ds.displacement.isel(time=-1) * 1000).plot.imshow(
+    ax=axes[0], cmap="RdBu_r", cbar_kwargs={"label": "mm"}
+)
+(tree.to_raster("displacement") * 1000).plot.imshow(
+    ax=axes[1], cmap="RdBu_r", cbar_kwargs={"label": "mm"}
+)
+for ax, title in zip(axes, ("30 m", "quadtree leaves")):
+    ax.set_title(title, loc="left")
+    ax.set_aspect("equal")
+plt.show()
+
+# %% [markdown]
 # ## Points
 
 # %%
