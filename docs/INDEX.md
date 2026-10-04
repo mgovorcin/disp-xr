@@ -16,6 +16,7 @@ How and when this file is rebuilt: see "Project Index (cyclical indexing)" in `C
 | [api_review.md](api_review.md) | v0.2 API review: public API, settled decisions, open questions | — |
 | [api_policy.md](api_policy.md) | What is public, deprecation rules, frozen names (draft until v0.2) | — |
 | [try-it.md](try-it.md) | Guide for Cal/Val users trying disp-xr on their own frame | — |
+| [docs_plan.md](docs_plan.md) | Documentation coverage per feature, stale notebooks, GitHub Pages gaps, tutorial order before going public | — |
 | [studies/split_metric.md](studies/split_metric.md) | T29 trade study report: frames, criteria, decision (scripts in `studies/split_metric/` at the root) | — |
 | [check_plan.py](check_plan.py) | Mechanical check of `todo.md` (run in every indexing cycle) | — |
 | [img/](img/) | `architecture.png`, `roadmap.png`, exported from the PRD doc | — |
