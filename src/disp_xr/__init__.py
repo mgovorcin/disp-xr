@@ -24,7 +24,7 @@ from .export import (
 )
 from .geometry.los import enu_to_los
 from .geometry.static import open_static
-from .hexagons import downsample_hex
+from .hexagons import downsample_hex, to_geodataframe
 from .open import open_disp, open_disp_tree
 from .product import find_products, get_disp_info  # noqa: F401  (deprecated)
 from .quality import mask, quality_summary, valid_mask
@@ -81,6 +81,7 @@ __all__ = [
     "remove_plate_motion",
     "rereference",
     "stack_disp",
+    "to_geodataframe",
     "to_geotiff",
     "to_geozarr",
     "to_icechunk",

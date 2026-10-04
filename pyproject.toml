@@ -62,6 +62,8 @@ docs = [
   "matplotlib",
 ]
 gnss = ["xvec", "geopandas"]
+# H3 hexagons (downsample_hex(grid="h3")) and cell polygons (to_geodataframe).
+hex = ["h3>=4", "geopandas"]
 # MintPy is used only to read exports back in round-trip tests.
 mintpy = ["mintpy"]
 plot = ["matplotlib"]
@@ -152,6 +154,9 @@ pytest-cov = "*"
 pytest-xdist = "*"
 ruff = "*"
 types-pyyaml = "*"
+# hex extra, so the H3 and GeoDataFrame tests run in every test environment
+h3-py = ">=4"
+geopandas = "*"
 
 [tool.pixi.feature.docs.dependencies]
 mkdocs = "*"
@@ -163,6 +168,9 @@ matplotlib-base = "*"
 # Older pairs break against current griffe.
 mkdocstrings = ">=0.29"
 mkdocstrings-python = ">=1.16"
+# The gallery runs H3 hexagons and to_geodataframe (hex extra).
+h3-py = ">=4"
+geopandas = "*"
 
 [tool.pixi.feature.aws.dependencies]
 asf_search = "*"

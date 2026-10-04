@@ -26,7 +26,8 @@ here the cells carry quality weights and sigmas, lazily.
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Literal, Optional, Union
+from dataclasses import dataclass
+from typing import Any, Literal, Optional, Union
 
 import numpy as np
 import xarray as xr
@@ -44,7 +45,14 @@ from .downsample import (
 )
 from .residuals import VariogramModel, mean_mask_correlation
 
-__all__ = ["downsample_hex", "hex_axial", "hex_centers", "hexagon_vertices"]
+__all__ = [
+    "cell_polygons",
+    "downsample_hex",
+    "hex_axial",
+    "hex_centers",
+    "hexagon_vertices",
+    "to_geodataframe",
+]
 
 SQRT3 = float(np.sqrt(3.0))
 WEIGHT_LAYERS = (
@@ -294,12 +302,22 @@ def _mode_cells(values: np.ndarray, labels: np.ndarray, n_ids: int, fill) -> np.
     return out.reshape(*lead, n_ids)
 
 
+def _row_extent(labels: np.ndarray, n_ids: int) -> tuple[np.ndarray, np.ndarray]:
+    """Return the first and last row of each cell id (-1 for absent ids)."""
+    ny, nx = labels.shape
+    first = np.full(n_ids, ny, dtype=np.int64)
+    last = np.full(n_ids, -1, dtype=np.int64)
+    rows = np.repeat(np.arange(ny), nx)
+    np.minimum.at(first, labels.ravel(), rows)
+    np.maximum.at(last, labels.ravel(), rows)
+    return first, last
+
+
 def _banded(
     func,
     arrays: list[xr.DataArray],
     labels: np.ndarray,
     n_ids: int,
-    halo: int,
     dtype,
     missing,
     target_mb: float = 128.0,
@@ -309,8 +327,9 @@ def _banded(
 
     A hexagon crosses chunk borders, so its median needs all its pixels in
     one task. Each band of rows owns the cells whose center falls in it, and
-    reads ``halo`` extra rows on both sides, enough for every pixel of those
-    cells; ``func(*blocks, local_labels, width)`` sees the band's pixels with
+    reads a halo of extra rows on both sides, enough for every pixel of those
+    cells (the largest reach of a cell from its center row, from ``labels``);
+    ``func(*blocks, local_labels, width)`` sees the band's pixels with
     labels local to the band's window of ids, and -1 for cells another band
     owns. One task then holds a band of the frame for a few epochs instead of
     whole epochs of the frame.
@@ -327,6 +346,11 @@ def _banded(
     import dask.array as darr
 
     ny, nx = labels.shape
+    first_row, last_row = _row_extent(labels, n_ids)
+    present = last_row >= 0
+    center_row = (first_row + last_row) // 2
+    reach = np.maximum(center_row - first_row, last_row - center_row)
+    halo = int(reach[present].max()) + 1
     band = max(data.chunks[-2][0], halo)
     itemsize = 8 * len(arrays)
     per_epoch = (band + 2 * halo) * nx * itemsize
@@ -334,37 +358,24 @@ def _banded(
         i: max(1, int(target_mb * 1e6 // per_epoch)) if i == 0 else -1
         for i in range(data.ndim - 2)
     }
-    chunks = {**lead_chunk, data.ndim - 2: band, data.ndim - 1: -1}
+    # dask's overlap needs every band at least as tall as the halo, so a short
+    # last band joins the one before it.
+    bands = [band] * (ny // band)
+    if ny % band:
+        if bands and ny % band < halo:
+            bands[-1] += ny % band
+        else:
+            bands.append(ny % band)
+    chunks = {**lead_chunk, data.ndim - 2: tuple(bands), data.ndim - 1: -1}
     datas = [darr.asarray(a.data).rechunk(chunks) for a in arrays]
     ychunks = datas[0].chunks[-2]
     edges = np.concatenate([[0], np.cumsum(ychunks)])
     # Owner band of each cell: the band holding the row of its center.
-    rows = np.arange(ny)
-    first_row = np.full(n_ids, ny, dtype=np.int64)
-    last_row = np.full(n_ids, -1, dtype=np.int64)
-    flat = labels.ravel()
-    row_of = np.repeat(rows, nx)
-    np.minimum.at(first_row, flat, row_of)
-    np.maximum.at(last_row, flat, row_of)
-    center_row = (first_row + last_row) // 2
     owner = np.searchsorted(edges[1:], center_row, side="right")
-    present = last_row >= 0
-    lo = np.array(
-        [
-            np.flatnonzero(present & (owner == k)).min(initial=0)
-            for k in range(len(ychunks))
-        ]
-    )
-    hi = np.array(
-        [
-            np.flatnonzero(present & (owner == k)).max(initial=-1) + 1
-            for k in range(len(ychunks))
-        ]
-    )
-    hi = np.maximum(hi, lo)
+    owned = [np.flatnonzero(present & (owner == k)) for k in range(len(ychunks))]
+    lo = np.array([o.min(initial=0) for o in owned])
+    hi = np.maximum(np.array([o.max(initial=-1) + 1 for o in owned]), lo)
     width = max(int((hi - lo).max()), 1)
-    if (last_row - first_row)[present].max() > 2 * halo:
-        raise AssertionError("halo smaller than a cell")
     depth = {data.ndim - 2: halo}
     padded = [darr.overlap.overlap(d, depth=depth, boundary="none") for d in datas]
     lab = darr.from_array(labels, chunks=(ychunks, (nx,)))
@@ -373,7 +384,10 @@ def _banded(
     def block(*blocks: np.ndarray, block_info=None) -> np.ndarray:
         *values, lb = blocks
         k = block_info[0]["chunk-location"][-2]
-        local = np.where((lb >= lo[k]) & (lb < hi[k]), lb - lo[k], -1)
+        # Only the cells this band owns; their ids span lo..hi, which may also
+        # hold a few cells owned by a neighbor (H3 ids follow the true center
+        # y, ownership the center row).
+        local = np.where(owner[lb] == k, lb - lo[k], -1)
         out = func(*values, local, width, **kwargs)
         return out.reshape(*out.shape[:-1], 1, width)
 
@@ -388,8 +402,8 @@ def _banded(
 
     def assemble(win: np.ndarray) -> np.ndarray:
         out = np.full((*win.shape[:-2], n_ids), missing, dtype=dtype)
-        for k in range(win.shape[-2]):
-            out[..., lo[k] : hi[k]] = win[..., k, : hi[k] - lo[k]]
+        for k, ids in enumerate(owned):
+            out[..., ids] = win[..., k, ids - lo[k]]
         return out
 
     result = darr.map_blocks(
@@ -402,13 +416,151 @@ def _banded(
     return xr.DataArray(result, dims=(*lead_dims, "cell"), coords=coords)
 
 
+@dataclass
+class _Cells:
+    """Cell assignment of the grid's pixels, for either kind of hexagon."""
+
+    labels: np.ndarray
+    """``(y, x)`` dense cell id of each pixel."""
+    n_ids: int
+    full: Union[float, np.ndarray]
+    """Pixel count of a full cell, a scalar or one per id."""
+    shape: np.ndarray
+    """Pixel mask of a typical full cell, for the variogram correlation."""
+    coords: dict[str, tuple]
+    """Per-id coordinate arrays, ``name -> (values, attrs)``."""
+    attrs: dict[str, Any]
+
+
+def _planar_cells(ds: xr.Dataset, spacing: float, dy: float, dx: float) -> _Cells:
+    bounds = _id_range(ds, spacing)
+    q0, r0, nq, nr = bounds
+    ids = np.arange(nq * nr)
+    q, r = ids % nq + q0, ids // nq + r0
+    cx, cy = hex_centers(q, r, spacing)
+    return _Cells(
+        labels=_labels(ds, spacing, bounds),
+        n_ids=nq * nr,
+        full=SQRT3 / 2.0 * spacing**2 / (dx * dy),
+        shape=_hex_mask(spacing, dy, dx),
+        coords={
+            "q": (q, {}),
+            "r": (r, {}),
+            "x": (cx, ds["x"].attrs),
+            "y": (cy, ds["y"].attrs),
+        },
+        attrs={"downsample_grid": "hexagon_planar", "hex_spacing": float(spacing)},
+    )
+
+
+def _h3_index(lon: np.ndarray, lat: np.ndarray, resolution: int) -> np.ndarray:
+    import h3.api.numpy_int as h3n
+
+    return np.fromiter(
+        (h3n.latlng_to_cell(la, lo, resolution) for lo, la in zip(lon, lat)),
+        dtype=np.uint64,
+        count=len(lon),
+    )
+
+
+def _h3_pixels(ds: xr.Dataset, resolution: int, dx: float) -> np.ndarray:
+    """Return the ``(y, x)`` H3 cell of every pixel center.
+
+    h3 indexes one point at a time (about 1 us), so pixels are first grouped
+    into square blocks a quarter of a cell edge wide: a block whose four
+    corners fall in one cell lies inside it (cells are convex at this
+    scale), and only the pixels of the other blocks are indexed one by one.
+    """
+    import h3
+    from pyproj import Transformer
+
+    to_lonlat = Transformer.from_crs(ds.rio.crs, "EPSG:4326", always_xy=True)
+    x, y = ds["x"].values.astype(np.float64), ds["y"].values.astype(np.float64)
+    ny, nx = y.size, x.size
+    edge = h3.average_hexagon_edge_length(resolution, unit="m")
+    stride = max(1, int(edge / dx / 4))
+    cells = np.zeros((ny, nx), dtype=np.uint64)
+    exact = np.ones((ny, nx), dtype=bool)
+    rows = np.unique(np.append(np.arange(0, ny, stride), ny - 1))
+    cols = np.unique(np.append(np.arange(0, nx, stride), nx - 1))
+    if stride > 1 and rows.size > 1 and cols.size > 1:
+        gx, gy = np.meshgrid(x[cols], y[rows])
+        lon, lat = to_lonlat.transform(gx.ravel(), gy.ravel())
+        corner = _h3_index(lon, lat, resolution).reshape(rows.size, cols.size)
+        uniform = (
+            (corner[:-1, :-1] == corner[1:, :-1])
+            & (corner[:-1, :-1] == corner[:-1, 1:])
+            & (corner[:-1, :-1] == corner[1:, 1:])
+        )
+        # Block of each pixel row and column (the last row/column closes the
+        # last block).
+        bi = np.minimum(
+            np.searchsorted(rows, np.arange(ny), side="right") - 1, rows.size - 2
+        )
+        bj = np.minimum(
+            np.searchsorted(cols, np.arange(nx), side="right") - 1, cols.size - 2
+        )
+        inside = uniform[bi[:, None], bj[None, :]]
+        cells[inside] = corner[:-1, :-1][bi[:, None], bj[None, :]][inside]
+        exact = ~inside
+    iy, ix = np.nonzero(exact)
+    if iy.size:
+        lon, lat = to_lonlat.transform(x[ix], y[iy])
+        cells[iy, ix] = _h3_index(lon, lat, resolution)
+    return cells
+
+
+def _h3_cells(ds: xr.Dataset, resolution: int, dy: float, dx: float) -> _Cells:
+    import h3
+    import h3.api.numpy_int as h3n
+    from pyproj import Transformer
+
+    if ds.rio.crs is None:
+        raise ValueError("grid='h3' needs a CRS (ds.rio.crs)")
+    pixels = _h3_pixels(ds, resolution, dx)
+    unique, inverse = np.unique(pixels.ravel(), return_inverse=True)
+    lat_lon = np.array([h3n.cell_to_latlng(c) for c in unique])
+    to_grid = Transformer.from_crs("EPSG:4326", ds.rio.crs, always_xy=True)
+    cx, cy = to_grid.transform(lat_lon[:, 1], lat_lon[:, 0])
+    # Ids ordered by row of cells (center y descending, then x), so a band of
+    # pixel rows holds a contiguous window of ids.
+    order = np.lexsort((cx, -cy))
+    rank = np.empty_like(order)
+    rank[order] = np.arange(order.size)
+    labels = rank[inverse].reshape(pixels.shape)
+    unique, cx, cy, lat_lon = unique[order], cx[order], cy[order], lat_lon[order]
+    area = np.array([h3n.cell_area(c, unit="m^2") for c in unique])
+    full = area / (dx * dy)
+    spacing = float(np.sqrt(full.mean() * dx * dy / (SQRT3 / 2.0)))
+    return _Cells(
+        labels=labels,
+        n_ids=unique.size,
+        full=full,
+        shape=_hex_mask(spacing, dy, dx),
+        coords={
+            "h3_cell": (unique, {"long_name": "H3 cell index (h3.int_to_str)"}),
+            "lon": (lat_lon[:, 1], {"units": "degrees_east"}),
+            "lat": (lat_lon[:, 0], {"units": "degrees_north"}),
+            "x": (cx, ds["x"].attrs),
+            "y": (cy, ds["y"].attrs),
+        },
+        attrs={
+            "downsample_grid": "hexagon_h3",
+            "h3_resolution": int(resolution),
+            "hex_spacing": spacing,
+            "h3_version": h3.__version__,
+        },
+    )
+
+
 @bounded_threads
 @recorded
 def downsample_hex(
     ds: xr.Dataset,
     *,
-    spacing: float,
-    grid: Literal["planar"] = "planar",
+    spacing: Optional[float] = None,
+    resolution: Optional[int] = None,
+    grid: Literal["planar", "h3"] = "planar",
     stat: Stat = "wmean",
     weights: Union[str, xr.DataArray, None] = "quality",
     layers: Optional[list[str]] = None,
@@ -423,41 +575,57 @@ def downsample_hex(
     ds : xr.Dataset
         Chained, re-referenced data with ``y`` and ``x`` (and optionally
         ``time``) dimensions, in a projected CRS.
-    spacing : float
-        Distance between neighboring cell centers, in the CRS unit (a
-        hexagon covers ``0.866 * spacing²``).
-    grid : {"planar"}
-        Planar hexagons in the frame's CRS. H3 global cells are plan task
-        T27.8, second part.
+    spacing : float, optional
+        ``grid="planar"``: distance between neighboring cell centers, in the
+        CRS unit (a hexagon covers ``0.866 * spacing²``).
+    resolution : int, optional
+        ``grid="h3"``: H3 resolution, for example 7 (about 5.2 km²), 8
+        (0.74 km²) or 9 (0.11 km²).
+    grid : {"planar", "h3"}
+        Planar hexagons in the frame's CRS anchored at its origin, or H3
+        global cells (the ``hex`` extra), which line up across frames and UTM
+        zones. H3 cells are hexagons on the sphere, so their pixel counts
+        vary slightly; ``valid_fraction`` and ``quality`` use each cell's
+        own area.
     stat, weights, layers, categorical, nan_threshold, variogram
         As in :func:`disp_xr.downsample`. ``valid_fraction`` is relative to
-        the expected pixel count of a full hexagon (its area over the pixel
+        the expected pixel count of a full cell (its area over the pixel
         area), so it can slightly exceed 1.
 
     Returns
     -------
     xr.Dataset
-        Dimension ``point`` (and ``time``), one point per hexagon holding at
-        least one pixel of the grid, ordered by cell id; coordinates ``cell``,
-        ``q``, ``r`` and the center ``x``, ``y``; the variables of
-        :func:`disp_xr.downsample`. Lazy if the input is.
+        Dimension ``point`` (and ``time``), one point per cell holding at
+        least one pixel of the grid; coordinates ``cell``, the center ``x``,
+        ``y``, and ``q``, ``r`` (planar) or ``h3_cell``, ``lon``, ``lat``
+        (H3); the variables of :func:`disp_xr.downsample` and ``pixels``.
+        Lazy if the input is.
 
     Examples
     --------
     >>> hexes = dxr.downsample_hex(ds, spacing=1075)  # doctest: +SKIP
+    >>> hexes = dxr.downsample_hex(ds, grid="h3", resolution=8)  # doctest: +SKIP
     >>> dxr.plot.plot_hex(hexes)  # doctest: +SKIP
 
     """
-    if grid != "planar":
-        raise ValueError(f"grid must be 'planar' (H3 is planned), not {grid!r}")
+    if grid not in ("planar", "h3"):
+        raise ValueError(f"grid must be 'planar' or 'h3', not {grid!r}")
     if stat not in ("wmean", "wmedian"):
         raise ValueError(f"stat must be 'wmean' or 'wmedian', not {stat!r}")
-    if spacing <= 0:
-        raise ValueError(f"spacing must be positive, not {spacing}")
     dy = abs(float(ds["y"][1] - ds["y"][0]))
     dx = abs(float(ds["x"][1] - ds["x"][0]))
-    if spacing < 2 * max(dx, dy):
-        raise ValueError(f"spacing {spacing} is under two pixels")
+    if grid == "planar":
+        if spacing is None or resolution is not None:
+            raise ValueError("grid='planar' takes spacing, not resolution")
+        if spacing <= 0:
+            raise ValueError(f"spacing must be positive, not {spacing}")
+        if spacing < 2 * max(dx, dy):
+            raise ValueError(f"spacing {spacing} is under two pixels")
+        cells = _planar_cells(ds, spacing, dy, dx)
+    else:
+        if resolution is None or spacing is not None:
+            raise ValueError("grid='h3' takes resolution, not spacing")
+        cells = _h3_cells(ds, int(resolution), dy, dx)
     w, static = _resolve_weights(ds, weights)
     categorical = {**CATEGORICAL_DEFAULTS, **dict(categorical or {})}
     if layers is None:
@@ -474,30 +642,29 @@ def downsample_hex(
     if missing := set(variogram) - set(layers):
         raise ValueError(f"variogram given for layers not aggregated: {missing}")
 
-    bounds = _id_range(ds, spacing)
-    n_ids = bounds[2] * bounds[3]
-    labels = _labels(ds, spacing, bounds)
-    # Rows a hexagon reaches above or below its center, plus one.
-    halo = int(np.ceil(spacing / SQRT3 / dy)) + 1
+    labels, n_ids = cells.labels, cells.n_ids
+    full = (
+        xr.DataArray(cells.full, dims="cell")
+        if isinstance(cells.full, np.ndarray)
+        else cells.full
+    )
 
     def group_sum(da: xr.DataArray) -> xr.DataArray:
         return _group_sum(da, labels, n_ids)
 
-    full = SQRT3 / 2.0 * spacing**2 / (dx * dy)
-    mask = _hex_mask(spacing, dy, dx)
     out, shared = _aggregate_layers(
         ds,
         w,
         layers=layers,
         cell_sums=lambda v, w: _hex_cell_sums(v, w, labels, n_ids),
         median=lambda v, wv: _banded(
-            _weighted_median_cells, [v, wv], labels, n_ids, halo, np.float64, np.nan
+            _weighted_median_cells, [v, wv], labels, n_ids, np.float64, np.nan
         ),
         full=full,
         stat=stat,
         nan_threshold=nan_threshold,
         variogram=variogram,
-        rho_bar=lambda model: mean_mask_correlation(model, mask, (dy, dx)),
+        rho_bar=lambda model: mean_mask_correlation(model, cells.shape, (dy, dx)),
     )
     for name, how in categorical.items():
         var = ds[name]
@@ -510,7 +677,7 @@ def downsample_hex(
             reduced = (group_sum(hit) > 0).astype(np.uint8)
         else:
             reduced = _banded(
-                _mode_cells, [var], labels, n_ids, halo, var.dtype, fill, fill=fill
+                _mode_cells, [var], labels, n_ids, var.dtype, fill, fill=fill
             )
         out[name] = reduced.drop_attrs().assign_attrs(var.attrs, reduction=how)
     total = group_sum(static)
@@ -518,7 +685,7 @@ def downsample_hex(
     shared["quality"] = (
         (total / full)
         .drop_attrs()
-        .assign_attrs(long_name="mean static weight of the cell (over a full hexagon)")
+        .assign_attrs(long_name="mean static weight of the cell (over a full cell)")
     )
     for name, coord in (("centroid_x", xx), ("centroid_y", yy)):
         centroid = group_sum(static * coord) / total.where(total > 0)
@@ -528,19 +695,16 @@ def downsample_hex(
         )
     pixels = np.bincount(labels.ravel(), minlength=n_ids)
     occupied = np.flatnonzero(pixels > 0)
-    q0, r0, nq, _ = bounds
-    q, r = occupied % nq + q0, occupied // nq + r0
-    cx, cy = hex_centers(q, r, spacing)
     result = xr.Dataset({**out, **shared}).isel(cell=occupied)
     result = result.drop_vars(
         [c for c in result.coords if c != "time" and c not in ("spatial_ref",)]
     )
     result = result.rename({"cell": "point"}).assign_coords(
         cell=("point", occupied),
-        q=("point", q),
-        r=("point", r),
-        x=("point", cx, ds["x"].attrs),
-        y=("point", cy, ds["y"].attrs),
+        **{
+            name: ("point", values[occupied], attrs)
+            for name, (values, attrs) in cells.coords.items()
+        },
     )
     if "spatial_ref" in ds.coords:
         result = result.assign_coords(spatial_ref=ds.coords["spatial_ref"])
@@ -549,11 +713,72 @@ def downsample_hex(
     result.attrs = {
         **{k: v for k, v in ds.attrs.items() if k != "history"},
         "history": ds.attrs.get("history", ""),
-        "downsample_grid": "hexagon_planar",
-        "hex_spacing": float(spacing),
+        **cells.attrs,
         "downsample_stat": stat,
         "downsample_weights": (
             weights if isinstance(weights, str) or weights is None else "user"
         ),
     }
     return result
+
+
+def cell_polygons(hexes: xr.Dataset) -> list[np.ndarray]:
+    """Return the outline of every cell of ``downsample_hex`` in the data CRS.
+
+    One ``(k, 2)`` array of ``(x, y)`` vertices per point.
+    """
+    if hexes.attrs.get("downsample_grid") == "hexagon_h3":
+        import h3.api.numpy_int as h3n
+        from pyproj import Transformer
+
+        crs = hexes.rio.crs
+        to_grid = Transformer.from_crs("EPSG:4326", crs, always_xy=True)
+        out = []
+        for cell in hexes["h3_cell"].values:
+            lat, lon = np.asarray(h3n.cell_to_boundary(int(cell))).T
+            out.append(np.column_stack(to_grid.transform(lon, lat)))
+        return out
+    verts = hexagon_vertices(
+        hexes["x"].values, hexes["y"].values, hexes.attrs["hex_spacing"]
+    )
+    return list(verts)
+
+
+def to_geodataframe(hexes: xr.Dataset, time: Optional[Any] = -1) -> Any:
+    """Return the cells of ``downsample_hex`` as a GeoDataFrame of polygons.
+
+    Parameters
+    ----------
+    hexes : xr.Dataset
+        Output of :func:`downsample_hex`.
+    time : int, date-like or None
+        Epoch to take for time-dependent variables: an index (default the
+        last), a date (nearest), or None for one row per cell and epoch.
+
+    Returns
+    -------
+    geopandas.GeoDataFrame
+        One row per cell (and epoch), the cell variables, the coordinates and
+        the hexagon polygon, in the data CRS (needs the ``hex`` extra).
+
+    """
+    import geopandas as gpd
+    from shapely.geometry import Polygon
+
+    data = hexes
+    if "time" in hexes.dims and time is not None:
+        data = (
+            hexes.isel(time=time)
+            if isinstance(time, (int, np.integer))
+            else hexes.sel(time=time, method="nearest")
+        )
+    polygons = [Polygon(v) for v in cell_polygons(hexes)]
+    frame = data.drop_vars("spatial_ref", errors="ignore").to_dataframe()
+    point = (
+        frame.index.get_level_values("point")
+        if "point" in frame.index.names
+        else frame.index
+    )
+    geometry = [polygons[i] for i in np.asarray(point)]
+    crs = hexes.rio.crs if "spatial_ref" in hexes.coords else None
+    return gpd.GeoDataFrame(frame.reset_index(), geometry=geometry, crs=crs)

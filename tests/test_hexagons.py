@@ -190,8 +190,12 @@ def test_quality_weights_on_fixture(stack_dir):
 
 def test_errors():
     ds, w = _dataset()
-    with pytest.raises(ValueError, match="planar"):
+    with pytest.raises(ValueError, match="takes resolution"):
         downsample_hex(ds, spacing=300, grid="h3", weights=w)
+    with pytest.raises(ValueError, match="takes spacing"):
+        downsample_hex(ds, resolution=8, weights=w)
+    with pytest.raises(ValueError, match="grid must be"):
+        downsample_hex(ds, spacing=300, grid="s2", weights=w)
     with pytest.raises(ValueError, match="two pixels"):
         downsample_hex(ds, spacing=40, weights=w)
     with pytest.raises(ValueError, match="not aggregated"):
@@ -240,34 +244,167 @@ def test_banded_median_and_mode_match_whole_frame():
     bounds = _id_range(ds, SPACING)
     n_ids = bounds[2] * bounds[3]
     labels = _labels(ds, SPACING, bounds)
-    halo = int(np.ceil(SPACING / np.sqrt(3) / 30.0)) + 1
     v = ds.displacement
     for chunks in ({"y": 10}, {"y": 37, "time": 2}):
-        whole = _banded(
-            _weighted_median_cells, [v, w], labels, n_ids, halo, float, np.nan
-        )
+        whole = _banded(_weighted_median_cells, [v, w], labels, n_ids, float, np.nan)
         banded = _banded(
             _weighted_median_cells,
             [v.chunk(chunks), w.chunk(chunks)],
             labels,
             n_ids,
-            halo,
             float,
             np.nan,
         )
         np.testing.assert_array_equal(banded.compute(), whole)
         mask = ds.recommended_mask
         mode_whole = _banded(
-            _mode_cells, [mask], labels, n_ids, halo, np.uint8, 255, fill=255
+            _mode_cells, [mask], labels, n_ids, np.uint8, 255, fill=255
         )
         mode_banded = _banded(
             _mode_cells,
             [mask.chunk(chunks)],
             labels,
             n_ids,
-            halo,
             np.uint8,
             255,
             fill=255,
         )
         np.testing.assert_array_equal(mode_banded.compute(), mode_whole)
+
+
+# --- H3 cells and GeoDataFrame export (T27.8, second part) ---
+
+h3 = pytest.importorskip("h3")
+
+
+def _exact_h3(ds, resolution):
+    import h3.api.numpy_int as h3n
+    from pyproj import Transformer
+
+    to_ll = Transformer.from_crs(ds.rio.crs, "EPSG:4326", always_xy=True)
+    xx, yy = np.meshgrid(ds.x.values, ds.y.values)
+    lon, lat = to_ll.transform(xx.ravel(), yy.ravel())
+    cells = [h3n.latlng_to_cell(a, b, resolution) for a, b in zip(lat, lon)]
+    return np.array(cells, dtype=np.uint64).reshape(xx.shape)
+
+
+def test_h3_block_shortcut_is_exact():
+    from disp_xr.hexagons import _h3_pixels
+
+    ds, _ = _dataset(nt=1, ny=150, nx=170)
+    fast = _h3_pixels(ds, 8, 30.0)  # stride 4: most pixels filled by blocks
+    np.testing.assert_array_equal(fast, _exact_h3(ds, 8))
+
+
+@pytest.mark.parametrize("stat", ["wmean", "wmedian"])
+def test_h3_matches_brute_force(stat):
+    ds, w = _dataset(nt=2, ny=90, nx=100, seed=2, chunks={"y": 23, "x": 31})
+    out = downsample_hex(ds, grid="h3", resolution=8, stat=stat, weights=w).compute()
+    exact = _exact_h3(ds, 8)
+    assert set(out.h3_cell.values) == set(np.unique(exact))
+    values, weights = ds.displacement.values, w.values
+    for k, cell in enumerate(out.h3_cell.values):
+        inside = exact == cell
+        assert int(out.pixels[k]) == inside.sum()
+        for t in range(values.shape[0]):
+            v, wt = values[t][inside], weights[t][inside]
+            ok = np.isfinite(v) & (wt > 0)
+            if not ok.any():
+                assert np.isnan(out.displacement[t, k])
+                continue
+            v, wt = v[ok], wt[ok]
+            if stat == "wmean":
+                ref = np.sum(wt * v) / wt.sum()
+            else:
+                order = np.argsort(v)
+                cw = np.cumsum(wt[order])
+                ref = v[order][np.argmax(cw >= 0.5 * cw[-1])]
+            assert float(out.displacement[t, k]) == pytest.approx(ref, rel=1e-10)
+    area = np.array(
+        [h3.cell_area(h3.int_to_str(int(c)), unit="m^2") for c in out.h3_cell.values]
+    )
+    np.testing.assert_allclose(out.valid_fraction, out.n_valid / (area / 900.0))
+    assert out.attrs["downsample_grid"] == "hexagon_h3"
+    assert out.attrs["h3_resolution"] == 8
+
+
+def test_h3_ids_shared_across_utm_zones():
+    """The same ground in two UTM zones gets the same H3 cells."""
+    from pyproj import Transformer
+
+    lon0, lat0 = -120.0, 37.0  # on the 10/11 zone boundary
+    frames = []
+    for epsg in (32610, 32611):
+        x0, y0 = Transformer.from_crs(4326, epsg, always_xy=True).transform(lon0, lat0)
+        x = x0 - 1500 + 30.0 * np.arange(100) + 15
+        y = y0 + 1500 - 30.0 * np.arange(100) - 15
+        ds = xr.Dataset(
+            {"displacement": (("y", "x"), np.ones((100, 100)))},
+            coords={"y": y, "x": x},
+        ).rio.write_crs(f"EPSG:{epsg}")
+        frames.append(downsample_hex(ds, grid="h3", resolution=8, weights=None))
+    a, b = frames
+    shared = set(a.h3_cell.values) & set(b.h3_cell.values)
+    assert len(shared) >= 4
+    for cell in shared:
+        ia = int(np.flatnonzero(a.h3_cell.values == cell)[0])
+        ib = int(np.flatnonzero(b.h3_cell.values == cell)[0])
+        assert float(a.lon[ia]) == float(b.lon[ib])
+        assert float(a.lat[ia]) == float(b.lat[ib])
+
+
+def test_h3_ids_follow_rows():
+    from disp_xr.hexagons import _h3_cells, _row_windows
+
+    ds, _ = _dataset(nt=1, ny=300, nx=60)
+    cells = _h3_cells(ds, 8, 30.0, 30.0)
+    _, width = _row_windows(cells.labels, (50,) * 6)
+    assert width < cells.n_ids / 2  # a band holds a window of ids, not all
+
+
+def test_h3_banded_median_matches_whole_frame():
+    ds, w = _dataset(nt=2, ny=120, nx=80, seed=5)
+    whole = downsample_hex(ds, grid="h3", resolution=8, stat="wmedian", weights=w)
+    split = downsample_hex(
+        ds.chunk({"y": 17, "x": 23}),
+        grid="h3",
+        resolution=8,
+        stat="wmedian",
+        weights=w.chunk({"y": 17, "x": 23}),
+    ).compute()
+    np.testing.assert_array_equal(split.displacement, whole.displacement)
+
+
+@pytest.mark.parametrize("grid", ["planar", "h3"])
+def test_to_geodataframe(grid):
+    ds, w = _dataset(nt=3, ny=60, nx=70)
+    kwargs = {"spacing": 300.0} if grid == "planar" else {"resolution": 8}
+    hexes = downsample_hex(ds, grid=grid, weights=w, **kwargs).compute()
+    gdf = dxr.to_geodataframe(hexes)
+    assert len(gdf) == hexes.sizes["point"]
+    assert gdf.crs.to_epsg() == 32610
+    assert gdf.geometry.is_valid.all()
+    np.testing.assert_allclose(gdf.geometry.centroid.x, hexes.x, atol=30)
+    if grid == "planar":
+        np.testing.assert_allclose(gdf.geometry.area, np.sqrt(3) / 2 * 300.0**2)
+    else:
+        area = [
+            h3.cell_area(h3.int_to_str(int(c)), unit="m^2")
+            for c in hexes.h3_cell.values
+        ]
+        np.testing.assert_allclose(gdf.geometry.area, area, rtol=0.01)
+    long = dxr.to_geodataframe(hexes, time=None)
+    assert len(long) == hexes.sizes["point"] * hexes.sizes["time"]
+    assert {"time", "displacement", "geometry"} <= set(long.columns)
+
+
+def test_plot_hex_h3():
+    import matplotlib
+
+    matplotlib.use("Agg")
+    ds, w = _dataset(nt=1, ny=60, nx=70)
+    times = np.array(["2020-01-01"], dtype="datetime64[ns]")
+    ds, w = ds.assign_coords(time=times), w.assign_coords(time=times)
+    hexes = downsample_hex(ds, grid="h3", resolution=8, weights=w)
+    ax = dxr.plot.plot_hex(hexes)
+    assert "H3 resolution 8" in ax.get_title(loc="left")

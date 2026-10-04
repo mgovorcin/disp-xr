@@ -125,6 +125,17 @@ plt.show()
 print(hexes.sizes["point"], "hexagons;", int(hexes.pixels.median()), "pixels each")
 
 # %% [markdown]
+# H3 global cells (`grid="h3"`, the `hex` extra) line up across frames and
+# UTM zones, so cells from neighboring frames merge by their `h3_cell` id.
+# `to_geodataframe` returns the cells as polygons for GIS tools.
+
+# %%
+h3_cells = dxr.downsample_hex(ds, grid="h3", resolution=9).compute()
+gdf = dxr.to_geodataframe(h3_cells)
+print(h3_cells.sizes["point"], "H3 cells at resolution 9")
+gdf[["h3_cell", "displacement", "n_eff", "geometry"]].head()
+
+# %% [markdown]
 # ## Points
 
 # %%
