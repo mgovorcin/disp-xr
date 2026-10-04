@@ -167,6 +167,7 @@ Still open in M0: T1.4b (name maintainers), T3.4 badge and T3.5 branch protectio
 | Date | Trigger | Changes |
 | --- | --- | --- |
 | 2026-09-30 | First index | Created from `specs.md`, `todo.md`, `code_review.md` and the source on `main` |
+| 2026-10-03 | Hexagon median by bands | `_banded`: median and mode per band of rows with a halo, about 128 MB per task instead of a whole epoch of the frame; node allocation stalls explained in `benchmarks/README.md` |
 | 2026-10-03 | Downsampling performance | One-pass per-cell sums for squares and hexagons (graph 29% and 38% smaller), windowed hexagon partial sums (13x smaller per block on a full frame); timings reported for T27.8 withdrawn (node order effect), see `benchmarks/README.md` |
 | 2026-10-03 | T27.8 planar part finished | `downsample_hex` (planar hexagons, lazily, blockwise bincount), `plot.plot_hex`, `mean_mask_correlation`; `downsample` and `downsample_hex` share `_aggregate_layers`; H3 next |
 | 2026-10-03 | T27.9 finished | `to_geozarr` and `export --format geozarr`; Zarr attributes stay JSON objects; checked with bowser's own server (`tests/bowser_check.py`); `docs/bowser.md` |
