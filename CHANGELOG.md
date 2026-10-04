@@ -72,6 +72,12 @@ All notable changes to disp-xr. The format follows
 
 ### Fixed
 
+- `open_disp` refused DISP-S1 frames that span the November 2025 production
+  change (displacement stored as float64 instead of float32, every other
+  layer alike). Granules that differ only in float precision are now read
+  together with a `MixedPrecisionWarning`, cast to float32 and listed in
+  `attrs["mixed_precision"]`; virtual stores still refuse them.
+
 - The command line failed at start-up (logging formatter name).
 - `fit_timeseries_block` fitted each chunk's epochs separately when time was
   split across chunks, and failed on `open_disp` output.

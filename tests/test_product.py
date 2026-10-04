@@ -7,9 +7,11 @@ which point the marker is removed.
 
 import shutil
 
+import numpy as np
 import pandas as pd
 import pytest
 
+import disp_xr as dxr
 from disp_xr import product
 
 
@@ -172,7 +174,11 @@ def test_group_ministacks(two_ministacks, stack_dir):
 
 # --- check_granules (plan task T5.8) ------------------------------------------
 
-from disp_xr.product import MixedProductionError, check_granules  # noqa: E402
+from disp_xr.product import (  # noqa: E402
+    MixedPrecisionWarning,
+    MixedProductionError,
+    check_granules,
+)
 
 
 def test_check_granules_accepts_one_production(stack_dir):
@@ -187,6 +193,51 @@ def test_check_granules_refuses_mixed_productions(disp_stacks):
     message = str(err.value)
     assert "displacement float32" in message and "displacement float64" in message
     assert "2025-04-12" in message and "2026-09-20" in message
+
+
+def test_check_granules_allows_precision_only(disp_stacks):
+    df = find_products(disp_stacks["mixed_dtype"].paths[0].parent)
+    with pytest.warns(MixedPrecisionWarning, match="displacement"):
+        out = check_granules(df, allow_mixed_precision=True)
+    assert out.attrs["mixed_precision"] == ["displacement"]
+    assert set(out["layout"]) == {0, 1}
+
+
+def test_open_disp_reads_mixed_precision_as_float32(disp_stacks):
+    stack = disp_stacks["mixed_dtype"]
+    folder = stack.paths[0].parent
+    with pytest.warns(MixedPrecisionWarning):
+        ds = dxr.open_disp(folder)
+    assert ds.displacement.dtype == np.float32
+    assert ds.attrs["mixed_precision"] == ["displacement"]
+    # Same values as each production read alone.
+    df = find_products(folder).assign(layout=lambda d: d["production_time"])
+    for _, group in df.groupby("production_time"):
+        alone = dxr.open_disp(group.drop(columns="layout"))
+        np.testing.assert_allclose(
+            ds.displacement.sel(time=alone.time).values,
+            alone.displacement.values.astype(np.float32),
+        )
+
+
+def test_check_granules_refuses_other_differences(monkeypatch, disp_stacks):
+    import disp_xr.product as product
+
+    real = product._layout
+
+    def recompressed(path, layers):
+        # The 2026 files also change compression: not a precision difference.
+        layout = real(path, layers)
+        if "2026" in str(path):
+            layout = tuple(
+                (n, dt, ch, "lzf", None, sh) for n, dt, ch, _, _, sh in layout
+            )
+        return layout
+
+    monkeypatch.setattr(product, "_layout", recompressed)
+    df = find_products(disp_stacks["mixed_dtype"].paths[0].parent)
+    with pytest.raises(MixedProductionError):
+        check_granules(df, allow_mixed_precision=True)
 
 
 def test_check_granules_reads_one_file_per_production(monkeypatch, disp_stacks):

@@ -18,6 +18,7 @@ How and when this file is rebuilt: see "Project Index (cyclical indexing)" in `C
 | [try-it.md](try-it.md) | Guide for Cal/Val users trying disp-xr on their own frame | — |
 | [docs_plan.md](docs_plan.md) | Documentation coverage per feature, stale notebooks, GitHub Pages gaps, tutorial order before going public | — |
 | [studies/split_metric.md](studies/split_metric.md) | T29 trade study report: frames, criteria, decision (scripts in `studies/split_metric/` at the root) | — |
+| [product_notes.md](product_notes.md) | Differences between DISP productions that affect reading a frame (float32 to float64 displacement in November 2025) | — |
 | [check_plan.py](check_plan.py) | Mechanical check of `todo.md` (run in every indexing cycle) | — |
 | [img/](img/) | `architecture.png`, `roadmap.png`, exported from the PRD doc | — |
 | `CLAUDE.md` (repository root) | Coding rules and the indexing cycle | — |
@@ -135,6 +136,7 @@ Still open in M0: T1.4b (name maintainers), T3.4 badge and T3.5 branch protectio
 
 | Date | Decision |
 | --- | --- |
+| 2026-10-04 | `open_disp` reads productions that differ only in float precision (DISP-S1 displacement float64 from November 2025) with a warning, cast to float32; virtual stores still refuse them |
 | 2026-10-02 | `open_disp` keeps the file layout (`chunks="native"`); each operation gets the chunks it needs (chaining keeps chunks, per-pixel functions rechunk themselves, `dxr.rechunk` for explicit control); disp-xr computes with at most 32 dask threads by default |
 | 2026-09-30 | 1.0 supports DISP-S1 and DISP-NISAR |
 | 2026-09-30 | verde is a design reference only; disp-xr has its own fit/predict estimators |
