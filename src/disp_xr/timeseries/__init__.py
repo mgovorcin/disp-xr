@@ -7,6 +7,7 @@ from ._design_matrix import (
 )
 from ._numpy_solver import lscov_2d
 from ._stats_analysis import get_residuals_analysis
+from .denoise import denoise
 from .estimate_fit import (
     fit_timeseries,
     fit_timeseries_block,
@@ -29,6 +30,7 @@ __all__ = [
     "Trajectory",
     "apply_segmented",
     "create_design_matrix",
+    "denoise",
     "fit_timeseries",
     "fit_noise",
     "fit_timeseries_block",

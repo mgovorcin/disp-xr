@@ -101,6 +101,12 @@ class DispDatasetAccessor(_Common):
         """Re-reference displacement (see :func:`disp_xr.reference.rereference`)."""
         return rereference(self._obj, method, **kwargs)
 
+    def denoise(self, method: str = "kalman", **kwargs: Any) -> xr.Dataset:
+        """Denoise in time (see :func:`disp_xr.denoise`); display, not rates."""
+        from .timeseries import denoise
+
+        return denoise(self._obj, method, **kwargs)
+
     def deramp(self, degree: int = 1, **kwargs: Any) -> xr.Dataset:
         """Remove a polynomial ramp per epoch (see :func:`disp_xr.models.deramp`)."""
         from .models import deramp
