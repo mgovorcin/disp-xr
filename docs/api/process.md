@@ -74,6 +74,23 @@ after. See [Concepts](../concepts.md).
 
 ::: disp_xr.diagnostics.anderson_darling
 
+## Time grids, gaps and breaks
+
+::: disp_xr.timeseries.temporal
+    options:
+      members: false
+      show_root_heading: false
+
+::: disp_xr.timeseries.regular_time_grid
+
+::: disp_xr.timeseries.grid_step_days
+
+::: disp_xr.timeseries.gap_mask
+
+::: disp_xr.timeseries.split_at_breaks
+
+::: disp_xr.timeseries.apply_segmented
+
 ## Colored noise (one series)
 
 ::: disp_xr.timeseries.noise
