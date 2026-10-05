@@ -215,6 +215,28 @@ def weights_for(ds: xr.Dataset, params: dict) -> tuple[xr.DataArray, xr.DataArra
     return qw.weight.fillna(static), static
 
 
+def cached_weights(
+    ds: xr.Dataset, frame: str, label: str, params: dict
+) -> tuple[xr.DataArray, xr.DataArray]:
+    """Return the weights of ``params``, computed once and kept as Zarr.
+
+    Every partition of a run reads the weights again; reading one stored
+    layer costs about half of recomputing it from three quality layers.
+    """
+    store = OUT / frame / "weights" / f"{label}.zarr"
+    if not (store / "zarr.json").exists():
+        weight, static = weights_for(ds, params)
+        out = xr.Dataset(
+            {"weight": weight.astype(np.float32), "static": static.astype(np.float32)}
+        )
+        out = out.chunk({"time": 1, "y": 1024, "x": 1024})
+        out.drop_vars([c for c in out.coords if c not in ("time", "y", "x")]).to_zarr(
+            store, mode="w"
+        )
+    cached = xr.open_zarr(store)
+    return cached["weight"], cached["static"]
+
+
 def run_frame(
     frame: str,
     profiles: list[list[float]],
@@ -222,11 +244,12 @@ def run_frame(
     sizes: dict[int, int] = SIZES_KM,
     methods: tuple[str, ...] = METRICS,
     params: dict | None = None,
+    label: str = "default",
 ) -> pd.DataFrame:
     """Score the regular grid and the quadtree ``methods`` at every size."""
     ds = xr.open_zarr(OUT / frame / "stack.zarr")
     velocity_da = xr.open_zarr(OUT / frame / "velocity.zarr")["velocity"]
-    weights, static_da = weights_for(ds, params or {})
+    weights, static_da = cached_weights(ds, frame, label, params or {})
     static = static_da.values
     velocity = velocity_da.values
     reliable = (static > 0) & ds["displacement"].notnull().any("time").values
@@ -302,21 +325,18 @@ def run_frame(
 # T29.5: one parameter at a time around the defaults of quality_weights
 # (penalty 0.5, f0 0.25, min_residual 0.05, floors from the product), plus
 # equal weights. Floors are absolute values here, not offsets.
+# Eight variants, trimmed from fourteen for run time (2026-10-04): the f0=0.1,
+# min_residual and similarity-floor variants are left for a follow-up if
+# these show the parameters matter. Labels name the cached weight stores.
 SWEEP: dict[str, dict] = {
     "default": {},
     "penalty=0.25": {"penalty": 0.25},
-    "penalty=0.75": {"penalty": 0.75},
-    "penalty=1 (none)": {"penalty": 1.0},
-    "f0=0.1": {"f0": 0.1},
+    "penalty=1": {"penalty": 1.0},
     "f0=0.5": {"f0": 0.5},
-    "min_residual=0.01": {"min_residual": 0.01},
-    "min_residual=0.2": {"min_residual": 0.2},
-    "floor_sim=0.2": {"floors": {"phase_similarity": 0.2}},
-    "floor_sim=0.5": {"floors": {"phase_similarity": 0.5}},
     "floor_coh=0.5": {"floors": {"temporal_coherence": 0.5}},
     "floor_coh=0.8": {"floors": {"temporal_coherence": 0.8}},
-    "no residuals": {"drop": "timeseries_inversion_residuals"},
-    "equal weights": {"equal": True},
+    "no_residuals": {"drop": "timeseries_inversion_residuals"},
+    "equal": {"equal": True},
 }
 SWEEP_SIZES = {2: 67}
 
@@ -346,7 +366,12 @@ def sweep_frame(frame: str, profiles: list[list[float]]) -> pd.DataFrame:
     tables = []
     for label, params in SWEEP.items():
         table = run_frame(
-            frame, profiles, sizes=SWEEP_SIZES, methods=methods, params=params
+            frame,
+            profiles,
+            sizes=SWEEP_SIZES,
+            methods=methods,
+            params=params,
+            label=label,
         )
         tables.append(table.assign(weights=label))
     return pd.concat(tables, ignore_index=True)

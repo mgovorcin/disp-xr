@@ -57,7 +57,8 @@ LAYERS = [
     "recommended_mask",
 ]
 REFERENCE_HALF_BOX = 32  # pixels: a 2 km box
-WORKERS = 24
+# Two frames can run side by side with DISP_XR_STUDY_WORKERS=16.
+WORKERS = int(os.environ.get("DISP_XR_STUDY_WORKERS", "24"))
 OUT = Path(
     os.environ.get(
         "DISP_XR_STUDY_OUT", "/u/aurora-r0/govorcin/01_OPERA/DISP/data/split_metric"
