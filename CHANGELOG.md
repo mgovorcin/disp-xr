@@ -50,6 +50,9 @@ All notable changes to disp-xr. The format follows
 - `downsample` (weighted mean or median to a regular coarse grid, with cell
   sigma, effective count, valid fraction and quality; mode or any for masks)
   and `to_points`.
+- `quadtree`: quality-weighted quadtree leaves (displacement, velocity or
+  structure split metric), by threshold or by a target number of points
+  (`n_points`).
 
 ### Changed
 
@@ -91,6 +94,12 @@ All notable changes to disp-xr. The format follows
   compared in absolute years with time relative to the reference.
 - `rereference("area")` read every chunk of the frame for the median of a
   small box; it now reads only the rows and columns around the area.
+- `quadtree` cells on the frame edge (and cells larger than the frame) never
+  split: `min_reliable` counted the children's pixels outside the frame. It
+  is now a share of the pixels inside the frame.
+- `fit_velocity`, `downsample`, `quadtree` and the other functions that align
+  chunks failed on a stack read back from Zarr, whose per-epoch coordinate
+  `reference_time` is one chunk while the data have one chunk per epoch.
 
 ## [0.1.0] - Unreleased
 
