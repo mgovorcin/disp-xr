@@ -78,6 +78,12 @@ class NoiseResult:
     """A trajectory fitted under a colored-noise model.
 
     Amplitudes are in the unit of the series; rates per year.
+
+    Examples
+    --------
+    >>> result = dxr.fit_noise(series, noise="PLWN")  # doctest: +SKIP
+    >>> result.velocity, result.velocity_sigma, result.kappa  # doctest: +SKIP
+
     """
 
     model: str
