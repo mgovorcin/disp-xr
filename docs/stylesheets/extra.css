@@ -1,0 +1,78 @@
+/* disp-xr documentation: small additions to Material for MkDocs. */
+
+:root {
+  --dxr-hero-from: #0d4f5c;
+  --dxr-hero-to: #1a7f8e;
+}
+
+[data-md-color-scheme="slate"] {
+  --dxr-hero-from: #0b3740;
+  --dxr-hero-to: #135c67;
+}
+
+/* Landing-page banner. */
+.dxr-hero {
+  margin: 0 0 1.6rem;
+  padding: 2.2rem 2rem 1.8rem;
+  border-radius: 0.8rem;
+  color: #fff;
+  background: linear-gradient(135deg, var(--dxr-hero-from), var(--dxr-hero-to));
+}
+
+.dxr-hero h1 {
+  margin: 0 0 0.6rem;
+  color: #fff;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.dxr-hero p {
+  max-width: 46rem;
+  font-size: 0.95rem;
+}
+
+.dxr-hero .md-button {
+  margin: 0.4rem 0.4rem 0 0;
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.7);
+}
+
+.dxr-hero .md-button--primary {
+  color: var(--dxr-hero-from);
+  background-color: #fff;
+  border-color: #fff;
+}
+
+.dxr-hero .md-button:hover {
+  color: var(--dxr-hero-from);
+  background-color: #f2c94c;
+  border-color: #f2c94c;
+}
+
+/* Cards lift a little on hover. */
+.md-typeset .grid.cards > ul > li {
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.md-typeset .grid.cards > ul > li:hover {
+  transform: translateY(-2px);
+}
+
+/* Executed notebooks: tighter output blocks. */
+.jp-OutputArea-output pre {
+  font-size: 0.72rem;
+}
+
+/* Primary color: deep teal (custom palette). */
+:root,
+[data-md-color-scheme="default"] {
+  --md-primary-fg-color: #0d4f5c;
+  --md-primary-fg-color--light: #1a7f8e;
+  --md-primary-fg-color--dark: #08343d;
+}
+
+[data-md-color-scheme="slate"] {
+  --md-primary-fg-color: #135c67;
+  --md-primary-fg-color--light: #1a7f8e;
+  --md-primary-fg-color--dark: #0b3740;
+}
