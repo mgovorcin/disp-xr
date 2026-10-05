@@ -122,3 +122,18 @@ def test_errors(ds):
         dxr.quality_weights(ds.drop_vars("phase_similarity"))
     with pytest.raises(ValueError, match="never exclude"):
         dxr.quality_weights(ds, min_residual=0)
+
+
+def test_quality_weights_stay_lazy(ds):
+    # Building the weights must not compute anything: np.round on a dask-backed
+    # DataArray once loaded the whole residual stack into memory.
+    import dask
+
+    def forbid(*args, **kwargs):  # noqa: ARG001 (dask scheduler signature)
+        raise AssertionError("quality_weights computed eagerly")
+
+    lazy = ds.chunk({"time": 1})
+    with dask.config.set(scheduler=forbid):
+        out = dxr.quality_weights(lazy)
+    assert out.weight.chunks is not None
+    np.testing.assert_allclose(out.weight.values, dxr.quality_weights(ds).weight.values)

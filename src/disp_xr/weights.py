@@ -74,7 +74,9 @@ def residual_cycles(residuals: xr.DataArray) -> xr.Dataset:
 
     """
     turns = residuals / TWO_PI
-    cycles = np.round(turns)
+    # The method, not np.round: numpy's round passes `out=`, which xarray does
+    # not take, and falls back to np.asarray, loading a dask array whole.
+    cycles = turns.round()
     frac = abs(turns - cycles)
     return xr.Dataset(
         {
