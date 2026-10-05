@@ -243,7 +243,9 @@ def cached_weights(
         out = xr.Dataset(
             {"weight": weight.astype(np.float32), "static": static.astype(np.float32)}
         )
-        out = out.chunk({"time": 1, "y": 1024, "x": 1024})
+        # Equal weights have no time dimension.
+        sizes = {"time": 1, "y": 1024, "x": 1024}
+        out = out.chunk({d: n for d, n in sizes.items() if d in out.dims})
         # Written under a temporary name and renamed when complete, so a run
         # killed mid-write never leaves a store that looks finished.
         partial = store.with_name(store.name + ".partial")
