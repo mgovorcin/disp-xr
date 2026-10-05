@@ -589,7 +589,7 @@ Goal: DISP-NISAR at parity, multi-frame, performance targets met, published on c
   - [ ] T38.3b Release checklist: diff the ported functions against current opera_utils (source commit in each header) and record the result; confirm `THIRD_PARTY_NOTICES.md` is complete and ships in the wheel. Audit done (2026-10-05): upstream opera-utils main has not changed since 97f77d9 (2026-06-04), so there are no upstream fixes to take; every ported file and test is identical between 97f77d9 and the fork commit dff4b45 the headers cited, so headers and THIRD_PARTY_NOTICES.md now cite the public 97f77d9 (search.py had none). THIRD_PARTY_NOTICES.md was missing from the wheel and is now in license-files. Repeat this diff before the 1.0 tag.
   - [ ] T38.4 Add a PyPI publish workflow (trusted publishing) and tag `v1.0.0rc1`.
   - [ ] T38.5 Submit the conda-forge staged-recipes PR and get the feedstock merged.
-  - [ ] T38.6 Write `docs/api_policy.md` covering semantic versioning, deprecation cycles and supported product versions.
+  - [x] T38.6 Write `docs/api_policy.md` covering semantic versioning, deprecation cycles and supported product versions. Done (2026-10-05): versions and what each release may contain, what is public (names, accessor, CLI, config keys, store layout and provenance attributes), stability levels (DISP-NISAR, batch and the REST service provisional), deprecation, supported products (DISP-S1 0.10 to below 2, validated; DISP-NISAR provisional) and Python and dependencies (3.12+, SPEC 0). The v0.2 frozen-name list still waits for T18.3.
 
 ### T39. Release v1.0
 
