@@ -318,7 +318,7 @@ M0 comes first because nothing else is safe to refactor without tests. Each diam
 - [ ] S2: default exponents, cycle penalty, f0, per-layer floors and the exclusion floor (set by the trade study).
 - [x] S2: quadtree split metric: velocity variance, displacement variance over time, or structure function? Decided: trade study of all three (see S2).
 - [ ] S3: test denoising on a deforming site with topography-correlated troposphere; experiments so far cover one flat, aseismic site (Kiritimati).
-- [ ] S4: which OPERA requirement thresholds to draw on the residual plots.
+- [x] S4: which OPERA requirement thresholds to draw on the residual plots? Decided (2026-10-04): both DISP-S1 requirements, by default: relative displacement 3 (1 + sqrt(L)) mm on the pairwise RMSE profile, and relative velocity 2 mm/yr on station-pair differences of velocity residuals, for 0.1 km < L < 50 km (`residuals.DISP_S1_DISPLACEMENT`, `DISP_S1_VELOCITY`). The values are to be confirmed against the OPERA requirements document before v0.3.
 - [x] Cloud: should Icechunk be the default store for analysis-ready outputs, or an opt-in extra? Decided: follow the earth-mover practices; Icechunk is opt-in where useful.
 - [x] Depend on opera_utils for product parsing, rebasing and referencing? Decided: no; port the needed functions into disp-xr with attribution.
 - [ ] DISP-NISAR: filename pattern, CMR short name and ASF credential endpoint are unconfirmed until a real granule is inspected.

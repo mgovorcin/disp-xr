@@ -53,6 +53,11 @@ All notable changes to disp-xr. The format follows
 - `quadtree`: quality-weighted quadtree leaves (displacement, velocity or
   structure split metric), by threshold or by a target number of points
   (`n_points`).
+- `residuals.compare` scores the OPERA DISP-S1 requirements by default:
+  relative displacement 3 (1 + sqrt(L)) mm on the pairwise RMSE profile and
+  relative velocity 2 mm/yr on station-pair velocity differences
+  (`Requirement`, `DISP_S1_DISPLACEMENT`, `DISP_S1_VELOCITY`,
+  `Comparison.velocity_pairs`).
 
 ### Changed
 
