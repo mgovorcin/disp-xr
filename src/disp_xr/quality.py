@@ -209,6 +209,11 @@ def valid_mask(
     ValueError
         If no criterion is chosen, or a needed layer is not in ``ds``.
 
+    Examples
+    --------
+    >>> good = dxr.valid_mask(ds, "recommended")  # doctest: +SKIP
+    >>> good = dxr.valid_mask(ds, None, temporal_coherence=0.7)  # doctest: +SKIP
+
     """
     chosen = _criteria_for(ds, preset)
     for key, value in {
@@ -292,6 +297,12 @@ def quality_summary(
         ``recommended_mask == 1``) and ``reliable``
         (``reliability >= reliability_threshold``). With ``by_ministack``,
         each is computed per ``reference_time`` group (flox groupby).
+
+    Examples
+    --------
+    >>> summary = dxr.quality_summary(ds).compute()  # doctest: +SKIP
+    >>> summary.reliable.plot.imshow()  # doctest: +SKIP
+    >>> per_ministack = dxr.quality_summary(ds, by_ministack=True)  # doctest: +SKIP
 
     """
 

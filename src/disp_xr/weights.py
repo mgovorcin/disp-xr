@@ -114,6 +114,11 @@ def network_degree(ds: xr.Dataset, max_bandwidth: int) -> xr.DataArray:
     ``max_bandwidth`` neighbours on each side within its ministack, whose
     first date is the (compressed) reference. A secondary at position ``p``
     of ``N`` dates has ``min(p, b) + min(N - 1 - p, b)`` interferograms.
+
+    Examples
+    --------
+    >>> degree = network_degree(ds, max_bandwidth=3)  # doctest: +SKIP
+
     """
     refs = pd.Series(ds["reference_time"].values)
     degree = np.zeros(len(refs), dtype=np.int16)
@@ -267,6 +272,10 @@ def residual_cycle_histogram(
     -------
     pd.Series
         Counts indexed by the lower bin edge, in cycles of 2 pi.
+
+    Examples
+    --------
+    >>> counts = residual_cycle_histogram(ds)  # doctest: +SKIP
 
     """
     bins = np.arange(0.0, 4.01, 0.25) if bins is None else np.asarray(bins)

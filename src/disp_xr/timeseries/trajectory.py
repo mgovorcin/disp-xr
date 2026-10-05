@@ -334,6 +334,13 @@ def predict_trajectory(
     The model is rebuilt from the coefficient names and the reference time in
     ``fit.attrs``, so a fit read back from a store can be evaluated. Computed
     in ``dtype`` and never stored unless you write it.
+
+    Examples
+    --------
+    >>> fit = dxr.fit_trajectory(ds)  # doctest: +SKIP
+    >>> model = dxr.predict_trajectory(fit, ds.time.values)  # doctest: +SKIP
+    >>> residual = ds.displacement - model  # doctest: +SKIP
+
     """
     from ._design_matrix import infer_parameters_from_names
 

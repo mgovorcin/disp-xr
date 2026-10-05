@@ -99,6 +99,14 @@ def open_disp(
     ValueError
         If a requested layer does not exist in the product.
 
+    Examples
+    --------
+    >>> ds = dxr.open_disp("F11116/")  # doctest: +SKIP
+    >>> ds = dxr.open_disp(
+    ...     "F11116/", layers=["displacement", "temporal_coherence"]
+    ... )  # doctest: +SKIP
+    >>> ds = dxr.open_disp(list(search_table["filename"]))  # doctest: +SKIP
+
     """
     df = (
         paths
@@ -198,6 +206,11 @@ def open_disp_tree(
     Returns
     -------
     xr.DataTree
+
+    Examples
+    --------
+    >>> tree = dxr.open_disp_tree("F11116/")  # doctest: +SKIP
+    >>> tree["corrections"].ds  # doctest: +SKIP
 
     """
     df = (

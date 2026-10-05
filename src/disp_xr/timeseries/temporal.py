@@ -53,6 +53,13 @@ def grid_step_days(times: TimesLike) -> int:
 
     Uses the 75th percentile of the intervals, so a frame with a mix of 12-
     and 24-day intervals gets 30 d (see the module docstring).
+
+    Examples
+    --------
+    >>> import pandas as pd
+    >>> grid_step_days(pd.date_range("2020-01-01", periods=30, freq="12D"))
+    15
+
     """
     t = _times(times)
     if t.size < 2:
@@ -84,6 +91,14 @@ def regular_time_grid(
     -------
     pandas.DatetimeIndex
         Midnight dates from ``start`` every ``step`` days, not beyond ``end``.
+
+    Examples
+    --------
+    >>> import pandas as pd
+    >>> times = pd.date_range("2020-01-01", periods=30, freq="12D")
+    >>> grid = regular_time_grid(times)
+    >>> int((grid[1] - grid[0]).days)
+    15
 
     """
     t = _times(times)
@@ -122,6 +137,13 @@ def gap_mask(
     numpy.ndarray
         Boolean, one per grid date.
 
+    Examples
+    --------
+    >>> import pandas as pd
+    >>> times = pd.to_datetime(["2020-01-01", "2020-01-13", "2020-09-01"])
+    >>> grid = pd.date_range("2020-01-01", "2020-09-01", freq="30D")
+    >>> gap_mask(times, grid, max_gap_days=60).sum()  # doctest: +SKIP
+
     """
     t = _times(times)
     g = _times(grid)
@@ -153,7 +175,16 @@ def break_epochs(times: TimesLike, breaks: Optional[Sequence[Any]]) -> np.ndarra
 def split_at_breaks(
     times: TimesLike, breaks: Optional[Sequence[Any]]
 ) -> list[np.ndarray]:
-    """Return the epoch indices of each segment between breaks."""
+    """Return the epoch indices of each segment between breaks.
+
+    Examples
+    --------
+    >>> import pandas as pd
+    >>> times = pd.date_range("2020-01-01", periods=6, freq="12D")
+    >>> [len(s) for s in split_at_breaks(times, ["2020-02-01"])]
+    [3, 3]
+
+    """
     t = _times(times)
     edges = [0, *np.flatnonzero(break_epochs(t, breaks)).tolist(), t.size]
     return [np.arange(a, b) for a, b in zip(edges, edges[1:]) if b > a]
@@ -191,6 +222,11 @@ def apply_segmented(
     Returns
     -------
     Same type as ``data``.
+
+    Examples
+    --------
+    >>> breaks = ["2023-02-06"]
+    >>> smooth = apply_segmented(my_filter, ds.displacement, breaks)  # doctest: +SKIP
 
     """
     if isinstance(data, (xr.DataArray, xr.Dataset)):

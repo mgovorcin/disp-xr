@@ -56,6 +56,11 @@ def significance(fit: xr.Dataset, alpha: float = 0.05) -> xr.Dataset:
         ``z`` (coefficient over sigma), ``p_value`` (two-sided, Gaussian),
         ``ci_low`` and ``ci_high``, and ``significant`` (``p_value < alpha``).
 
+    Examples
+    --------
+    >>> sig = significance(dxr.fit_trajectory(ds))  # doctest: +SKIP
+    >>> sig.sel(coefficient="linear_trend").significant.mean()  # doctest: +SKIP
+
     """
     from scipy.special import ndtr, ndtri
 
@@ -84,6 +89,14 @@ def anderson_darling(values: np.ndarray, axis: int = -1) -> np.ndarray:
     Mean and variance are estimated from the data, with Stephens'
     small-sample correction ``A² (1 + 0.75 / n + 2.25 / n²)``. Vectorized: one
     sort for all series. NaN where fewer than 8 values are finite.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> rng = np.random.default_rng(0)
+    >>> bool(anderson_darling(rng.standard_normal(500)) < AD_CRITICAL_5)
+    True
+
     """
     from scipy.special import log_ndtr
 
@@ -160,6 +173,12 @@ def model_diagnostics(
         ``kurtosis`` (excess), ``autocorrelation_lag<k>`` and
         ``anderson_darling`` (normality; above ``AD_CRITICAL_5`` rejects at
         5%).
+
+    Examples
+    --------
+    >>> fit = dxr.fit_trajectory(ds)  # doctest: +SKIP
+    >>> diag = model_diagnostics(ds, fit, lags=(1, 2))  # doctest: +SKIP
+    >>> (diag.autocorrelation_lag1 > 0.3).mean()  # doctest: +SKIP
 
     """
     da = data[layer] if isinstance(data, xr.Dataset) else data

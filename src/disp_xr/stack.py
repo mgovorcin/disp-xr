@@ -46,6 +46,12 @@ class NaNPolicy(str, Enum):
     ``propagate`` (default): later epochs of that pixel become NaN, since their
     offset is unknown. ``omit``: the missing offset is taken as zero, which
     assumes no motion over the missing interval.
+
+    Examples
+    --------
+    >>> NaNPolicy("omit")
+    <NaNPolicy.omit: 'omit'>
+
     """
 
     propagate = "propagate"
@@ -160,6 +166,11 @@ def stack_disp(
         If a reference date after the first is not an epoch of ``ds``.
     ValueError
         If ``start`` is not a reference date.
+
+    Examples
+    --------
+    >>> ds = dxr.stack_disp(dxr.open_disp("F11116/"))  # doctest: +SKIP
+    >>> ds = dxr.stack_disp(raw, start="2020-01-01")  # doctest: +SKIP
 
     """
     nan_policy = NaNPolicy(nan_policy)

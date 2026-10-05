@@ -143,6 +143,11 @@ def build_overviews(
         Children ``"0"``, ``"1"``, ... and the multiscales attributes on the
         root; lazy if ``ds`` is.
 
+    Examples
+    --------
+    >>> tree = dxr.build_overviews(ds, factors=(33, 67, 333))  # doctest: +SKIP
+    >>> dxr.to_pyramid(tree, "F11116_pyramid.zarr")  # doctest: +SKIP
+
     """
     from ..downsample import CATEGORICAL_DEFAULTS, downsample
 
@@ -269,6 +274,11 @@ def open_pyramid(
     xr.DataTree
         One child per level, named by its ``asset``, with the root attributes
         (``multiscales`` and provenance).
+
+    Examples
+    --------
+    >>> tree = dxr.open_pyramid("F11116_pyramid.zarr")  # doctest: +SKIP
+    >>> tree["1"].ds  # doctest: +SKIP
 
     """
     import zarr

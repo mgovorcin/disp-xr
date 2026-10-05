@@ -66,7 +66,23 @@ SPATIAL = ("y", "x")
 
 @dataclass
 class RegionJob:
-    """One region of a frame cube: what to read, where to write it."""
+    """One region of a frame cube: what to read, where to write it.
+
+    Examples
+    --------
+    >>> job = RegionJob(
+    ...     job_id="F11116-y0-x0",
+    ...     frame=11116,
+    ...     store="frame.zarr",
+    ...     region={"y": [0, 1024], "x": [0, 1024]},
+    ...     granules=["g1.nc", "g2.nc"],
+    ... )
+    >>> RegionJob.from_json(job.to_json()) == job
+    True
+    >>> job.slices["y"]
+    slice(0, 1024, None)
+
+    """
 
     job_id: str
     frame: int
@@ -93,7 +109,14 @@ class RegionJob:
 
 @dataclass
 class RegionResult:
-    """What a region job reports: success or the error, and how long it took."""
+    """What a region job reports: success or the error, and how long it took.
+
+    Examples
+    --------
+    >>> result = run_region(job, chain)  # doctest: +SKIP
+    >>> result.status, result.seconds  # doctest: +SKIP
+
+    """
 
     job_id: str
     status: str
@@ -116,6 +139,12 @@ def init_store(
     Coordinates are written; data variables are created empty with the
     encoding :func:`disp_xr.to_zarr` would use. Returns the shard sizes by
     dimension, which :func:`plan_jobs` aligns the regions to.
+
+    Examples
+    --------
+    >>> template = dxr.stack_disp(dxr.open_disp(granules))  # doctest: +SKIP
+    >>> shards = init_store(template, "frame.zarr")  # doctest: +SKIP
+
     """
     out, shards = _prepare(template, preset, None, target_mb, json_native=True)
     out = _with_zarr_conventions(out)
@@ -133,7 +162,16 @@ def init_store(
 def plan_regions(
     template: xr.Dataset, shards: dict[str, int]
 ) -> list[dict[str, list[int]]]:
-    """Return regions of whole shards in ``y`` and ``x`` (all epochs each)."""
+    """Return regions of whole shards in ``y`` and ``x`` (all epochs each).
+
+    Examples
+    --------
+    >>> import numpy as np, xarray as xr
+    >>> template = xr.Dataset(coords={"y": np.arange(300), "x": np.arange(500)})
+    >>> len(plan_regions(template, {"y": 256, "x": 256}))
+    4
+
+    """
     regions = []
     for y0 in range(0, template.sizes["y"], shards["y"]):
         for x0 in range(0, template.sizes["x"], shards["x"]):
@@ -154,7 +192,15 @@ def plan_jobs(
     *,
     parameters: Optional[dict[str, Any]] = None,
 ) -> list[RegionJob]:
-    """Return one :class:`RegionJob` per region of :func:`plan_regions`."""
+    r"""Return one :class:`RegionJob` per region of :func:`plan_regions`.
+
+    Examples
+    --------
+    >>> jobs = plan_jobs(template, "frame.zarr", granules, shards)  # doctest: +SKIP
+    >>> lines = [job.to_json() + "\n" for job in jobs]  # doctest: +SKIP
+    >>> open("jobs.jsonl", "w").writelines(lines)  # doctest: +SKIP
+
+    """
     frame = int(template.attrs.get("frame_id", 0))
     files = [str(g) for g in granules]
     return [
@@ -178,6 +224,13 @@ def run_region(
     ``process(ds, job)`` gets the region of ``open_disp(job.granules)`` and
     returns the variables of the template on that region. Errors are caught
     and reported in the result, so a coordinator can collect every job.
+
+    Examples
+    --------
+    >>> def chain(ds, job):
+    ...     return dxr.stack_disp(dxr.mask(ds, "recommended"))
+    >>> result = run_region(job, chain)  # doctest: +SKIP
+
     """
     from . import open_disp
 
@@ -212,20 +265,38 @@ def run_region(
 def failed_jobs(
     jobs: Sequence[RegionJob], results: Sequence[RegionResult]
 ) -> list[RegionJob]:
-    """Return the jobs without an ``"ok"`` result, to resubmit."""
+    """Return the jobs without an ``"ok"`` result, to resubmit.
+
+    Examples
+    --------
+    >>> retry = failed_jobs(jobs, read_manifest("manifest.jsonl"))  # doctest: +SKIP
+
+    """
     done = {r.job_id for r in results if r.status == "ok"}
     return [job for job in jobs if job.job_id not in done]
 
 
 def write_manifest(results: Sequence[RegionResult], path: Union[str, Path]) -> None:
-    """Append results to a JSON-lines manifest."""
+    """Append results to a JSON-lines manifest.
+
+    Examples
+    --------
+    >>> write_manifest([result], "manifest.jsonl")  # doctest: +SKIP
+
+    """
     with open(path, "a") as f:
         for result in results:
             f.write(json.dumps(asdict(result)) + "\n")
 
 
 def read_manifest(path: Union[str, Path]) -> list[RegionResult]:
-    """Return the results in a JSON-lines manifest (later lines win per job)."""
+    """Return the results in a JSON-lines manifest (later lines win per job).
+
+    Examples
+    --------
+    >>> results = read_manifest("manifest.jsonl")  # doctest: +SKIP
+
+    """
     latest: dict[str, RegionResult] = {}
     with open(path) as f:
         for line in f:

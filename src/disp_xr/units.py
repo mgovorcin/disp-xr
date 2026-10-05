@@ -56,6 +56,13 @@ def to_units(obj: XarrayObj, unit: str) -> XarrayObj:
     ValueError
         If ``unit`` is not a supported length unit.
 
+    Examples
+    --------
+    >>> import numpy as np, xarray as xr
+    >>> da = xr.DataArray(np.array([0.01]), attrs={"units": "meters"})
+    >>> float(to_units(da, "mm")[0])
+    10.0
+
     """
     target = _canonical(unit)
     if target is None:

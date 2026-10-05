@@ -144,6 +144,11 @@ def plot_map(
     -------
     matplotlib.axes.Axes
 
+    Examples
+    --------
+    >>> ax = ds.disp.plot_map()  # doctest: +SKIP
+    >>> ax = plot_map(ds, time="2024-06-01", units="cm", vmax=5)  # doctest: +SKIP
+
     """
     plt = _pyplot()
     da = _layer(obj, layer)
@@ -218,6 +223,10 @@ def plot_hex(
     Returns
     -------
     matplotlib.axes.Axes
+
+    Examples
+    --------
+    >>> ax = plot_hex(dxr.downsample_hex(ds, spacing=1000.0))  # doctest: +SKIP
 
     """
     from matplotlib.collections import PolyCollection
@@ -332,6 +341,10 @@ def plot_point(
     ------
     OutOfBoundsError
         If the point is outside the grid.
+
+    Examples
+    --------
+    >>> ax = plot_point(ds, lon=-120.43, lat=35.90, buffer_m=90)  # doctest: +SKIP
 
     """
     plt = _pyplot()

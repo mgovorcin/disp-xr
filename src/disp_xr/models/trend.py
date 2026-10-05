@@ -30,7 +30,14 @@ __all__ = ["Trend", "deramp", "polynomial_terms"]
 
 
 def polynomial_terms(degree: int) -> list[tuple[int, int]]:
-    """Return the ``(i, j)`` exponents of ``e**i * n**j`` with ``i + j <= degree``."""
+    """Return the ``(i, j)`` exponents of ``e**i * n**j`` with ``i + j <= degree``.
+
+    Examples
+    --------
+    >>> polynomial_terms(1)
+    [(0, 0), (1, 0), (0, 1)]
+
+    """
     if degree < 0:
         raise ValueError(f"degree must be >= 0, not {degree}")
     return [(i, d - i) for d in range(degree + 1) for i in range(d, -1, -1)]
@@ -59,6 +66,11 @@ class Trend(BaseEstimator):
         normalized coordinates ``(e - center) / scale``.
     center_, scale_ : tuple of float
         The normalization.
+
+    Examples
+    --------
+    >>> plane = Trend(1).fit(coords, data)  # doctest: +SKIP
+    >>> ramp = plane.grid(like=ds)  # doctest: +SKIP
 
     """
 

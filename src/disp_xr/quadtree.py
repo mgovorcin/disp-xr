@@ -54,7 +54,15 @@ Metric = Union[MetricName, Callable[[xr.Dataset, Optional[xr.Dataset]], xr.DataA
 
 
 class Quadtree(NamedTuple):
-    """Leaves of a quadtree."""
+    """Leaves of a quadtree.
+
+    Examples
+    --------
+    >>> tree = dxr.quadtree(ds, n_points=5000)  # doctest: +SKIP
+    >>> tree.points.level.to_series().value_counts()  # doctest: +SKIP
+    >>> tree.to_raster("displacement", time=-1).plot.imshow()  # doctest: +SKIP
+
+    """
 
     points: xr.Dataset
     """One point per leaf (dimension ``point``, and ``time``)."""

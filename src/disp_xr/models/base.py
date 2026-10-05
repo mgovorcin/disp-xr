@@ -52,6 +52,11 @@ def coordinates(obj: Union[xr.Dataset, xr.DataArray, pd.DataFrame]) -> Coords:
     order); a point table (``x`` and ``y`` coordinates along one dimension,
     as from :func:`disp_xr.to_points`) or a DataFrame with ``x`` and ``y``
     columns gives 1D arrays.
+
+    Examples
+    --------
+    >>> coords = coordinates(ds)  # doctest: +SKIP
+
     """
     if isinstance(obj, pd.DataFrame):
         return obj["x"].to_numpy(np.float64), obj["y"].to_numpy(np.float64)
@@ -83,6 +88,13 @@ class BaseEstimator:
     (stored under the same names) and implement ``_fit(easting, northing,
     data, weights)`` and ``_predict(easting, northing)`` on 1D arrays
     without NaN; the base class checks inputs, drops NaN and reshapes.
+
+    Examples
+    --------
+    >>> class Offset(BaseEstimator):  # doctest: +SKIP
+    ...     def fit(self, coords, data, weights=None): ...
+    ...     def predict(self, coords): ...
+
     """
 
     def _fit(
@@ -250,7 +262,13 @@ class BaseEstimator:
 
 
 class Mean(BaseEstimator):
-    """The weighted mean of the data: the simplest model (a baseline)."""
+    """The weighted mean of the data: the simplest model (a baseline).
+
+    Examples
+    --------
+    >>> Mean().fit(coords, data).predict(coords)  # doctest: +SKIP
+
+    """
 
     def __init__(self) -> None:
         """Take no parameters."""
@@ -279,6 +297,12 @@ class Chain(BaseEstimator):
     steps : sequence of (name, estimator)
         The estimators, in order.
 
+    Examples
+    --------
+    >>> from disp_xr.models import Chain, Spline, Trend
+    >>> chain = Chain([("trend", Trend(1)), ("spline", Spline(damping=1e-2))])
+    >>> chain.fit(coords, data).predict(coords)  # doctest: +SKIP
+
     """
 
     def __init__(self, steps: Sequence[tuple[str, BaseEstimator]]) -> None:
@@ -297,7 +321,16 @@ class Chain(BaseEstimator):
 
 
 def clone(estimator: BaseEstimator) -> BaseEstimator:
-    """Return an unfitted copy of ``estimator`` with the same parameters."""
+    """Return an unfitted copy of ``estimator`` with the same parameters.
+
+    Examples
+    --------
+    >>> from disp_xr.models import Trend
+    >>> fresh = clone(Trend(2))
+    >>> fresh.degree
+    2
+
+    """
     params = {}
     for name, value in estimator.get_params().items():
         if isinstance(value, BaseEstimator):
@@ -328,6 +361,11 @@ def cross_val_score(
     -------
     numpy.ndarray
         One score per fold.
+
+    Examples
+    --------
+    >>> from disp_xr.models import Trend
+    >>> scores = cross_val_score(Trend(1), coords, data, spacing=5e3)  # doctest: +SKIP
 
     """
     easting, northing, shape = _flat(coords)

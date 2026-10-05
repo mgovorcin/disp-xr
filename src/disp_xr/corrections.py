@@ -146,6 +146,13 @@ def correct(
         already applied, or the processor already applied it (DISP-NISAR
         ionosphere).
 
+    Examples
+    --------
+    >>> raw = dxr.open_disp("F11116/", corrections=True)  # doctest: +SKIP
+    >>> layers = ["ionospheric_delay", "solid_earth_tide"]
+    >>> ds = dxr.correct(raw, layers)  # doctest: +SKIP
+    >>> ds = dxr.correct(raw, None, external={"troposphere": tropo})  # doctest: +SKIP
+
     """
     if "reference_date" in ds.attrs:
         raise CorrectionError(
@@ -238,7 +245,15 @@ def _pole(plate: str) -> np.ndarray:
 def geodetic_to_ecef(
     lat: np.ndarray, lon: np.ndarray, height: Union[float, np.ndarray] = 0.0
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-    """Return WGS84 ECEF ``(x, y, z)`` in meters from geodetic degrees and height."""
+    """Return WGS84 ECEF ``(x, y, z)`` in meters from geodetic degrees and height.
+
+    Examples
+    --------
+    >>> x, y, z = geodetic_to_ecef(0.0, 0.0)
+    >>> round(float(x))
+    6378137
+
+    """
     lat_r, lon_r = np.radians(lat), np.radians(lon)
     e2 = WGS84_F * (2 - WGS84_F)
     n = WGS84_A / np.sqrt(1 - e2 * np.sin(lat_r) ** 2)
@@ -258,6 +273,13 @@ def plate_velocity_enu(
     The origin rate bias of the model is not added. ``up`` is not exactly zero
     (below 0.1 mm/yr): ``omega x r`` is normal to the geocentric radius, not
     to the ellipsoid normal.
+
+    Examples
+    --------
+    >>> east, north, up = plate_velocity_enu("NOAM", 35.9, -120.4)
+    >>> round(float(east) * 1e3)  # mm/yr
+    -12
+
     """
     wx, wy, wz = _pole(plate)
     x, y, z = geodetic_to_ecef(lat, lon)
@@ -286,6 +308,10 @@ def plate_motion_los(static: xr.Dataset, plate: str) -> xr.DataArray:
     -------
     xr.DataArray
         Lazy ``(y, x)`` LOS velocity, positive toward the satellite.
+
+    Examples
+    --------
+    >>> v_los = plate_motion_los(dxr.open_static(ds), "NOAM")  # doctest: +SKIP
 
     """
     _pole(plate)
@@ -329,6 +355,11 @@ def remove_plate_motion(ds: xr.Dataset, static: xr.Dataset, plate: str) -> xr.Da
     ------
     CorrectionError
         If plate motion was already removed.
+
+    Examples
+    --------
+    >>> static = dxr.open_static(ds)  # doctest: +SKIP
+    >>> fixed = dxr.remove_plate_motion(ds, static, "NOAM")  # doctest: +SKIP
 
     """
     name = "plate_motion"

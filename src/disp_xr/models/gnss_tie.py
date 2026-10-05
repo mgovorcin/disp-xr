@@ -48,6 +48,11 @@ class GNSSTie(BaseEstimator):
         (default) fits the trend alone. Keep it large: the tie field should
         hold long-wavelength error only.
 
+    Examples
+    --------
+    >>> tie = GNSSTie(degree=1, damping=None)
+    >>> tie.fit(coords, residuals).grid(like=ds)  # doctest: +SKIP
+
     """
 
     def __init__(self, degree: int = 1, damping: Optional[float] = None) -> None:
@@ -68,7 +73,15 @@ class GNSSTie(BaseEstimator):
 
 @dataclass
 class TieResult:
-    """A fitted GNSS tie: one estimator (velocity) or one per epoch."""
+    """A fitted GNSS tie: one estimator (velocity) or one per epoch.
+
+    Examples
+    --------
+    >>> tie = fit_tie(comparison, mode="epoch")  # doctest: +SKIP
+    >>> tie.correction(ds).isel(time=-1).plot()  # doctest: +SKIP
+    >>> tie.stations  # doctest: +SKIP
+
+    """
 
     mode: Mode
     estimators: Any
@@ -188,6 +201,12 @@ def fit_tie(
     -------
     TieResult
 
+    Examples
+    --------
+    >>> comparison = dxr.residuals.compare(ds, gps, static)  # doctest: +SKIP
+    >>> tie = fit_tie(comparison, mode="velocity")  # doctest: +SKIP
+    >>> tie = fit_tie(comparison, exclude=["P539"])  # doctest: +SKIP
+
     """
     if mode not in ("velocity", "epoch"):
         raise ValueError(f"mode must be 'velocity' or 'epoch', not {mode!r}")
@@ -236,6 +255,11 @@ def apply_tie(
     fitted). Velocity mode subtracts the correction from a velocity layer, or
     from displacement as the corrected rate times the time since the first
     epoch.
+
+    Examples
+    --------
+    >>> corrected = apply_tie(ds, tie)  # doctest: +SKIP
+
     """
     out = ds.copy()
     data = ds[layer]
@@ -273,6 +297,11 @@ def cross_validate_tie(
         Per station: ``rmse_before`` (of its residual) and ``rmse_after``
         (after subtracting the prediction), ``excluded``; ``attrs`` holds the
         network RMSE before and after.
+
+    Examples
+    --------
+    >>> scores = cross_validate_tie(comparison, mode="epoch")  # doctest: +SKIP
+    >>> scores.attrs["rmse_before"], scores.attrs["rmse_after"]  # doctest: +SKIP
 
     """
     table = _station_table(comparison)

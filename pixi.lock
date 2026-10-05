@@ -8589,8 +8589,8 @@ packages:
   requires_python: '>=3.11'
 - pypi: ./
   name: disp-xr
-  version: 0.1.0.post1.dev64+g6cd167b17.d20261005
-  sha256: 332b465e1c98e50c3c9dc13e7cc8a02c6772b1ef81ec4d6c6b05dff8c0c640d6
+  version: 0.1.0.post1.dev70+g46a7f2c6d.d20261005
+  sha256: beaec9b4b54bf40659972967a8606feb7551566085f3a080a72b9691a0ab705c
   requires_dist:
   - click>=7.0
   - dask

@@ -80,6 +80,12 @@ class ProductSpec:
 
     ``validated`` is False until the spec has been checked against an official
     granule of the product.
+
+    Examples
+    --------
+    >>> spec = PRODUCTS["DISP-S1"]
+    >>> spec.cmr_short_name  # doctest: +SKIP
+
     """
 
     name: str
@@ -144,7 +150,17 @@ _BY_TITLE = {s.title: s for s in PRODUCTS.values()}
 
 @dataclass(frozen=True)
 class DispGranule:
-    """One DISP granule: the product it belongs to and its dates."""
+    """One DISP granule: the product it belongs to and its dates.
+
+    Examples
+    --------
+    >>> granule = DispGranule.from_filename(
+    ...     "OPERA_L3_DISP-S1_IW_F11116_VV_20200101T000153Z_20200113T000153Z"
+    ...     "_v1.0_20250412T164531Z.nc"
+    ... )  # doctest: +SKIP
+    >>> granule.frame_id, granule.secondary_time  # doctest: +SKIP
+
+    """
 
     path: str
     product: str
@@ -344,6 +360,12 @@ def group_ministacks(df: pd.DataFrame) -> dict[pd.Timestamp, pd.DataFrame]:
     """Split a :func:`find_products` table into ministacks, ordered by date.
 
     A ministack is the set of granules that share a reference date.
+
+    Examples
+    --------
+    >>> groups = group_ministacks(find_products("F11116/"))  # doctest: +SKIP
+    >>> list(groups)[:2]  # doctest: +SKIP
+
     """
     return {
         ref: group.sort_values("secondary_time").reset_index(drop=True)
@@ -477,6 +499,12 @@ def check_granules(
     -----
     MixedPrecisionWarning
         If layouts differ only in float precision and that is allowed.
+
+    Examples
+    --------
+    >>> df = find_products("F11116/")  # doctest: +SKIP
+    >>> df = check_granules(df, allow_mixed_precision=True)  # doctest: +SKIP
+    >>> df.attrs["mixed_precision"]  # doctest: +SKIP
 
     """
     layers_by_product = {

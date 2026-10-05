@@ -291,6 +291,13 @@ def build_virtual_frame(
         If a ministack is on another grid or does not follow the branch's
         last epoch.
 
+    Examples
+    --------
+    >>> snapshots = dxr.build_virtual_frame(
+    ...     "F11116/", "F11116-virtual/"
+    ... )  # doctest: +SKIP
+    >>> dxr.build_virtual_frame(new_granules, "F11116-virtual/")  # doctest: +SKIP
+
     """
     df = _products(granules)
     check_granules(df)
@@ -368,6 +375,12 @@ def open_virtual(
     As :func:`disp_xr.open_icechunk`, but the repository is opened with read
     access to every virtual chunk container in its config: local directories,
     or S3 with ``credentials`` (default: environment, then ASF).
+
+    Examples
+    --------
+    >>> ds = dxr.open_virtual("F11116-virtual/")  # doctest: +SKIP
+    >>> before = dxr.open_virtual("F11116-virtual/", snapshot_id=sid)  # doctest: +SKIP
+
     """
     repository = _open_repository(repo, credentials=credentials)
     return open_icechunk(
@@ -404,6 +417,11 @@ def validate_virtual(
     ------
     ValueError
         If any value or the time axis differs, naming what differs.
+
+    Examples
+    --------
+    >>> report = dxr.validate_virtual("F11116-virtual/", "F11116/")  # doctest: +SKIP
+    >>> report["n_granules"]  # doctest: +SKIP
 
     """
     df = _products(granules)

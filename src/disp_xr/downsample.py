@@ -561,6 +561,13 @@ def to_points(coarse: xr.Dataset, min_valid_fraction: float = 0.0) -> xr.Dataset
     ``centroid_y``), the cell centre (``x``, ``y``), the ``cell`` id
     (``row * n_cols + col``) and every cell variable. ``.to_dataframe()``
     gives the table.
+
+    Examples
+    --------
+    >>> coarse = dxr.downsample(ds, factor=33)  # doctest: +SKIP
+    >>> points = dxr.to_points(coarse, min_valid_fraction=0.5)  # doctest: +SKIP
+    >>> points.to_dataframe()  # doctest: +SKIP
+
     """
     stacked = coarse.stack(point=("y", "x"))
     keep = (stacked["n_valid"] > 0) & (stacked["valid_fraction"] >= min_valid_fraction)
