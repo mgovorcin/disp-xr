@@ -26,7 +26,7 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 
-from .._chunks import time_contiguous
+from .._chunks import data_chunks, time_contiguous
 from .._history import recorded
 from ._design_matrix import create_design_matrix, get_coefficient_names
 
@@ -269,7 +269,7 @@ def fit_trajectory(
         weights = xr.ones_like(da["time"], dtype=np.float32)
     weights = weights.broadcast_like(da)
     if da.chunks is not None:
-        weights = weights.chunk(da.chunksizes)
+        weights = weights.chunk(data_chunks(da))
     coef, sigma, rms, count = xr.apply_ufunc(
         _solve,
         da,

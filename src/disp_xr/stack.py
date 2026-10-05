@@ -29,6 +29,7 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 
+from ._chunks import data_chunks
 from ._history import recorded
 from .log.logging import log_runtime
 
@@ -95,7 +96,7 @@ def _chain_lazy(
     if da.chunks is not None:
         # Indexing splits time into one chunk per epoch; match the input so
         # a one-time-chunk layer stays one chunk.
-        per_epoch = per_epoch.chunk({"time": da.chunksizes["time"]})
+        per_epoch = per_epoch.chunk({"time": data_chunks(da)["time"]})
     out = da + per_epoch
     return out.transpose(*da.dims).astype(da.dtype, copy=False)
 
