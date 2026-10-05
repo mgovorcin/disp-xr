@@ -89,6 +89,8 @@ All notable changes to disp-xr. The format follows
 - Re-exporting a store split its `input_granules` list into characters.
 - Trajectory steps and postseismic terms never fired: their onsets were
   compared in absolute years with time relative to the reference.
+- `rereference("area")` read every chunk of the frame for the median of a
+  small box; it now reads only the rows and columns around the area.
 
 ## [0.1.0] - Unreleased
 
