@@ -244,7 +244,7 @@ dev = { features = ["test", "aws", "cloud", "plot", "mintpy", "notebooks", "inte
 
 [tool.setuptools]
 # Ship third-party license texts for ported code (THIRD_PARTY_NOTICES.md).
-license-files = ["LICENSE", "LICENSES/*"]
+license-files = ["LICENSE", "LICENSES/*", "THIRD_PARTY_NOTICES.md"]
 
 [tool.setuptools_scm]
 # https://github.com/pypa/setuptools_scm#configuration-parameters

@@ -1,6 +1,6 @@
 """Earthdata Login and ASF temporary S3 credentials.
 
-Adapted from opera-utils (src/opera_utils/credentials.py, commit dff4b45),
+Adapted from opera-utils (src/opera_utils/credentials.py, commit 97f77d9),
 Copyright (c) 2022 California Institute of Technology, BSD-3-Clause. See
 THIRD_PARTY_NOTICES.md. Changes: the HTTP session is injectable for tests, and
 the credential cache is a plain dict with an expiry time.

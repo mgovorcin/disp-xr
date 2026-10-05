@@ -7,7 +7,7 @@ cache directory. Frames without it can use :func:`stitch_cslc_static`, which
 merges CSLC-S1-STATIC bursts onto the DISP grid with rioxarray.
 
 Layer names and nodata values of the CSLC-STATIC files follow opera-utils
-``geometry.py`` (commit dff4b45), Copyright (c) 2022 California Institute of
+``geometry.py`` (commit 97f77d9), Copyright (c) 2022 California Institute of
 Technology, BSD-3-Clause; the GDAL stitcher is replaced by
 ``rio.reproject_match``. See THIRD_PARTY_NOTICES.md.
 

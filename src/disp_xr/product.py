@@ -6,7 +6,7 @@ name (DISP-NISAR SAS output is written as ``<ref>_<sec>.nc``), from the file's
 ``/identification`` group.
 
 Filename parsing and the version/production deduplication are adapted from
-opera-utils (src/opera_utils/disp/_product.py, constants.py, commit dff4b45),
+opera-utils (src/opera_utils/disp/_product.py, constants.py, commit 97f77d9),
 Copyright (c) 2022 California Institute of Technology, BSD-3-Clause. See
 THIRD_PARTY_NOTICES.md.
 """

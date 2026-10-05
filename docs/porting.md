@@ -2,7 +2,7 @@
 
 disp-xr does not depend on `opera_utils` (PRD decision, Sep 30, 2026). The DISP product logic it needs is ported into disp-xr modules, with attribution, and disp-xr owns and tests it from then on.
 
-- **Source:** `opera-utils` commit `dff4b45` (Sep 15, 2026), checkout at `00_tools/src/opera-utils`.
+- **Source:** `opera-utils` commit `97f77d9` (upstream `opera-adt/opera-utils` main, 2026-06-04). The port was read from a checkout at a fork commit, `dff4b45`, that adds only NISAR download modules on top of `97f77d9`; every ported file and test is identical in the two, so headers cite the public `97f77d9`.
 - **Status of this spec:** written by two readers of the source. The independent verification pass did not run; spot checks of the license, the filename regex, the module locations and upstream bugs 1–3 passed. Confirm every line range when porting.
 - **Tasks:** each row names the task in [todo.md](todo.md) that owns the port.
 
@@ -11,7 +11,7 @@ disp-xr does not depend on `opera_utils` (PRD decision, Sep 30, 2026). The DISP 
 opera_utils is dual-licensed, BSD-3-Clause or Apache-2.0, at the user's choice (Copyright (c) 2022 California Institute of Technology, U.S. Government sponsorship acknowledged). disp-xr is BSD-3-Clause, so the ports are taken under BSD-3-Clause.
 
 1. Ship the opera_utils BSD-3-Clause text as `LICENSES/opera-utils-BSD-3-Clause.txt`, and list it under `license-files` in `pyproject.toml` so it goes into the sdist, wheel and conda package.
-2. Give each ported module a header: `Portions adapted from opera-utils (https://github.com/opera-adt/opera-utils, commit dff4b45, <source path>), Copyright (c) 2022 California Institute of Technology, BSD-3-Clause; modified for disp-xr.`
+2. Give each ported module a header: `Portions adapted from opera-utils (https://github.com/opera-adt/opera-utils, commit 97f77d9, <source path>), Copyright (c) 2022 California Institute of Technology, BSD-3-Clause; modified for disp-xr.`
 3. Do not use the Caltech or JPL names to endorse disp-xr.
 4. Ported tests carry the same header.
 5. `plate_motion.py` follows MintPy code, and MintPy is GPL-3.0. Do not copy it. Reimplement plate motion from the published math (ITRF2014 plate motion model, Altamimi et al. 2017) and cite the paper.

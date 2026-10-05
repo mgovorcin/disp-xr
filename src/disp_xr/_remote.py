@@ -1,6 +1,6 @@
 """Open local or remote (S3, HTTPS, any fsspec URL) granules.
 
-Adapted from opera-utils (src/opera_utils/_remote.py, commit dff4b45),
+Adapted from opera-utils (src/opera_utils/_remote.py, commit 97f77d9),
 Copyright (c) 2022 California Institute of Technology, BSD-3-Clause. See
 THIRD_PARTY_NOTICES.md. Changes: any fsspec protocol is accepted (tests use
 ``memory://``), listing a remote prefix is supported, and the cloud libraries

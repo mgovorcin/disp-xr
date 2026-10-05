@@ -1,6 +1,6 @@
 """Ministack chaining (plan task T7).
 
-The kernel cases follow opera-utils tests/test_disp_rebase.py (commit dff4b45),
+The kernel cases follow opera-utils tests/test_disp_rebase.py (commit 97f77d9),
 with explicit secondary dates, since disp-xr takes each offset from the epoch
 whose date equals the new reference date.
 """

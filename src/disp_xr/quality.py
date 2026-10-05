@@ -135,7 +135,7 @@ def combine_quality_masks(
     ``np.logical_and``: all pass).
 
     Ported from opera-utils (src/opera_utils/disp/_reformat.py, commit
-    dff4b45), Copyright (c) 2022 California Institute of Technology,
+    97f77d9), Copyright (c) 2022 California Institute of Technology,
     BSD-3-Clause. See THIRD_PARTY_NOTICES.md.
 
     Examples

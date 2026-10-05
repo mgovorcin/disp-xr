@@ -10,7 +10,7 @@ For an epoch ``t`` in ministack ``k`` with reference date ``r_k``::
 the first must also be an epoch of the stack.
 
 ``NaNPolicy`` and the chaining idea are adapted from opera-utils
-(src/opera_utils/disp/_rebase.py, commit dff4b45), Copyright (c) 2022 California
+(src/opera_utils/disp/_rebase.py, commit 97f77d9), Copyright (c) 2022 California
 Institute of Technology, BSD-3-Clause. See THIRD_PARTY_NOTICES.md. Changes: the
 offset comes from the crossover epoch by date (opera-utils assumes it is the
 previous epoch), a missing crossover raises, and the input dtype is kept.
