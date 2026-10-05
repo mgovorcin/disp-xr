@@ -43,6 +43,11 @@ METRICS = ("displacement", "velocity", "structure")
 MIN_LEVEL, MAX_LEVEL = 3, 10
 PROFILE_HALF_WIDTH = 500.0  # meters: a 1 km swath
 PROFILE_BIN = 300.0  # meters along the profile
+# Pixels valid in fewer epochs than this share (the stack's zero epoch not
+# counted) are treated as missing: their series are mostly masked and their
+# velocities fit a handful of epochs (sigmas of 100s of mm/yr), which
+# otherwise dominate both the split scores and every RMSE.
+MIN_VALID_FRACTION = 0.5
 # Column order of results and checkpoints: appended CSV rows are matched by
 # position, so every write uses this order.
 COLUMNS = [
@@ -229,6 +234,21 @@ def weights_for(ds: xr.Dataset, params: dict) -> tuple[xr.DataArray, xr.DataArra
     return qw.weight.fillna(static), static
 
 
+def reliable_pixels(ds: xr.Dataset, frame: str) -> np.ndarray:
+    """Return the pixels valid in at least ``MIN_VALID_FRACTION`` of epochs.
+
+    Computed once per frame (one pass over the displacement) and kept as
+    ``keep_<fraction>.npy`` next to the stack.
+    """
+    path = OUT / frame / f"keep_{MIN_VALID_FRACTION:g}.npy"
+    if path.exists():
+        return np.load(path)
+    valid = ds["displacement"].isel(time=slice(1, None)).notnull().mean("time")
+    keep = (valid >= MIN_VALID_FRACTION).values
+    np.save(path, keep)
+    return keep
+
+
 def cached_weights(
     ds: xr.Dataset, frame: str, label: str, params: dict
 ) -> tuple[xr.DataArray, xr.DataArray]:
@@ -280,10 +300,14 @@ def run_frame(
     done_sizes = set(done["size_km"]) if len(done) else set()
     ds = xr.open_zarr(OUT / frame / "stack.zarr")
     velocity_da = xr.open_zarr(OUT / frame / "velocity.zarr")["velocity"]
+    keep = reliable_pixels(ds, frame)
+    keep_da = xr.DataArray(keep, dims=("y", "x"), coords={"y": ds.y, "x": ds.x})
+    ds = ds.assign(displacement=ds["displacement"].where(keep_da))
+    velocity_da = velocity_da.where(keep_da)
     weights, static_da = cached_weights(ds, frame, label, params or {})
     static = static_da.values
     velocity = velocity_da.values
-    reliable = (static > 0) & ds["displacement"].notnull().any("time").values
+    reliable = keep & (static > 0)
     gnss = pd.read_csv(HERE / "stations" / f"{frame}_los.csv")
     profile = profile_pixels(ds, profiles)
     rows = [done] if len(done) else []
