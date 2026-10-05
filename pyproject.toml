@@ -165,6 +165,10 @@ geopandas = "*"
 [tool.pixi.feature.test.pypi-dependencies]
 geepers = { git = "https://github.com/opera-adt/geepers.git", rev = "d5421787d9c41dbf7e4d0679249bb9d5145bcc40" }
 
+# Web tiles with earth-mover's xpublish-tiles (PRD C5; one gallery page).
+[tool.pixi.feature.tiles.pypi-dependencies]
+xpublish-tiles = ">=0.9"
+
 # The GNSS gallery pages run geepers on synthetic stations (gnss extra).
 [tool.pixi.feature.docs.pypi-dependencies]
 geepers = { git = "https://github.com/opera-adt/geepers.git", rev = "d5421787d9c41dbf7e4d0679249bb9d5145bcc40" }
@@ -231,7 +235,7 @@ test-py312 = { features = ["test", "py312"], solve-group = "py312" }
 test-py313 = { features = ["test", "py313"], solve-group = "py313" }
 test-py314 = { features = ["test", "py314"], solve-group = "py314" }
 test = { features = ["test"], solve-group = "default" }
-docs = { features = ["docs", "interactive", "cloud"], solve-group = "default" }
+docs = { features = ["docs", "interactive", "cloud", "tiles"], solve-group = "default" }
 # Icechunk and VirtualiZarr (cloud extra); CI runs its tests in one job.
 test-cloud = { features = ["test", "cloud"], solve-group = "default" }
 # The residual EOF example (xeofs); CI reports its breakage without failing.

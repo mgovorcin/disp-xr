@@ -65,6 +65,8 @@ All notable changes to disp-xr. The format follows
 - `disp_xr.tutorial.make_gnss_source` and `vertical_los`: synthetic GNSS
   stations that follow a DISP frame, through the geepers source interface.
 - Gallery: comparing DISP with GNSS, and tying DISP to GNSS.
+- Gallery: serving results as web map tiles with xpublish-tiles (docs
+  environment only, `tiles` pixi feature).
 
 ### Changed
 
