@@ -267,7 +267,12 @@ def fit_trajectory(
     design = terms.design(da["time"].values)
     names = terms.names
     if weights is None:
-        weights = xr.ones_like(da["time"], dtype=np.float32)
+        # Built in dask like the data: a NumPy (time,) array broadcast to the
+        # frame, then chunked, made dask hash the whole broadcast view (two
+        # hours of graph building on a 389-epoch frame).
+        weights = xr.ones_like(da, dtype=np.float32)
+    elif da.chunks is not None and weights.chunks is None:
+        weights = weights.chunk()
     weights = weights.broadcast_like(da)
     if da.chunks is not None:
         weights = weights.chunk(data_chunks(da))

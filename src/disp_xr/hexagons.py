@@ -32,6 +32,7 @@ from typing import Any, Literal, Optional, Union
 import numpy as np
 import xarray as xr
 
+from ._grid import coordinate_grids
 from ._history import recorded
 from .config import bounded_threads
 from .downsample import (
@@ -681,7 +682,7 @@ def downsample_hex(
             )
         out[name] = reduced.drop_attrs().assign_attrs(var.attrs, reduction=how)
     total = group_sum(static)
-    xx, yy = xr.broadcast(ds["x"].astype(np.float64), ds["y"].astype(np.float64))
+    xx, yy = coordinate_grids(ds, static)
     shared["quality"] = (
         (total / full)
         .drop_attrs()
