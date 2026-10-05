@@ -230,3 +230,20 @@ def test_provenance_of_a_reopened_store(ds, tmp_path):
     dxr.to_zarr(xr.open_zarr(tmp_path / "a.zarr"), tmp_path / "b.zarr")
     granules = json.loads(xr.open_zarr(tmp_path / "b.zarr").attrs["input_granules"])
     assert len(granules) == 10 and granules[0].startswith("OPERA_L3_DISP")
+
+
+def test_maps_store_feeds_per_pixel_and_cell_functions(ds, tmp_path):
+    # The store keeps one chunk per epoch for the data but one chunk for the
+    # per-epoch coordinate reference_time; functions that align chunks must
+    # use the data's chunks, not DataArray.chunksizes (which raises here).
+    path = tmp_path / "maps.zarr"
+    dxr.to_zarr(ds.disp.rereference("median"), path, preset="maps")
+    back = xr.open_zarr(path)
+    assert len(back.displacement.chunks[0]) > 1
+    assert len(back.reference_time.chunks[0]) == 1
+    vel = dxr.fit_velocity(back, method="ols")
+    assert np.isfinite(vel.velocity.values).any()
+    coarse = dxr.downsample(back, factor=5, layers=["displacement"])
+    assert np.isfinite(coarse.displacement.values).any()
+    tree = dxr.quadtree(back, n_points=20, min_level=1, max_level=4)
+    assert tree.points.sizes["point"] > 0

@@ -30,6 +30,7 @@ from collections.abc import Mapping
 from typing import Any, Literal, Union
 
 import numpy as np
+import xarray as xr
 
 from .config import config
 
@@ -148,13 +149,37 @@ def rechunk(obj: Any, chunks: ChunkSpec = "timeseries") -> Any:
     return obj.chunk({d: n for d, n in spec.items() if d in obj.dims})
 
 
+def data_chunks(da: xr.DataArray) -> dict[str, tuple[int, ...]]:
+    """Return the chunks of a DataArray's data by dimension (empty if eager).
+
+    Unlike ``DataArray.chunksizes`` this ignores the coordinates: per-epoch
+    coordinates read from a store (``reference_time``) are often one chunk
+    while the data have one chunk per epoch.
+
+    Examples
+    --------
+    >>> import xarray as xr, numpy as np
+    >>> da = xr.DataArray(np.zeros((4, 8)), dims=("time", "x")).chunk(time=1)
+    >>> data_chunks(da)["time"]
+    (1, 1, 1, 1)
+
+    """
+    return dict(zip(da.dims, da.chunks)) if da.chunks else {}
+
+
 def time_contiguous(obj: Any) -> Any:
     """Return ``obj`` with the whole time axis in each chunk, for per-pixel work.
 
     Unchanged if it is not a dask array or ``time`` is already one chunk;
     otherwise rechunked with the ``"timeseries"`` preset.
     """
-    chunks = getattr(obj, "chunksizes", None) or {}
+    if isinstance(obj, xr.DataArray):
+        chunks = data_chunks(obj)
+    else:
+        try:
+            chunks = dict(getattr(obj, "chunksizes", None) or {})
+        except ValueError:  # variables chunked differently along a dimension
+            return rechunk(obj, "timeseries")
     if "time" not in chunks or len(chunks["time"]) == 1:
         return obj
     return rechunk(obj, "timeseries")

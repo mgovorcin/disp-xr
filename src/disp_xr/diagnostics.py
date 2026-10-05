@@ -28,7 +28,7 @@ from typing import Union
 import numpy as np
 import xarray as xr
 
-from ._chunks import time_contiguous
+from ._chunks import data_chunks, time_contiguous
 from .timeseries.trajectory import predict_trajectory
 
 __all__ = ["anderson_darling", "model_diagnostics", "significance"]
@@ -166,7 +166,7 @@ def model_diagnostics(
     da = time_contiguous(da)
     model = predict_trajectory(fit, da["time"].values, dtype="float64")
     if da.chunks is not None:
-        model = model.chunk({d: da.chunksizes[d] for d in model.dims if d in da.dims})
+        model = model.chunk({d: data_chunks(da)[d] for d in model.dims if d in da.dims})
     residual = (da.astype(np.float64) - model).transpose(..., "time")
     names = [
         "n",
