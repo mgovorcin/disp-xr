@@ -98,10 +98,21 @@ changes its results.
   granules and frames, so the most common values are recorded on each
   stack: 0.6 and 0.7 for F08882, 0.5 and 0.6 for F39362.
 
+## Two arms: unmasked (primary) and masked
+
+Decision of 2026-10-05: downsampling works on unmasked data, and the
+quality weights do the quality work (as the PRD's S2 decision asks: cycle
+jumps down-weight, never mask). The primary arm therefore builds stacks
+with only water removed (`water_mask`). The masked arm applies the
+recommended mask, as `disp_xr stack` does by default, and is the
+comparison: if the unmasked, weighted arm does at least as well on GNSS
+agreement and gradient preservation, the defaults move to unmasked
+downsampling. Set the arm with `DISP_XR_STUDY_VARIANT=unmasked|masked`.
+
 ## Reliable pixels
 
 The recommended mask is applied per epoch and varies in time, so most
-pixels are valid in only part of the series: on F08882 only 15% of pixels
+pixels of the masked arm are valid in only part of the series: on F08882 only 15% of pixels
 are valid in at least half of the 91 epochs, on F39362 14% of 84. A
 velocity fit to a handful of epochs is noise, with sigmas of hundreds of
 mm/yr. The study treats pixels valid in fewer than half of the epochs (the
