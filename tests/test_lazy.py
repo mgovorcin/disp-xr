@@ -83,3 +83,44 @@ def test_open_and_stack_are_lazy(tmp_path):
         out = dxr.stack_disp(corrected)
     assert out.displacement.chunks is not None
     assert np.isfinite(out.displacement.isel(time=-1).values).any()
+
+
+def _graph_bytes(obj):
+    """Size of the pickled task graph of a lazy result."""
+    import cloudpickle
+
+    arrays = [v.data for v in obj.data_vars.values() if hasattr(v.data, "dask")]
+    graph = dask.base.collections_to_expr(arrays).__dask_graph__()
+    return len(cloudpickle.dumps(dict(graph)))
+
+
+@pytest.fixture(scope="module")
+def big_lazy():
+    # Large enough that an embedded frame-sized NumPy array (33 MB for the
+    # coordinate grids, 670 MB for broadcast weights) dwarfs the graph.
+    import dask.array as da
+    import xarray as xr
+
+    shape, chunks = (40, 2048, 2048), (40, 512, 512)
+    values = da.zeros(shape, chunks=chunks, dtype="float32")
+    coords = {
+        "time": np.datetime64("2020-01-01") + np.arange(40) * np.timedelta64(12, "D"),
+        "y": 4.1e6 - 30.0 * np.arange(shape[1]),
+        "x": 5.0e5 + 30.0 * np.arange(shape[2]),
+    }
+    ds = xr.Dataset({"displacement": (("time", "y", "x"), values)}, coords=coords)
+    return ds.assign(displacement=ds.displacement.assign_attrs(units="meters"))
+
+
+@pytest.mark.parametrize(
+    "build",
+    [
+        lambda ds: dxr.fit_trajectory(ds),
+        lambda ds: dxr.downsample(ds, factor=33, weights=None),
+    ],
+    ids=["fit_trajectory", "downsample"],
+)
+def test_no_frame_sized_arrays_in_graphs(big_lazy, build):
+    # Weights broadcast from NumPy, or x/y grids built in NumPy, end up in the
+    # graph: hours of hashing and tens of GB on the scheduler for real frames.
+    assert _graph_bytes(build(big_lazy)) < 10e6

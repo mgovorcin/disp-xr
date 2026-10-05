@@ -90,6 +90,13 @@ All notable changes to disp-xr. The format follows
 
 ### Fixed
 
+- `fit_trajectory` and `fit_velocity` (OLS, Whittle) took hours to build their
+  graph on a full frame: default weights were a NumPy array broadcast to the
+  frame, which dask hashed whole (2 h on a 389-epoch DISP-S1 frame, now 0.1 s
+  on 60 epochs). `downsample`, `downsample_hex` and `quadtree` embedded
+  frame-sized x/y grids (about 500 MB each) in their graphs; they are now
+  built lazily.
+
 - `fit_velocity`, `fit_trajectory` and `downsample` outputs lacked the
   `grid_mapping` attribute on their map variables, so readers that look up
   the CRS per variable (GDAL, xpublish-tiles) missed it.

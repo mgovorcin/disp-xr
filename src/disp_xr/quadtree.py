@@ -42,6 +42,7 @@ import numpy as np
 import xarray as xr
 
 from ._chunks import data_chunks
+from ._grid import coordinate_grids
 from ._history import record
 from .config import bounded_threads
 from .downsample import SUMS, _block_cell_sums, _block_sum, _resolve_weights
@@ -326,7 +327,7 @@ def quadtree(
     sums = _block_cell_sums(v, wb, f0)
     finest = xr.Dataset(dict(zip(SUMS, sums)))
     # Static per-cell sums: quality weight, centroid, reliable pixels.
-    xx, yy = xr.broadcast(ds["x"].astype(np.float64), ds["y"].astype(np.float64))
+    xx, yy = coordinate_grids(ds, static)
     any_valid = v.notnull().any("time") if "time" in v.dims else v.notnull()
     reliable_px = ((static > 0) & any_valid).astype(np.float64)
     finest["static_w"] = _block_sum(static, f0)
