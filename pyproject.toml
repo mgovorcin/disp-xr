@@ -231,7 +231,7 @@ test-py312 = { features = ["test", "py312"], solve-group = "py312" }
 test-py313 = { features = ["test", "py313"], solve-group = "py313" }
 test-py314 = { features = ["test", "py314"], solve-group = "py314" }
 test = { features = ["test"], solve-group = "default" }
-docs = { features = ["docs", "interactive"], solve-group = "default" }
+docs = { features = ["docs", "interactive", "cloud"], solve-group = "default" }
 # Icechunk and VirtualiZarr (cloud extra); CI runs its tests in one job.
 test-cloud = { features = ["test", "cloud"], solve-group = "default" }
 # The residual EOF example (xeofs); CI reports its breakage without failing.
