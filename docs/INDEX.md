@@ -33,7 +33,7 @@ The PRD also lives as a shared doc; `specs.md` is its copy in the repo and must 
 | M0 Foundation (v0.1) | T1–T8 | 5 / 8 (T2, T4, T5, T6, T7). Open: T1.4b (name maintainers), T3.4–T3.5 (coverage badge, branch protection: need CI), T8 (tag `v0.1.0`, milestone dates) |
 | M1 Core API (v0.2) | T9–T18 | 7 / 10 (T9, T10, T11, T13, T14, T15, T17). Open: T12.5 (needs DISP-NI-STATIC), T16.6 (GitHub Pages, waits for the repository to go public), T18 (tag and API review with Cal/Val users) |
 | M2 Analysis (v0.3) | T19–T34 | 13 / 16. Open: T28.5 (benchmark numbers, need a quiet node), T29 (trade study, running on branch `feat/split-metric-study`), T34 (validation gate, needs T29) |
-| M3 Release (v1.0) | T35–T39 | 0 / 5. T37 4 of 6 subtasks done (T37.3a, T37.4, T37.5 and most of T37.3; T37.1 budget proposed); T35 waits for beta DISP-NISAR products; T36 parked (decision of 2026-10-04); T38–T39 not started |
+| M3 Release (v1.0) | T35–T40 | 0 / 6. T37 4 of 6 subtasks done (T37.3a, T37.4, T37.5 and most of T37.3; T37.1 budget proposed); T35 waits for beta DISP-NISAR products; T36 parked (decision of 2026-10-04); T38–T39 not started |
 
 Subtasks: 187 done, 45 open. All work is merged in `main` except the T29
 study branch. CI is off (Actions minutes on a private repository); every PR
@@ -68,6 +68,7 @@ since #30 was checked locally and says so in its description.
 | C4 Multiscale pyramids | T27.7, T27.9 | Done: `to_pyramid`, `open_pyramid`, `build_overviews`, `to_geozarr` (bowser) |
 | C5 Map serving example | T37.5 | Done: gallery `web_tiles` (xpublish-tiles, docs environment only) |
 | C6 Batch builds and benchmarks | T37.3b, T37.4 | Region jobs done (`batch.py`); storage benchmark: local compression part in progress, S3 part needs AWS |
+| C7 Read-only REST service (opt-in) | T40 | Planned (added 2026-10-05), after the v0.3 gate |
 | X DataTree | T6.4b, T36.1b | `open_disp_tree` done |
 | X flox grouped reductions | T10.3, T23.2, T32.1 | Used in `quality_summary(by_ministack=True)`; others not needed so far |
 | X apply_ufunc kernels | T7.2, T20.3, T22.3 | Done: per-pixel fits and filters run through `apply_ufunc` on time-contiguous chunks |
@@ -131,6 +132,7 @@ since #30 was checked locally and says so in its description.
 
 | Date | Decision |
 | --- | --- |
+| 2026-10-05 | A read-only REST service becomes requirement C7 (task T40, M3): an xpublish plugin over existing stores, no processing on request |
 | 2026-10-04 | `open_disp` reads productions that differ only in float precision (DISP-S1 displacement float64 from November 2025) with a warning, cast to float32; virtual stores still refuse them |
 | 2026-10-04 | Residual plots draw both OPERA DISP-S1 requirements by default: displacement 3 (1 + sqrt(L)) mm, velocity 2 mm/yr, 0.1 to 50 km (values to confirm against the requirements document) |
 | 2026-10-04 | Documentation is published on GitHub Pages, not ReadTheDocs |
