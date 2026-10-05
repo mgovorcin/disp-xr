@@ -43,6 +43,20 @@ METRICS = ("displacement", "velocity", "structure")
 MIN_LEVEL, MAX_LEVEL = 3, 10
 PROFILE_HALF_WIDTH = 500.0  # meters: a 1 km swath
 PROFILE_BIN = 300.0  # meters along the profile
+# Column order of results and checkpoints: appended CSV rows are matched by
+# position, so every write uses this order.
+COLUMNS = [
+    "frame", "size_km", "method", "n_points", "threshold", "seconds", "levels",
+    "disp_rmse_mm", "disp_rmse_last_mm", "vel_rmse_mm_yr", "gnss_rms_mm_yr",
+    "n_gnss", "profile_rmse_mm_yr", "weights",
+]  # fmt: skip
+
+
+def append_rows(rows: pd.DataFrame, checkpoint: Path) -> None:
+    """Append ``rows`` to ``checkpoint`` in the order of ``COLUMNS``."""
+    rows.reindex(columns=COLUMNS).to_csv(
+        checkpoint, mode="a", header=not checkpoint.exists(), index=False
+    )
 
 
 def grid_leaf_id(shape: tuple[int, int], factor: int) -> np.ndarray:
@@ -230,9 +244,13 @@ def cached_weights(
             {"weight": weight.astype(np.float32), "static": static.astype(np.float32)}
         )
         out = out.chunk({"time": 1, "y": 1024, "x": 1024})
+        # Written under a temporary name and renamed when complete, so a run
+        # killed mid-write never leaves a store that looks finished.
+        partial = store.with_name(store.name + ".partial")
         out.drop_vars([c for c in out.coords if c not in ("time", "y", "x")]).to_zarr(
-            store, mode="w"
+            partial, mode="w"
         )
+        partial.rename(store)
     cached = xr.open_zarr(store)
     return cached["weight"], cached["static"]
 
@@ -245,16 +263,33 @@ def run_frame(
     methods: tuple[str, ...] = METRICS,
     params: dict | None = None,
     label: str = "default",
+    checkpoint: Path | None = None,
 ) -> pd.DataFrame:
-    """Score the regular grid and the quadtree ``methods`` at every size."""
+    """Score the regular grid and the quadtree ``methods`` at every size.
+
+    With ``checkpoint`` (a CSV), each size's rows are appended as soon as
+    they are scored, and sizes already there for ``label`` are skipped, so
+    a killed run resumes where it stopped.
+    """
+    done = pd.DataFrame()
+    if checkpoint is not None and checkpoint.exists():
+        done = pd.read_csv(checkpoint)
+        done = done[done["weights"] == label]
+    done_sizes = set(done["size_km"]) if len(done) else set()
     ds = xr.open_zarr(OUT / frame / "stack.zarr")
     velocity_da = xr.open_zarr(OUT / frame / "velocity.zarr")["velocity"]
     weights, static_da = cached_weights(ds, frame, label, params or {})
     static = static_da.values
     velocity = velocity_da.values
     reliable = (static > 0) & ds["displacement"].notnull().any("time").values
-    parts = []
+    gnss = pd.read_csv(HERE / "stations" / f"{frame}_los.csv")
+    profile = profile_pixels(ds, profiles)
+    rows = [done] if len(done) else []
     for size_km, factor in sizes.items():
+        if size_km in done_sizes:
+            print(f"{frame} {label} {size_km} km: done, skipped", flush=True)
+            continue
+        parts = []
         t0 = time.perf_counter()
         coarse = dxr.downsample(
             ds, factor=factor, layers=["displacement"], weights=weights
@@ -302,24 +337,34 @@ def run_frame(
                 }
             )
             print({k: v for k, v in parts[-1].items() if k[0] != "l" and k[0] != "c"})
-    gnss = pd.read_csv(HERE / "stations" / f"{frame}_los.csv")
-    profile = profile_pixels(ds, profiles)
-    score_all(parts, ds, velocity, static, reliable, gnss, profile)
+        score_all(parts, ds, velocity, static, reliable, gnss, profile)
+        size_rows = pd.DataFrame(parts).assign(weights=label)
+        if checkpoint is not None:
+            append_rows(size_rows, checkpoint)
+        rows.append(size_rows)
+    if 0.03 in done_sizes:
+        return pd.concat(rows, ignore_index=True)
     # The 30 m velocity at the station pixel: the agreement before any
     # downsampling, the floor the cells are compared with.
     at = velocity[station_pixels(ds, gnss)]
     at = np.where(reliable[station_pixels(ds, gnss)], at, np.nan)
-    parts.append(
-        {
-            "frame": frame,
-            "size_km": 0.03,
-            "method": "full",
-            "n_points": int(reliable.sum()),
-            "gnss_rms_mm_yr": 1e3 * gnss_rms(at, gnss),
-            "n_gnss": int(np.isfinite(at).sum()),
-        }
+    full = pd.DataFrame(
+        [
+            {
+                "frame": frame,
+                "size_km": 0.03,
+                "method": "full",
+                "n_points": int(reliable.sum()),
+                "gnss_rms_mm_yr": 1e3 * gnss_rms(at, gnss),
+                "n_gnss": int(np.isfinite(at).sum()),
+                "weights": label,
+            }
+        ]
     )
-    return pd.DataFrame(parts)
+    if checkpoint is not None:
+        append_rows(full, checkpoint)
+    rows.append(full)
+    return pd.concat(rows, ignore_index=True)
 
 
 # T29.5: one parameter at a time around the defaults of quality_weights
@@ -372,8 +417,9 @@ def sweep_frame(frame: str, profiles: list[list[float]]) -> pd.DataFrame:
             methods=methods,
             params=params,
             label=label,
+            checkpoint=HERE / "results" / f"{frame}_sweep.partial.csv",
         )
-        tables.append(table.assign(weights=label))
+        tables.append(table)
     return pd.concat(tables, ignore_index=True)
 
 
@@ -403,7 +449,10 @@ def run_frames(names: list[str], frames: dict, sweep: bool, out: Path) -> None:
         if sweep:
             sweep_frame(frame, profiles).to_csv(out / f"{frame}_sweep.csv", index=False)
         else:
-            run_frame(frame, profiles).to_csv(out / f"{frame}.csv", index=False)
+            checkpoint = out / f"{frame}.partial.csv"
+            run_frame(frame, profiles, checkpoint=checkpoint).to_csv(
+                out / f"{frame}.csv", index=False
+            )
 
 
 if __name__ == "__main__":
