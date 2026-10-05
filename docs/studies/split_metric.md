@@ -98,6 +98,22 @@ changes its results.
   granules and frames, so the most common values are recorded on each
   stack: 0.6 and 0.7 for F08882, 0.5 and 0.6 for F39362.
 
+## Reliable pixels
+
+The recommended mask is applied per epoch and varies in time, so most
+pixels are valid in only part of the series: on F08882 only 15% of pixels
+are valid in at least half of the 91 epochs, on F39362 14% of 84. A
+velocity fit to a handful of epochs is noise, with sigmas of hundreds of
+mm/yr. The study treats pixels valid in fewer than half of the epochs (the
+stack's zero epoch not counted) as missing, before downsampling and in
+every criterion. On the pixels kept, velocities look like the sites:
+95th percentile |v| 11 mm/yr on F08882 and 4 mm/yr on F39362, median sigma
+about 1 mm/yr.
+
+A first run without this rule (2026-10-04) is not valid: its 30 m GNSS
+floor on F08882 was 203 mm/yr, and the split metrics followed the noisy
+pixels.
+
 ## Design: equal point budgets
 
 A metric that splits more always reconstructs better, so the metrics are
@@ -179,7 +195,9 @@ The study turned up five problems in disp-xr, each fixed with a test:
 - `quality_weights` loaded the whole residual stack into memory;
 - `rereference("area")` read the whole frame for a small box;
 - `open_disp` refused (and could not chain) frames that span the November
-  2025 production change. The product notes have the details.
+  2025 production change. The product notes have the details;
+- `fit_velocity`, `fit_trajectory` and `downsample` outputs lacked
+  `grid_mapping` (found serving tiles).
 
 ## Results
 
