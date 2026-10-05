@@ -69,6 +69,11 @@ All notable changes to disp-xr. The format follows
 
 ### Fixed
 
+- `quality_weights` (and so `downsample` and `quadtree` with
+  `weights="quality"`) loaded the whole inversion-residual stack into memory:
+  `np.round` on a dask-backed DataArray falls back to `np.asarray`. It now
+  stays lazy (53 GB for a 91-epoch DISP-S1 frame before).
+
 - The command line failed at start-up (logging formatter name).
 - `fit_timeseries_block` fitted each chunk's epochs separately when time was
   split across chunks, and failed on `open_disp` output.
