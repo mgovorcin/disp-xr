@@ -17,6 +17,7 @@ How and when this file is rebuilt: see "Project Index (cyclical indexing)" in `C
 | [api_policy.md](api_policy.md) | What is public, deprecation rules, frozen names (draft until v0.2) | — |
 | [try-it.md](try-it.md) | Guide for Cal/Val users trying disp-xr on their own frame | — |
 | [product_notes.md](product_notes.md) | Differences between DISP productions that affect reading a frame (float32 to float64 displacement in November 2025) | — |
+| [performance.md](performance.md) | Running full frames: processes against threads, disp-xr settings, environment for batch jobs, memory stalls on shared nodes | — |
 | [check_plan.py](check_plan.py) | Mechanical check of `todo.md` (run in every indexing cycle) | — |
 | [img/](img/) | `architecture.png`, `roadmap.png`, exported from the PRD doc | — |
 | `CLAUDE.md` (repository root) | Coding rules and the indexing cycle | — |

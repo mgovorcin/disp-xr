@@ -64,6 +64,10 @@ All notable changes to disp-xr. The format follows
 
 ### Changed
 
+- Export and plotting check `max_load_bytes` from shape and dtype before
+  loading, and raise `LoadTooLargeError` (a `ValueError`) naming the size,
+  the limit and the remedy. New page: large frames and batch jobs.
+
 - `open_disp` keeps the file layout by default (`chunks="native"`), and
   `stack_disp` keeps the input chunks, so a map or a point reads only what it
   needs. Per-pixel functions rechunk themselves.
