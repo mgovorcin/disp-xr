@@ -92,6 +92,7 @@ nav:
       - Denoising and regular time grids: gallery/denoise.py
       - Interactive browsing of a full frame: gallery/interactive.py
       - Virtual frames and versioned stores: gallery/virtual_frames.py
+      - Serving results as web map tiles: gallery/web_tiles.py
   - API reference:
       - Overview: api/index.md
       - Find and open: api/open.md
