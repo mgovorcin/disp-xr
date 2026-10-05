@@ -80,6 +80,8 @@ nav:
       - Chunks for maps and time series: gallery/chunking.py
       - Velocity from a trajectory fit: gallery/velocity.py
       - Velocity with colored-noise uncertainty: gallery/colored_noise.py
+      - Comparing DISP with GNSS: gallery/gnss_compare.py
+      - Tying DISP to GNSS: gallery/gnss_tie.py
       - Interactive browsing of a full frame: gallery/interactive.py
   - API reference:
       - Overview: api/index.md

@@ -12,10 +12,17 @@ groups. Each ministack's reference date is the last secondary date of the
 previous ministack, as in real frames.
 
 Request a stack by variant name through :func:`make_disp_stack`.
+
+``make_gnss_source(ds, pixels, cache_dir)`` serves synthetic GNSS stations
+that follow the DISP displacement at given pixels, through the geepers source
+interface, so :func:`disp_xr.gnss.load` and :func:`disp_xr.residuals.compare`
+run without a network (``gnss`` extra). ``vertical_los(ds)`` gives matching
+static layers.
 """
 
 from __future__ import annotations
 
+import functools
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -33,6 +40,8 @@ __all__ = [
     "correlated_noise",
     "disp_filename",
     "make_disp_stack",
+    "make_gnss_source",
+    "vertical_los",
 ]
 
 SPACING = 30.0
@@ -542,3 +551,156 @@ def make_disp_stack(
         first.extra["second_frame"] = write(root / "F11117", 2, FRAME_11N)
         return first
     raise ValueError(f"Unknown variant {variant!r}; choose one of {VARIANTS}")
+
+
+# --- Synthetic GNSS -------------------------------------------------------------
+
+
+@functools.cache
+def synthetic_source_class() -> type:
+    """Return a geepers source class serving given stations and series.
+
+    Built on first use so that this module does not need geepers. Instances
+    take ``(table, series, cache_dir)``: a station table (``id``, ``lon``,
+    ``lat``, ``alt``) and a dict of daily ENU DataFrames by station id.
+    """
+    import geopandas as gpd
+    from geepers.gps_sources.base import BaseGpsSource
+    from shapely.geometry import Point
+
+    class SyntheticGnssSource(BaseGpsSource):
+        """A geepers source serving given stations and series."""
+
+        def __init__(self, table, series, cache_dir):
+            super().__init__(cache_dir=cache_dir)
+            self.table = table
+            self.series = series
+
+        def _read_station_data(self):
+            points = [Point(lo, la) for lo, la in zip(self.table.lon, self.table.lat)]
+            return gpd.GeoDataFrame(self.table, geometry=points, crs="EPSG:4326")
+
+        def timeseries(
+            self,
+            station_id,
+            /,
+            frame="ENU",  # noqa: ARG002
+            start_date=None,
+            end_date=None,
+            zero_by="mean",  # noqa: ARG002
+            download_if_missing=True,  # noqa: ARG002
+            **kwargs,  # noqa: ARG002
+        ):
+            df = self.series[station_id].copy()
+            if start_date:
+                df = df[df.date >= pd.Timestamp(start_date)]
+            if end_date:
+                df = df[df.date <= pd.Timestamp(end_date)]
+            return df.reset_index(drop=True)
+
+    return SyntheticGnssSource
+
+
+def make_gnss_source(
+    ds: xr.Dataset,
+    pixels: list[tuple[int, int]],
+    cache_dir: str | Path,
+    *,
+    noise: float = 0.001,
+    extra_rate: dict[int, float] | None = None,
+    seed: int = 0,
+):
+    """Return a geepers GNSS source whose stations follow DISP at ``pixels``.
+
+    Each station sits at a ``(row, col)`` pixel; its daily up motion is that
+    pixel's displacement (interpolated to days) plus white noise, with east
+    and north zero, so it matches DISP under a vertical line of sight
+    (:func:`vertical_los`). Needs the ``gnss`` extra (geepers).
+
+    Parameters
+    ----------
+    ds : xr.Dataset
+        Chained, re-referenced DISP with a CRS.
+    pixels : list of (int, int)
+        Station pixels; stations are named ``S000``, ``S001``...
+    cache_dir : str or Path
+        geepers cache directory (nothing is downloaded).
+    noise : float
+        Standard deviation of the daily noise and the station sigmas (m).
+    extra_rate : dict, optional
+        Station index to an added up rate (m/yr), to make an outlier.
+    seed : int
+        Seed of the noise.
+
+    Returns
+    -------
+    geepers source
+        Pass it as ``source=`` to :func:`disp_xr.gnss.load`.
+
+    Examples
+    --------
+    >>> src = make_gnss_source(ds, [(4, 4), (30, 30)], "cache")  # doctest: +SKIP
+    >>> gps = dxr.gnss.load(ds, source=src)  # doctest: +SKIP
+
+    """
+    from pyproj import Transformer
+
+    rng = np.random.default_rng(seed)
+    to_ll = Transformer.from_crs(ds.rio.crs, "EPSG:4326", always_xy=True)
+    days = pd.date_range(
+        pd.Timestamp(ds.time.values[0]).normalize() - pd.Timedelta("5D"),
+        pd.Timestamp(ds.time.values[-1]).normalize() + pd.Timedelta("5D"),
+        freq="D",
+    )
+    rows, series = [], {}
+    for k, (r, c) in enumerate(pixels):
+        sid = f"S{k:03d}"
+        lon, lat = to_ll.transform(float(ds.x[c]), float(ds.y[r]))
+        rows.append({"id": sid, "lon": lon, "lat": lat, "alt": 0.0})
+        pixel = ds.displacement.isel(y=r, x=c).to_series()
+        pixel.index = pd.DatetimeIndex(pixel.index).normalize()
+        up = pixel.reindex(days).interpolate(limit_direction="both").to_numpy()
+        years = np.asarray((days - days[0]).days) / 365.25
+        up = (
+            up
+            + (extra_rate or {}).get(k, 0.0) * years
+            + noise * rng.standard_normal(days.size)
+        )
+        series[sid] = pd.DataFrame(
+            {
+                "date": days,
+                "east": 0.0,
+                "north": 0.0,
+                "up": up,
+                "sigma_east": noise,
+                "sigma_north": noise,
+                "sigma_up": noise,
+                "corr_en": 0.0,
+                "corr_eu": 0.0,
+                "corr_nu": 0.0,
+            }
+        )
+    return synthetic_source_class()(pd.DataFrame(rows), series, cache_dir)
+
+
+def vertical_los(ds: xr.Dataset) -> xr.Dataset:
+    """Return static layers with a vertical line of sight on the grid of ``ds``.
+
+    Examples
+    --------
+    >>> import numpy as np, xarray as xr
+    >>> ds = xr.Dataset(coords={"y": np.arange(3.0), "x": np.arange(4.0)})
+    >>> vertical_los(ds.rio.write_crs("EPSG:32611")).los_up.shape
+    (3, 4)
+
+    """
+    shape = (ds.sizes["y"], ds.sizes["x"])
+    zeros = np.zeros(shape)
+    return xr.Dataset(
+        {
+            "los_east": (("y", "x"), zeros),
+            "los_north": (("y", "x"), zeros),
+            "los_up": (("y", "x"), np.ones(shape)),
+        },
+        coords={"y": ds.y, "x": ds.x},
+    ).rio.write_crs(ds.rio.crs)

@@ -29,7 +29,7 @@ The PRD also lives as a shared doc; `specs.md` is its copy in the repo and must 
 | --- | --- | --- |
 | M0 Foundation (v0.1) | T1–T8 | 5 / 8 (T2, T4, T5, T6, T7 done; T1 open only for T1.4b; T3 open for T3.4–T3.5) |
 | M1 Core API (v0.2) | T9–T18 | 7 / 10 (T9, T10, T11, T13, T14, T15, T17; T12 open only for T12.5, T16 only for ReadTheDocs publishing) |
-| M2 Analysis (v0.3) | T19–T34 | 11 / 16 (T19, T20, T21, T22, T23, T24, T25, T26, T27, T30, T31; started before the T18 review) |
+| M2 Analysis (v0.3) | T19–T34 | 13 / 16 (T19, T20, T21, T22, T23, T24, T25, T26, T27, T30, T31, T32, T33; started before the T18 review) |
 | M3 Release (v1.0) | T35–T39 | 0 / 5 |
 
 Six local branches, stacked, not pushed:
@@ -66,7 +66,7 @@ Still open in M0: T1.4b (name maintainers), T3.4 badge and T3.5 branch protectio
 | S1 Colored-noise velocity | T20, T21, T22, T23 | Done: OLS, one-series colored noise, per-pixel Whittle and MIDAS, frame GLS with coherence groups; quadtree groups wait for T28; noise-model policy proposed, awaiting confirmation |
 | S2 Downsampling | T26, T27, T28, T29 | T26 and T27 done; quadtree (T28) done except its benchmark numbers; trade study (T29) open |
 | S3 Temporal denoising | T30, T31 | Done: grid, gaps and breaks (T30), Kalman and LOWESS `denoise` (T31); the deforming-site check goes with T29 |
-| S4 Residual analysis | T32 | Done except the gallery (T32.7): `compare` over geepers, normalized residuals and flags, spectra, common mode, diagnostics; OPERA DISP-S1 requirement curves by default (T32.6) |
+| S4 Residual analysis | T32 | Done: `compare` over geepers, normalized residuals and flags, spectra, common mode, diagnostics; OPERA DISP-S1 requirement curves by default (T32.6) |
 | C1 Zarr v3 output | T14.2, T14.2a | Not started |
 | C2 Icechunk store (opt-in) | T14.2b | Done: `to_icechunk` / `open_icechunk`, one commit per write, append along time, tags, snapshot id in provenance |
 | C3 Virtual datasets (opt-in) | T5.8, T14.2c | Done for local granules: `build_virtual_frame`, `open_virtual`, `validate_virtual`; S3 path not run against S3; `/corrections` not referenced |
@@ -179,6 +179,7 @@ Still open in M0: T1.4b (name maintainers), T3.4 badge and T3.5 branch protectio
 
 | Date | Trigger | Changes |
 | --- | --- | --- |
+| 2026-10-04 | T32 and T33 finished | Requirement curves (T32.6); gallery pages `gnss_compare` and `gnss_tie` on synthetic stations (`tutorial.make_gnss_source`, `vertical_los`; geepers added to the docs environment) |
 | 2026-10-03 | T33.1–T33.4 finished | `models/gnss_tie.py`: tie from `compare` output (velocity or epoch), station exclusion for deforming areas, lazy `apply_tie`, LOSO cross-validation; `gnss.sample` names a missing `units` |
 | 2026-10-03 | T31 finished | `denoise` (gated Kalman with RTS or fixed-lag, robust LOWESS) on acquisitions or grids; study scores reproduced (transient 92.8% / 82.2% / 74.5%) |
 | 2026-10-03 | T30 finished | `timeseries/temporal.py`: grid step from the 75th-percentile interval (study's pre segment), refused gaps, declared breaks on NumPy and xarray |

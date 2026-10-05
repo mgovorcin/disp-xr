@@ -7,3 +7,5 @@
         - DispStack
         - VARIANTS
         - correlated_noise
+        - make_gnss_source
+        - vertical_los
