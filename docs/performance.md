@@ -79,3 +79,50 @@ small data on purpose:
 - `to_points` reads which cells hold data;
 - `quadtree` computes its split scores;
 - `rereference(check_point=True)` reads the reference pixel.
+
+## Building a frame with region jobs
+
+`disp_xr.batch` splits the build of a frame cube into independent jobs, one
+per region of whole shards, for AWS Batch array jobs or a pool of dask
+workers. The coordinator writes the store's metadata once and plans the
+jobs:
+
+```python
+import json
+import disp_xr as dxr
+from disp_xr.batch import init_store, plan_jobs
+
+granules = list(search_table["filename"])           # resolved once, here
+template = dxr.stack_disp(dxr.open_disp(granules))  # lazy: reads no pixel
+shards = init_store(template, "s3://bucket/F11116.zarr")
+jobs = plan_jobs(template, "s3://bucket/F11116.zarr", granules, shards)
+with open("jobs.jsonl", "w") as f:
+    f.writelines(job.to_json() + "\n" for job in jobs)
+```
+
+Each worker (AWS Batch array index `i`) runs one job and reports a result:
+
+```python
+import os
+from disp_xr.batch import RegionJob, run_region, write_manifest
+
+line = open("jobs.jsonl").readlines()[int(os.environ["AWS_BATCH_JOB_ARRAY_INDEX"])]
+job = RegionJob.from_json(line)
+result = run_region(job, lambda ds, job: dxr.stack_disp(dxr.mask(ds, "recommended")))
+write_manifest([result], f"manifest-{job.job_id}.jsonl")
+```
+
+A job owns whole shards and overwrites them, so a retry is safe. Collect
+the manifests and resubmit what failed with `failed_jobs(jobs, results)`.
+
+Processing in a job must be local in space: masking, corrections, chaining
+and per-pixel fits work region by region. A spatial reference or a deramp
+needs the whole frame, so apply it afterwards on the assembled store,
+lazily:
+
+```python
+cube = xr.open_zarr("s3://bucket/F11116.zarr").disp.rereference("median")
+velocity = dxr.fit_velocity(cube, "midas")
+cells = dxr.downsample(cube, factor=33)
+report = dxr.residuals.compare(cells, dxr.gnss.load(cube), dxr.open_static(cube))
+```

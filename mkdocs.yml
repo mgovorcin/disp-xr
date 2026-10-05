@@ -100,6 +100,7 @@ nav:
       - GNSS: api/gnss.md
       - Export: api/export.md
       - Icechunk and virtual stores: api/cloud.md
+      - Region batch jobs: api/batch.md
       - Plot: api/plot.md
       - Accessor: api/accessor.md
       - Settings and chunks: api/config.md

@@ -8,6 +8,10 @@ All notable changes to disp-xr. The format follows
 
 ### Added
 
+- `disp_xr.batch`: build a frame cube with independent region jobs aligned
+  to shards (`init_store`, `plan_jobs`, `RegionJob` as JSON for AWS Batch
+  array jobs, `run_region`, a manifest and `failed_jobs` to resubmit).
+
 - `.disp` accessor on Datasets and DataArrays, with an operation history
   recorded in every result; `to_units`; `validate_disp`.
 - Quality: `mask` and `valid_mask` (`recommended`, `strict` or per criterion),
