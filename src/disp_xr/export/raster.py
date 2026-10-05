@@ -291,14 +291,15 @@ def _write_cog(
 ) -> Path:
     """Write one ``(y, x)`` layer as a COG tagged with ``provenance``."""
     from .._version import __version__
-    from ..config import config
+    from ..config import check_load
 
     if da.dims != ("y", "x"):
         raise ValueError(f"A GeoTIFF layer needs (y, x) dims, not {da.dims}")
-    if da.nbytes > config.get("max_load_bytes"):
-        raise ValueError(
-            f"Layer of {da.nbytes / 1e9:.1f} GB is larger than max_load_bytes"
-        )
+    check_load(
+        da,
+        "the GeoTIFF layer",
+        "Write a window (da.isel(y=..., x=...)), or a whole stack with to_zarr.",
+    )
     image = da.compute()
     nodata = np.nan if image.dtype.kind == "f" else image.attrs.get("_FillValue")
     attrs = {

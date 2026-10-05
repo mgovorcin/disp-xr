@@ -27,6 +27,7 @@ import pandas as pd
 import xarray as xr
 
 from .._chunks import data_chunks, time_contiguous
+from .._grid import with_grid_mapping
 from .._history import recorded
 from ._design_matrix import create_design_matrix, get_coefficient_names
 
@@ -132,8 +133,14 @@ def _solve_block(
     )
     inverse = inverse.ravel()
     grouped = np.zeros(y.shape[0], dtype=bool)
+    # Pixels sorted by pattern, so each group is a slice: scanning all pixels
+    # once per pattern was quadratic (thousands of patterns per block).
+    order = np.argsort(inverse, kind="stable")
+    ends = np.cumsum(sizes)
+    eligible = enough & uniform
     for k in np.flatnonzero(sizes >= GROUP_MIN_PIXELS):
-        members = np.flatnonzero((inverse == k) & enough & uniform)
+        members = order[ends[k] - sizes[k] : ends[k]]
+        members = members[eligible[members]]
         if members.size < GROUP_MIN_PIXELS:
             continue
         rows = w[members[0]] > 0
@@ -260,7 +267,12 @@ def fit_trajectory(
     design = terms.design(da["time"].values)
     names = terms.names
     if weights is None:
-        weights = xr.ones_like(da["time"], dtype=np.float32)
+        # Built in dask like the data: a NumPy (time,) array broadcast to the
+        # frame, then chunked, made dask hash the whole broadcast view (two
+        # hours of graph building on a 389-epoch frame).
+        weights = xr.ones_like(da, dtype=np.float32)
+    elif da.chunks is not None and weights.chunks is None:
+        weights = weights.chunk()
     weights = weights.broadcast_like(da)
     if da.chunks is not None:
         weights = weights.chunk(data_chunks(da))
@@ -311,7 +323,7 @@ def fit_trajectory(
         "reference_time": str(pd.Timestamp(da["time"].values[0])),
         "terms": repr(terms),
     }
-    return out
+    return with_grid_mapping(out)
 
 
 def predict_trajectory(

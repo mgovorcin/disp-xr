@@ -286,7 +286,7 @@ Ideas copied without a dependency:
 | Memory | Full-frame masking, re-referencing and export stay within a fixed per-worker memory budget (target to be set) |
 | Testing | pytest with small synthetic DISP fixtures; target 80% line coverage; doctests on every public example; CI on every PR |
 | Typing and style | mypy clean, ruff + black via pre-commit (already configured) |
-| Docs | mkdocs on ReadTheDocs: getting started, API reference from type hints, a verde-style gallery of short worked examples |
+| Docs | mkdocs on GitHub Pages: getting started, API reference from type hints, a verde-style gallery of short worked examples |
 | Packaging | Python 3.12+, conda-forge and PyPI; heavy extras optional (`[gnss]`, `[mintpy]`, `[plot]`, `[interactive]`, `[aws]`, `[cloud]`, `[eof]`); no opera_utils or verde dependency |
 | Compatibility | Supports every released DISP-S1 product version and DISP-NISAR at 1.0; version checks fail early with a clear error |
 | Provenance | Each output records the disp-xr version, the versions of xarray, zarr and dask, input granules and operations applied |
@@ -318,7 +318,7 @@ M0 comes first because nothing else is safe to refactor without tests. Each diam
 - [ ] S2: default exponents, cycle penalty, f0, per-layer floors and the exclusion floor (set by the trade study).
 - [x] S2: quadtree split metric: velocity variance, displacement variance over time, or structure function? Decided: trade study of all three (see S2).
 - [ ] S3: test denoising on a deforming site with topography-correlated troposphere; experiments so far cover one flat, aseismic site (Kiritimati).
-- [ ] S4: which OPERA requirement thresholds to draw on the residual plots.
+- [x] S4: which OPERA requirement thresholds to draw on the residual plots? Decided (2026-10-04): both DISP-S1 requirements, by default: relative displacement 3 (1 + sqrt(L)) mm on the pairwise RMSE profile, and relative velocity 2 mm/yr on station-pair differences of velocity residuals, for 0.1 km < L < 50 km (`residuals.DISP_S1_DISPLACEMENT`, `DISP_S1_VELOCITY`). The values are to be confirmed against the OPERA requirements document before v0.3.
 - [x] Cloud: should Icechunk be the default store for analysis-ready outputs, or an opt-in extra? Decided: follow the earth-mover practices; Icechunk is opt-in where useful.
 - [x] Depend on opera_utils for product parsing, rebasing and referencing? Decided: no; port the needed functions into disp-xr with attribution.
 - [ ] DISP-NISAR: filename pattern, CMR short name and ASF credential endpoint are unconfirmed until a real granule is inspected.

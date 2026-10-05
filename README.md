@@ -22,7 +22,9 @@ ministack's reference date; `stack_disp` chains the ministacks. See
 ## Documentation
 
 The documentation (install, getting started, concepts, command line, a
-gallery of examples and the API reference) builds with mkdocs:
+gallery of examples and the API reference) is published at
+<https://mgovorcin.github.io/disp-xr/> once the repository is public. It
+builds locally with mkdocs:
 
 ```bash
 pixi run -e docs mkdocs serve    # http://127.0.0.1:8000

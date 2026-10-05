@@ -28,7 +28,7 @@ import pandas as pd
 import xarray as xr
 
 from .._version import __version__
-from ..config import bounded_threads, config
+from ..config import bounded_threads, check_load, config
 from ..geometry import grid
 from ..geometry.los import slant_range
 from ..product import PRODUCTS
@@ -105,8 +105,7 @@ def _write(path: Path, attrs: Mapping[str, str], datasets: Mapping[str, Any]) ->
                 name, shape=arr.shape, dtype=arr.dtype, chunks=chunks, **COMPRESSION
             )
             if arr.ndim < 3:
-                if arr.nbytes > max_bytes:
-                    raise ValueError(f"{name} is larger than max_load_bytes")
+                check_load(arr, f"the MintPy dataset {name}", "Export a window.")
                 dset[...] = np.asarray(arr)
                 continue
             # Row blocks of whole epochs: bounded memory, one write per block.

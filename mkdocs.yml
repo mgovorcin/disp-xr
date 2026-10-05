@@ -1,5 +1,6 @@
 site_name: disp-xr
 site_description: Xarray tools for OPERA DISP surface displacement products
+site_url: https://mgovorcin.github.io/disp-xr/
 repo_url: https://github.com/mgovorcin/disp-xr
 repo_name: mgovorcin/disp-xr
 edit_uri: edit/main/docs/
@@ -65,22 +66,33 @@ nav:
   - Home: README.md
   - Install: install.md
   - Getting started: getting-started.md
+  - Finding and reading granules remotely: remote.md
   - Concepts: concepts.md
   - Product notes: product_notes.md
   - Choosing a velocity method: velocity-methods.md
   - Command line: cli.md
+  - Large frames and batch jobs: performance.md
   - View in bowser: bowser.md
   - Try it on your frame: try-it.md
   - Gallery:
       - Quick look at a frame: gallery/quicklook.py
+      - The command line, end to end: gallery/command_line.py
       - Quality layers and masking: gallery/quality_masks.py
       - Quality weights: gallery/quality_weights.py
+      - Corrections and reference methods: gallery/reference.py
+      - Line-of-sight geometry and plate motion: gallery/geometry.py
       - Downsampling with quality weights: gallery/downsample.py
       - Exporting results: gallery/export.py
       - Chunks for maps and time series: gallery/chunking.py
       - Velocity from a trajectory fit: gallery/velocity.py
       - Velocity with colored-noise uncertainty: gallery/colored_noise.py
+      - Comparing DISP with GNSS: gallery/gnss_compare.py
+      - Tying DISP to GNSS: gallery/gnss_tie.py
+      - Checking a velocity fit: gallery/diagnostics.py
+      - Denoising and regular time grids: gallery/denoise.py
       - Interactive browsing of a full frame: gallery/interactive.py
+      - Virtual frames and versioned stores: gallery/virtual_frames.py
+      - Serving results as web map tiles: gallery/web_tiles.py
   - API reference:
       - Overview: api/index.md
       - Find and open: api/open.md
@@ -89,6 +101,7 @@ nav:
       - GNSS: api/gnss.md
       - Export: api/export.md
       - Icechunk and virtual stores: api/cloud.md
+      - Region batch jobs: api/batch.md
       - Plot: api/plot.md
       - Accessor: api/accessor.md
       - Settings and chunks: api/config.md

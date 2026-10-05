@@ -55,7 +55,7 @@ f = open(filename)
 
 ## Documentation
 
-- mkdocs + Jupyter. Hosted on ReadTheDocs.
+- mkdocs + Jupyter. Hosted on GitHub Pages (`.github/workflows/docs.yml`).
 - Auto API from type hints.
 - Provide tutorial notebooks covering common workflows.
 - Include examples in docstrings.

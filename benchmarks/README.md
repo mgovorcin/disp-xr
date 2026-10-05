@@ -1,5 +1,15 @@
 # Benchmarks
 
+## `suite.py` (plan task T37.2)
+
+The core operations end to end (open, chain, mask, re-reference,
+fit_velocity OLS/MIDAS/GLS, downsample, quadtree, denoise) at three sizes
+(`--size smoke|tile|frame`). Each run warms up untimed, interleaves the
+trials across operations, records package versions, host, load and the time
+to touch 256 MB of fresh memory (above about 2 s the node is stalling and
+the run measures the node), writes the raw rows to `results/` and prints
+median and spread. `tests/test_benchmarks.py` runs it at the smoke size.
+
 Scripts that time disp-xr on synthetic data. Shared nodes vary a lot, so each
 result records the machine load; compare columns of one run, not runs.
 

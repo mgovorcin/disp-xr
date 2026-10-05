@@ -33,6 +33,7 @@ import pandas as pd
 import xarray as xr
 
 from ._chunks import data_chunks
+from ._grid import coordinate_grids, with_grid_mapping
 from ._history import recorded
 from .config import bounded_threads
 from .residuals import VariogramModel, mean_block_correlation, n_eff_correlated
@@ -517,7 +518,7 @@ def downsample(
             out[name] = _categorical(ds[name], f, how)
     # Static per-cell quality and weighted centroid.
     total = _block_sum(static, f)
-    xx, yy = xr.broadcast(ds["x"].astype(np.float64), ds["y"].astype(np.float64))
+    xx, yy = coordinate_grids(ds, static)
     shared["quality"] = (
         (total / f**2)
         .drop_attrs()
@@ -549,7 +550,7 @@ def downsample(
         ),
         "resolution": f"{abs(float(ds['x'][1] - ds['x'][0])) * f:g}",
     }
-    return result
+    return with_grid_mapping(result)
 
 
 def to_points(coarse: xr.Dataset, min_valid_fraction: float = 0.0) -> xr.Dataset:

@@ -8,6 +8,10 @@ All notable changes to disp-xr. The format follows
 
 ### Added
 
+- `disp_xr.batch`: build a frame cube with independent region jobs aligned
+  to shards (`init_store`, `plan_jobs`, `RegionJob` as JSON for AWS Batch
+  array jobs, `run_region`, a manifest and `failed_jobs` to resubmit).
+
 - `.disp` accessor on Datasets and DataArrays, with an operation history
   recorded in every result; `to_units`; `validate_disp`.
 - Quality: `mask` and `valid_mask` (`recommended`, `strict` or per criterion),
@@ -53,8 +57,22 @@ All notable changes to disp-xr. The format follows
 - `quadtree`: quality-weighted quadtree leaves (displacement, velocity or
   structure split metric), by threshold or by a target number of points
   (`n_points`).
+- `residuals.compare` scores the OPERA DISP-S1 requirements by default:
+  relative displacement 3 (1 + sqrt(L)) mm on the pairwise RMSE profile and
+  relative velocity 2 mm/yr on station-pair velocity differences
+  (`Requirement`, `DISP_S1_DISPLACEMENT`, `DISP_S1_VELOCITY`,
+  `Comparison.velocity_pairs`).
+- `disp_xr.tutorial.make_gnss_source` and `vertical_los`: synthetic GNSS
+  stations that follow a DISP frame, through the geepers source interface.
+- Gallery: comparing DISP with GNSS, and tying DISP to GNSS.
+- Gallery: serving results as web map tiles with xpublish-tiles (docs
+  environment only, `tiles` pixi feature).
 
 ### Changed
+
+- Export and plotting check `max_load_bytes` from shape and dtype before
+  loading, and raise `LoadTooLargeError` (a `ValueError`) naming the size,
+  the limit and the remedy. New page: large frames and batch jobs.
 
 - `open_disp` keeps the file layout by default (`chunks="native"`), and
   `stack_disp` keeps the input chunks, so a map or a point reads only what it
@@ -72,25 +90,39 @@ All notable changes to disp-xr. The format follows
 
 ### Fixed
 
+- `fit_trajectory` and `fit_velocity` (OLS, Whittle) took hours to build their
+  graph on a full frame: default weights were a NumPy array broadcast to the
+  frame, which dask hashed whole (2 h on a 389-epoch DISP-S1 frame, now 0.1 s
+  on 60 epochs). `downsample`, `downsample_hex` and `quadtree` embedded
+  frame-sized x/y grids (about 500 MB each) in their graphs; they are now
+  built lazily.
+
+- `fit_velocity`, `fit_trajectory` and `downsample` outputs lacked the
+  `grid_mapping` attribute on their map variables, so readers that look up
+  the CRS per variable (GDAL, xpublish-tiles) missed it.
+
+- `quality_weights` (and so `downsample` and `quadtree` with
+  `weights="quality"`) loaded the whole inversion-residual stack into memory:
+  `np.round` on a dask-backed DataArray falls back to `np.asarray`. It now
+  stays lazy (53 GB for a 91-epoch DISP-S1 frame before).
 - `open_disp` refused DISP-S1 frames that span the November 2025 production
   change (displacement stored as float64 instead of float32, every other
   layer alike). Granules that differ only in float precision are now read
   together with a `MixedPrecisionWarning`, cast to float32 and listed in
   `attrs["mixed_precision"]`; virtual stores still refuse them.
-- `quality_weights` (and so `downsample` and `quadtree` with
-  `weights="quality"`) loaded the whole inversion-residual stack into memory:
-  `np.round` on a dask-backed DataArray falls back to `np.asarray`. It now
-  stays lazy (53 GB for a 91-epoch DISP-S1 frame before).
 - Ministacks of DISP-S1 productions from November 2025 did not chain to
   earlier ones (`MissingCrossoverError`): their time is float seconds since
   2010 and decodes nanoseconds off. `open_disp` now reads times to the whole
   second, as granule names give them.
+
 - The command line failed at start-up (logging formatter name).
 - `fit_timeseries_block` fitted each chunk's epochs separately when time was
   split across chunks, and failed on `open_disp` output.
 - Re-exporting a store split its `input_granules` list into characters.
 - Trajectory steps and postseismic terms never fired: their onsets were
   compared in absolute years with time relative to the reference.
+- `rereference("area")` read every chunk of the frame for the median of a
+  small box; it now reads only the rows and columns around the area.
 - `quadtree` cells on the frame edge (and cells larger than the frame) never
   split: `min_reliable` counted the children's pixels outside the frame. It
   is now a share of the pixels inside the frame.

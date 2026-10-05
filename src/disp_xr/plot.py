@@ -19,7 +19,7 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 
-from .config import bounded_threads
+from .config import bounded_threads, check_load
 from .geometry import grid, lonlat_to_rowcol
 from .units import _canonical, to_units
 
@@ -155,6 +155,7 @@ def plot_map(
     factor = max(1, math.ceil(max(da.sizes["y"], da.sizes["x"]) / max_pixels))
     if factor > 1:
         da = da.coarsen(y=factor, x=factor, boundary="trim").mean(keep_attrs=True)
+    check_load(da.astype("float64"), "the map", "Lower max_pixels.")
     da = _in_units(da.astype("float64", keep_attrs=True), units).compute()
 
     if vmax is None:
@@ -229,6 +230,7 @@ def plot_hex(
         da = da.isel(time=-1) if time is None else da.sel(time=time, method="nearest")
     if da.dims != ("point",):
         raise ValueError(f"plot_hex needs (point,) after selecting time, not {da.dims}")
+    check_load(da.astype("float64"), "the hexagons", "Select fewer cells.")
     da = _in_units(da.astype("float64", keep_attrs=True), units).compute()
     values = da.values
     finite = np.isfinite(values)

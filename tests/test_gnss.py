@@ -87,7 +87,7 @@ def test_load_builds_a_station_time_cube(frame, fake):
     assert sorted(cube.station.values) == ["AAA1", "BBB2"]
     assert str(cube.time.values[0])[:10] == "2020-01-01"
     assert {"sigma_up", "corr_en", "lon", "lat", "x", "y"} <= set(cube.variables)
-    assert cube.attrs["gnss_source"] == "FakeSource"
+    assert cube.attrs["gnss_source"] == "SyntheticGnssSource"
     by_id = gnss.load(["BBB2"], source=fake)
     assert list(by_id.station.values) == ["BBB2"]
     with pytest.raises(ValueError, match="source must be"):

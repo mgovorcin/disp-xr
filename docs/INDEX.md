@@ -1,6 +1,6 @@
 # disp-xr project index
 
-**Last indexed:** 2026-10-04 · `main` at `0781413` on `origin` = `mgovorcin/disp-xr` (through T33, PR #34); branch `feat/split-metric-study` adds T29.1
+**Last indexed:** 2026-10-03 · `main` on `origin` = `mgovorcin/disp-xr`, through T27.1–T27.6 (regular-grid downsampling); branch `feat/variogram-sigma` (on PR #16) adds T27.3b
 
 How and when this file is rebuilt: see "Project Index (cyclical indexing)" in `CLAUDE.md` at the repository root.
 
@@ -16,9 +16,10 @@ How and when this file is rebuilt: see "Project Index (cyclical indexing)" in `C
 | [api_review.md](api_review.md) | v0.2 API review: public API, settled decisions, open questions | — |
 | [api_policy.md](api_policy.md) | What is public, deprecation rules, frozen names (draft until v0.2) | — |
 | [try-it.md](try-it.md) | Guide for Cal/Val users trying disp-xr on their own frame | — |
+| [product_notes.md](product_notes.md) | Differences between DISP productions that affect reading a frame (float32 to float64 displacement in November 2025) | — |
+| [performance.md](performance.md) | Running full frames: processes against threads, disp-xr settings, environment for batch jobs, memory stalls on shared nodes | — |
 | [docs_plan.md](docs_plan.md) | Documentation coverage per feature, stale notebooks, GitHub Pages gaps, tutorial order before going public | — |
 | [studies/split_metric.md](studies/split_metric.md) | T29 trade study report: frames, criteria, decision (scripts in `studies/split_metric/` at the root) | — |
-| [product_notes.md](product_notes.md) | Differences between DISP productions that affect reading a frame (float32 to float64 displacement in November 2025) | — |
 | [check_plan.py](check_plan.py) | Mechanical check of `todo.md` (run in every indexing cycle) | — |
 | [img/](img/) | `architecture.png`, `roadmap.png`, exported from the PRD doc | — |
 | `CLAUDE.md` (repository root) | Coding rules and the indexing cycle | — |
@@ -30,8 +31,8 @@ The PRD also lives as a shared doc; `specs.md` is its copy in the repo and must 
 | Milestone | Tasks | Done |
 | --- | --- | --- |
 | M0 Foundation (v0.1) | T1–T8 | 5 / 8 (T2, T4, T5, T6, T7 done; T1 open only for T1.4b; T3 open for T3.4–T3.5) |
-| M1 Core API (v0.2) | T9–T18 | 7 / 10 (T9, T10, T11, T13, T14, T15, T17; T12 open only for T12.5, T16 only for ReadTheDocs publishing) |
-| M2 Analysis (v0.3) | T19–T34 | 11 / 16 (T19, T20, T21, T22, T23, T24, T25, T26, T27, T30, T31; T28 open for benchmark numbers, T32 for T32.6–T32.7, T33 for its gallery example; T29 started (T29.1); started before the T18 review) |
+| M1 Core API (v0.2) | T9–T18 | 7 / 10 (T9, T10, T11, T13, T14, T15, T17; T12 open only for T12.5, T16 only for GitHub Pages publishing (T16.6, waits for the repository to go public)) |
+| M2 Analysis (v0.3) | T19–T34 | 13 / 16 (T19, T20, T21, T22, T23, T24, T25, T26, T27, T30, T31, T32, T33; started before the T18 review) |
 | M3 Release (v1.0) | T35–T39 | 0 / 5 |
 
 Six local branches, stacked, not pushed:
@@ -66,9 +67,9 @@ Still open in M0: T1.4b (name maintainers), T3.4 badge and T3.5 branch protectio
 | F15 Plate motion | T13.5 | Done: `plate_motion_los`, `remove_plate_motion` (ITRF2014-PMM) |
 | F16 Search | T4.5 | Exists, S1 only (`download.py`) |
 | S1 Colored-noise velocity | T20, T21, T22, T23 | Done: OLS, one-series colored noise, per-pixel Whittle and MIDAS, frame GLS with coherence groups; quadtree groups wait for T28; noise-model policy proposed, awaiting confirmation |
-| S2 Downsampling | T26, T27, T28, T29 | T26 and T27 done; quadtree (T28) done except its benchmark numbers; trade study (T29) started: frames and GNSS station lists chosen (T29.1, `studies/split_metric/`), runner and criteria open |
+| S2 Downsampling | T26, T27, T28, T29 | T26 and T27 done; quadtree (T28) done except its benchmark numbers; trade study (T29) open |
 | S3 Temporal denoising | T30, T31 | Done: grid, gaps and breaks (T30), Kalman and LOWESS `denoise` (T31); the deforming-site check goes with T29 |
-| S4 Residual analysis | T32 | Residual statistics on branch |
+| S4 Residual analysis | T32 | Done: `compare` over geepers, normalized residuals and flags, spectra, common mode, diagnostics; OPERA DISP-S1 requirement curves by default (T32.6) |
 | C1 Zarr v3 output | T14.2, T14.2a | Not started |
 | C2 Icechunk store (opt-in) | T14.2b | Done: `to_icechunk` / `open_icechunk`, one commit per write, append along time, tags, snapshot id in provenance |
 | C3 Virtual datasets (opt-in) | T5.8, T14.2c | Done for local granules: `build_virtual_frame`, `open_virtual`, `validate_virtual`; S3 path not run against S3; `/corrections` not referenced |
@@ -83,7 +84,7 @@ Still open in M0: T1.4b (name maintainers), T3.4 badge and T3.5 branch protectio
 | NFR Compatibility | T5.7, T35 | Not started |
 | NFR Metadata, Provenance | T14.2a, T14.4 | Not started |
 | NFR Benchmarks, Performance, Memory | T37 | Not started |
-| NFR Docs | T16 | mkdocs site with executed gallery and strict CI build done; ReadTheDocs publishing waits for an account |
+| NFR Docs | T16 | mkdocs site with executed gallery and strict CI build done; GitHub Pages workflow ready; publishing waits for the repository to go public |
 | API rules (config, history, order) | T4.9, T9, T15.2 | Config and history done; processing order in T15.2 |
 
 ## Modules (branch `refactor/package-layout`, `src/disp_xr`)
@@ -101,6 +102,7 @@ Still open in M0: T1.4b (name maintainers), T3.4 badge and T3.5 branch protectio
 | `export/raster.py` (was `io.py`) | F12 | `to_geotiff` (COG), legacy rasterio helpers | T14.1 |
 | `export/zarr.py` | F12, C1 | `to_zarr`, `to_netcdf`, chunk/shard scheme (presets `timeseries`, `maps`, `ministack`), `round_mantissa` | T14.2, T14.2b |
 | `export/icechunk.py` | F12, C2 | `to_icechunk`, `open_icechunk` (`cloud` extra, imported lazily) | T14.2b |
+| `batch.py` | C6 | `init_store`, `plan_jobs`, `RegionJob`, `run_region`, `failed_jobs`, manifest | T37.4 |
 | `virtual.py` | C3 | `build_virtual_frame`, `open_virtual`, `validate_virtual` (`cloud` extra) | T14.2c |
 | `export/_provenance.py` | NFR Provenance, Metadata | Provenance and CF flag attributes | T14.4 |
 | `export/mintpy.py` (was `mintpy.py`) | F12 | `to_mintpy`: timeseries, quality masks, geometry (h5py only) | T14.3 |
@@ -137,6 +139,8 @@ Still open in M0: T1.4b (name maintainers), T3.4 badge and T3.5 branch protectio
 | Date | Decision |
 | --- | --- |
 | 2026-10-04 | `open_disp` reads productions that differ only in float precision (DISP-S1 displacement float64 from November 2025) with a warning, cast to float32; virtual stores still refuse them |
+| 2026-10-04 | Residual plots draw both OPERA DISP-S1 requirements by default: displacement 3 (1 + sqrt(L)) mm, velocity 2 mm/yr, 0.1 to 50 km (values to confirm against the requirements document) |
+| 2026-10-04 | Documentation is published on GitHub Pages, not ReadTheDocs |
 | 2026-10-02 | `open_disp` keeps the file layout (`chunks="native"`); each operation gets the chunks it needs (chaining keeps chunks, per-pixel functions rechunk themselves, `dxr.rechunk` for explicit control); disp-xr computes with at most 32 dask threads by default |
 | 2026-09-30 | 1.0 supports DISP-S1 and DISP-NISAR |
 | 2026-09-30 | verde is a design reference only; disp-xr has its own fit/predict estimators |
@@ -161,8 +165,6 @@ Still open in M0: T1.4b (name maintainers), T3.4 badge and T3.5 branch protectio
 - Open bug with a strict xfail test: 7. Bugs 1, 3, 8 and 9 are fixed. The old notebooks still import the deprecated module names (`download`, `io`, `quality_metrics`, `static_layers`, `utils.*`); they keep working with warnings until T16 rewrites them.
 - `.claude/skills` is a symlink to `../skills`, which does not exist in this repo; `.claude/` is excluded through `.git/info/exclude`, as in geepers.
 
-- GitHub Actions on `mgovorcin/disp-xr` is disabled (2026-10-04): the private repo ran out of Actions minutes, so PRs #30–#33 merged with no CI run. Until it is re-enabled, local git hooks stand in: `pre-commit` on commit, pytest (py312) and `mkdocs --strict` on push. Python 3.13/3.14, test-cloud and the EOF example are not checked.
-
 ## Not verified
 
 - `code_review.md` and the Context lines of `todo.md` were not checked by a second reader against the code. The 7 bugs were read from the source when the review was written.
@@ -172,7 +174,7 @@ Still open in M0: T1.4b (name maintainers), T3.4 badge and T3.5 branch protectio
 
 ## Checks passed this cycle
 
-- `python docs/check_plan.py`: 39 tasks, 231 subtasks, no duplicate or dangling ids; "Depends on" lines, mermaid graph and dependency table agree; no cycles; every task except T39 unlocks another; headings match task titles.
+- `python docs/check_plan.py`: 39 tasks, 230 subtasks, no duplicate or dangling ids; "Depends on" lines, mermaid graph and dependency table agree; no cycles; every task except T39 unlocks another; headings match task titles.
 - All relative links in `docs/*.md` and `CLAUDE.md` resolve.
 - No sentence in `specs.md`, `todo.md` or `code_review.md` tells disp-xr to depend on, wrap or vendor opera_utils.
 - Every requirement in the table above has at least one task.
@@ -181,7 +183,7 @@ Still open in M0: T1.4b (name maintainers), T3.4 badge and T3.5 branch protectio
 
 | Date | Trigger | Changes |
 | --- | --- | --- |
-| 2026-10-04 | T29.1 finished; PR #34 merged | Frames F08882 (subsidence), F11116 (tectonic with topography-correlated troposphere, downloaded to `01_OPERA/DISP/data/F11116`) and F39362 (quiet control, v0.10) with GNSS station lists; NISAR candidates for T35.5; CI disabled, local hooks noted under Out of sync |
+| 2026-10-04 | T32 and T33 finished | Requirement curves (T32.6); gallery pages `gnss_compare` and `gnss_tie` on synthetic stations (`tutorial.make_gnss_source`, `vertical_los`; geepers added to the docs environment) |
 | 2026-10-03 | T33.1–T33.4 finished | `models/gnss_tie.py`: tie from `compare` output (velocity or epoch), station exclusion for deforming areas, lazy `apply_tie`, LOSO cross-validation; `gnss.sample` names a missing `units` |
 | 2026-10-03 | T31 finished | `denoise` (gated Kalman with RTS or fixed-lag, robust LOWESS) on acquisitions or grids; study scores reproduced (transient 92.8% / 82.2% / 74.5%) |
 | 2026-10-03 | T30 finished | `timeseries/temporal.py`: grid step from the 75th-percentile interval (study's pre segment), refused gaps, declared breaks on NumPy and xarray |

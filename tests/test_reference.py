@@ -160,6 +160,34 @@ def test_area_median(ds):
     assert "bbox" in json.loads(out.attrs["reference"])
 
 
+def test_area_reads_only_the_box(ds):
+    # Every chunk read is logged; the reference values must come from the
+    # chunks under the box, not from the whole frame.
+    read = []
+
+    def logged(block, block_info=None):
+        read.append(tuple(block_info[0]["chunk-location"][1:]))
+        return block
+
+    chunked = ds.chunk({"time": -1, "y": 16, "x": 16})
+    disp = chunked.displacement
+    chunked["displacement"] = disp.copy(
+        data=disp.data.map_blocks(logged, dtype=disp.dtype)
+    )
+    (west, south) = _lonlat(ds, 44, 31, dx=-15, dy=-15)
+    (east, north) = _lonlat(ds, 35, 40, dx=15, dy=15)
+    out = rereference(chunked, "area", bbox=(west, south, east, north))
+    expected = rereference(ds, "area", bbox=(west, south, east, north))
+    read.clear()
+    ref = (chunked.displacement - out.displacement).isel(y=0, x=0)
+    np.testing.assert_allclose(
+        ref.values, (ds.displacement - expected.displacement)[:, 0, 0], atol=1e-6
+    )
+    # Rows 35-44 and columns 31-40 lie in chunk rows 2 and columns 1-2; the
+    # pixel (0, 0) read for the check is chunk (0, 0).
+    assert set(read) <= {(2, 1), (2, 2), (0, 0)}
+
+
 def test_area_needs_one_shape(ds):
     with pytest.raises(ValueError, match="exactly one of bbox or geometry"):
         rereference(ds, "area")
