@@ -1,5 +1,34 @@
 # Benchmarks
 
+## `storage.py` (plan task T37.3b, local half)
+
+Compression and chunk layout on real data: a window of the F11116 unmasked
+study stack (32 epochs x 2048 x 2048, float32), Zarr v3 on local disk, two
+interleaved trials, run on 2026-10-05 with the node healthy (touching 256 MB
+took at most 0.24 s). Medians:
+
+| Layer, layout | zstd-3 (default) | Blosc-zstd-3 bitshuffle | Blosc-zstd-3 shuffle | Blosc-LZ4 | zstd-9 |
+|---|---:|---:|---:|---:|---:|
+| displacement, maps 1x1024x1024 | 1.37 | **1.59** | 1.58 | 1.39 | 1.43 |
+| displacement, timeseries Tx128x128 | 1.37 | **1.60** | 1.59 | 1.40 | 1.40 |
+| temporal coherence, maps | 2.71 | **3.57** | 3.26 | 2.38 | 2.93 |
+| temporal coherence, timeseries | **11.9** | 6.0 | 5.0 | 4.6 | 13.0 |
+| displacement, 12 mantissa bits (lossy) | 1.74 | **2.20** | 2.07 | 1.75 | 1.89 |
+
+(compression ratios: uncompressed over stored bytes)
+
+- Blosc with bit shuffle stores displacement 16% smaller than plain zstd,
+  and coherence maps 32% smaller, at the same write and read speed (writes
+  0.4-0.6 s, map reads about 0.01 s).
+- In the time-series layout, coherence compresses twice as well with plain
+  zstd: the value repeats along time within a ministack, which zstd's long
+  matches find and shuffling breaks.
+- Access patterns follow the presets: a map reads in about 0.01 s from
+  1-epoch chunks and 0.15 s from time-series chunks; a pixel series reads
+  in 0.003 s from time-series chunks and 0.03 s from map chunks. Chunks of
+  256 x 256 write 3-4 times slower with no gain.
+- The S3 half (NetCDF on S3, virtual Icechunk) needs AWS and is not run.
+
 ## `suite.py` (plan task T37.2)
 
 The core operations end to end (open, chain, mask, re-reference,
