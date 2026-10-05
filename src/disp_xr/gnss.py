@@ -67,6 +67,10 @@ def get_source(name: Union[str, Any] = "unr", cache_dir: Optional[str] = None) -
     cache_dir : str, optional
         Where geepers caches downloads (its default otherwise).
 
+    Examples
+    --------
+    >>> source = get_source("unr", cache_dir="gnss-cache")  # doctest: +SKIP
+
     """
     if not isinstance(name, str):
         return name
@@ -116,6 +120,11 @@ def stations(
     geopandas.GeoDataFrame
         geepers station table (``id``, ``lon``, ``lat``, ``alt``, geometry).
 
+    Examples
+    --------
+    >>> table = dxr.gnss.stations(ds)  # doctest: +SKIP
+    >>> table = dxr.gnss.stations((-121.5, 35.5, -120.0, 37.0))  # doctest: +SKIP
+
     """
     src = get_source(source, cache_dir)
     gdf = src.stations(bbox=_bbox(target))
@@ -155,6 +164,11 @@ def load(
         ``east``, ``north``, ``up`` (meters, as geepers returns them) and
         ``sigma_*``, ``corr_*``; coordinates ``station``, ``time``, ``lon``,
         ``lat``, ``alt`` (and ``x``, ``y`` for a dataset target).
+
+    Examples
+    --------
+    >>> gps = dxr.gnss.load(ds, start="2017-01-01")  # doctest: +SKIP
+    >>> gps = dxr.gnss.load(["P539", "P565"])  # doctest: +SKIP
 
     """
     src = get_source(source, cache_dir)
@@ -219,6 +233,11 @@ def to_los(gnss: xr.Dataset, static: xr.Dataset) -> xr.Dataset:
     xr.Dataset
         ``gnss`` with ``los`` and ``sigma_los`` (positive toward the
         satellite) and the LOS vector components per station.
+
+    Examples
+    --------
+    >>> los = dxr.gnss.to_los(gps, dxr.open_static(ds))  # doctest: +SKIP
+    >>> los["los"].sel(station="P539").plot()  # doctest: +SKIP
 
     """
     from geepers.uncertainty import get_sigma_los
@@ -290,6 +309,10 @@ def sample(
     -------
     xr.DataArray
         ``(station, time)`` DISP at each station.
+
+    Examples
+    --------
+    >>> insar = dxr.gnss.sample(ds, gps, buffer_m=90)  # doctest: +SKIP
 
     """
     import math
@@ -397,6 +420,10 @@ def align(
     xr.DataArray
         GNSS at ``times`` minus its value at ``reference``; NaN where the
         GNSS series does not reach an epoch or the reference.
+
+    Examples
+    --------
+    >>> on_epochs = dxr.gnss.align(los["los"], ds.time)  # doctest: +SKIP
 
     """
     times = pd.DatetimeIndex(np.asarray(times))

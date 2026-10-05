@@ -35,7 +35,14 @@ __all__ = [
 
 
 class Grid(NamedTuple):
-    """CRS, affine transform and ``(y, x)`` shape of a raster grid."""
+    """CRS, affine transform and ``(y, x)`` shape of a raster grid.
+
+    Examples
+    --------
+    >>> g = grid(ds)  # doctest: +SKIP
+    >>> g.crs, g.transform, g.shape  # doctest: +SKIP
+
+    """
 
     crs: Optional[CRS]
     transform: Affine
@@ -47,6 +54,11 @@ def grid(obj: Union[xr.Dataset, xr.DataArray]) -> Grid:
 
     All grid and CRS access in disp-xr goes through this function, so a raster
     index (for example rasterix) can replace rioxarray in one place.
+
+    Examples
+    --------
+    >>> g = grid(ds)  # doctest: +SKIP
+
     """
     crs = obj.rio.crs
     return Grid(
@@ -67,6 +79,11 @@ def match_grid(
     of ``da`` (the same frame, or a subset of it), the pixels are selected,
     which stays lazy and exact. Otherwise ``da`` is resampled with
     ``rio.reproject_match``.
+
+    Examples
+    --------
+    >>> tropo_on_disp = match_grid(tropo, ds)  # doctest: +SKIP
+
     """
     if da.rio.crs == like.rio.crs:
         dx = abs(float(like.x[1] - like.x[0])) if like.sizes["x"] > 1 else 1.0
@@ -91,6 +108,10 @@ def lonlat_to_rowcol(
     ------
     OutOfBoundsError
         If the point is outside the grid.
+
+    Examples
+    --------
+    >>> row, col = lonlat_to_rowcol(ds, -120.43, 35.90)  # doctest: +SKIP
 
     """
     g = grid(obj)
@@ -125,6 +146,12 @@ def latlon_to_utm(lat: float, lon: float, utm_epsg: int) -> Tuple[float, float]:
     Tuple[float, float]
         A tuple containing the UTM easting and northing coordinates.
 
+    Examples
+    --------
+    >>> easting, northing = latlon_to_utm(35.90, -120.43, 32610)
+    >>> round(easting / 1e3)
+    732
+
     """
     transformer = Transformer.from_crs("epsg:4326", f"epsg:{utm_epsg}", always_xy=True)
     return transformer.transform(lon, lat)
@@ -148,6 +175,12 @@ def utm_to_latlon(
     -------
     Tuple[float, float]
         (latitude, longitude) in decimal degrees.
+
+    Examples
+    --------
+    >>> lat, lon = utm_to_latlon(500000.0, 4000000.0, 32610)
+    >>> round(lon, 2)
+    -123.0
 
     """
     transformer = Transformer.from_crs(f"epsg:{utm_epsg}", "epsg:4326", always_xy=True)
@@ -176,6 +209,10 @@ def get_extent(ds: xr.Dataset) -> Tuple[float, float, float, float]:
     .. deprecated::
         Use ``ds.rio.bounds()`` (rioxarray), which returns
         ``(left, bottom, right, top)``.
+
+    Examples
+    --------
+    >>> west, south, east, north = get_extent(ds)  # doctest: +SKIP
 
     """
     warnings.warn(
@@ -207,6 +244,10 @@ def get_burst_ids(disp_path: Union[str, Path]) -> list[str]:
     -------
     list[str]
         Burst IDs in ASF format, ``T<track>_<burst>_IW<n>``.
+
+    Examples
+    --------
+    >>> get_burst_ids("OPERA_L3_DISP-S1_IW_F11116_....nc")  # doctest: +SKIP
 
     """
 

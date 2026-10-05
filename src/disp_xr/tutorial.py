@@ -81,7 +81,14 @@ NISAR_VERSION = "0.4"
 
 @dataclass
 class DispStack:
-    """Paths of a written synthetic stack and the truth behind them."""
+    """Paths of a written synthetic stack and the truth behind them.
+
+    Examples
+    --------
+    >>> truth = make_disp_stack(folder)  # doctest: +SKIP
+    >>> truth.cumulative.shape, truth.velocity  # doctest: +SKIP
+
+    """
 
     paths: list[Path]
     times: pd.DatetimeIndex
@@ -109,7 +116,15 @@ def disp_filename(
     version: str = "1.0",
     production: str = PRODUCTION_2025,
 ) -> str:
-    """Return a granule name in the OPERA DISP-S1 pattern."""
+    """Return a granule name in the OPERA DISP-S1 pattern.
+
+    Examples
+    --------
+    >>> from datetime import datetime
+    >>> disp_filename(datetime(2020, 1, 1), datetime(2020, 1, 13))
+    'OPERA_L3_DISP-S1_IW_F11116_VV_20200101T000000Z_20200113T000000Z_v1.0_20250412T164531Z.nc'
+
+    """
     fmt = "%Y%m%dT%H%M%SZ"
     return (
         f"OPERA_L3_DISP-S1_IW_F{frame_id:05d}_VV_{reference.strftime(fmt)}_"
@@ -148,6 +163,12 @@ def correlated_noise(
         Pixel spacing.
     seed : int
         Random seed.
+
+    Examples
+    --------
+    >>> field = correlated_noise((64, 64), correlation_range=300.0, seed=1)
+    >>> field.shape
+    (64, 64)
 
     """
     ny, nx = shape
@@ -509,6 +530,14 @@ def make_disp_stack(
     -------
     DispStack
         Paths and truth.
+
+    Examples
+    --------
+    >>> import tempfile
+    >>> from pathlib import Path
+    >>> truth = make_disp_stack(Path(tempfile.mkdtemp()), "two_ministacks")
+    >>> len(truth.paths)
+    10
 
     """
 

@@ -323,6 +323,10 @@ def mean_block_correlation(
     spacing : float or (float, float)
         Pixel spacing, or ``(dy, dx)``, in the unit of the model ranges.
 
+    Examples
+    --------
+    >>> rho = mean_block_correlation(model, factor=33, spacing=30.0)  # doctest: +SKIP
+
     """
     if factor < 2:
         return 0.0
@@ -346,6 +350,11 @@ def mean_mask_correlation(
     number of pixel pairs at each offset is the autocorrelation of the mask,
     computed with an FFT, so the double sum over pairs costs one transform.
     :func:`mean_block_correlation` is the square-block case.
+
+    Examples
+    --------
+    >>> rho = mean_mask_correlation(model, cell_mask, spacing=30.0)  # doctest: +SKIP
+
     """
     mask = np.asarray(mask, dtype=np.float64)
     n = mask.sum()
@@ -374,6 +383,12 @@ def n_eff_correlated(sum_w, sum_w2, rho_bar: float):
     with equal weights; it assumes valid pixels and weights are spread
     evenly over the block, so it overestimates ``n_eff`` (underestimates the
     sigma) for blocks whose valid pixels cluster, such as edge cells.
+
+    Examples
+    --------
+    >>> n_eff_correlated(sum_w=100.0, sum_w2=100.0, rho_bar=0.0)
+    100.0
+
     """
     total2 = sum_w**2
     return total2 / (sum_w2 + (total2 - sum_w2) * rho_bar)
@@ -465,6 +480,13 @@ class Comparison:
     """DISP against GNSS at the stations; the metrics come from geepers.
 
     Attributes are filled by :func:`compare`.
+
+    Examples
+    --------
+    >>> result = compare(ds, gps, static)  # doctest: +SKIP
+    >>> result.summary["velocity_fraction_passing"]  # doctest: +SKIP
+    >>> result.plot_velocities()  # doctest: +SKIP
+
     """
 
     series: xr.Dataset
@@ -613,6 +635,13 @@ def compare(
     -------
     Comparison
 
+    Examples
+    --------
+    >>> gps = dxr.gnss.load(ds)  # doctest: +SKIP
+    >>> result = compare(ds, gps, dxr.open_static(ds))  # doctest: +SKIP
+    >>> result.stations[["velocity_residual", "outlier"]]  # doctest: +SKIP
+    >>> cells = compare(dxr.quadtree(ds, n_points=5000), gps, static)  # doctest: +SKIP
+
     """
     from geepers.analysis import (
         binned_rmse_profile,
@@ -755,6 +784,10 @@ def residual_spectra(
     xr.DataArray
         ``(station, frequency)`` power (normalized, 0 to 1).
 
+    Examples
+    --------
+    >>> power = residual_spectra(result)  # doctest: +SKIP
+
     """
     from scipy.signal import lombscargle
 
@@ -812,6 +845,10 @@ def common_mode(
         ``common_mode`` ``(time, component)``, ``spatial_response``
         ``(station, component)``, ``cleaned`` ``(station, time)`` (residual
         minus the common mode) and ``explained_variance`` ``(component)``.
+
+    Examples
+    --------
+    >>> cme = common_mode(result, n_components=1)  # doctest: +SKIP
 
     """
     from geepers.cme import estimate_cme

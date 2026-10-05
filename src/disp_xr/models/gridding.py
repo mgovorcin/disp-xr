@@ -50,6 +50,10 @@ class Spline(BaseEstimator):
     forces_ : numpy.ndarray
         The force at each point.
 
+    Examples
+    --------
+    >>> field = Spline(damping=1e-2).fit(coords, data).grid(like=ds)  # doctest: +SKIP
+
     """
 
     def __init__(self, damping: Optional[float] = None) -> None:
@@ -92,7 +96,13 @@ class Spline(BaseEstimator):
 
 
 class Nearest(BaseEstimator):
-    """Nearest-neighbor gridder: the value of the closest data point."""
+    """Nearest-neighbor gridder: the value of the closest data point.
+
+    Examples
+    --------
+    >>> filled = Nearest().fit(coords, data).grid(like=ds)  # doctest: +SKIP
+
+    """
 
     def __init__(self) -> None:
         """Take no parameters."""
