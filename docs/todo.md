@@ -19,7 +19,7 @@ Companion to [specs.md](specs.md) (the PRD). This plan turns the PRD into 39 tas
 | M0 Foundation | v0.1 | T1–T8 | CI green, tests pass |
 | M1 Core API | v0.2 | T9–T18 | API reviewed by users |
 | M2 Analysis | v0.3 | T19–T34 | GNSS tie validated |
-| M3 Release | v1.0 | T35–T39 | — |
+| M3 Release | v1.0 | T35–T40 | — |
 
 ## Dependency graph
 
@@ -77,6 +77,8 @@ graph LR
   T35 --> T38
   T36 --> T38
   T37 --> T38
+  T34 --> T40
+  T40 --> T38
   T38 --> T39
 ```
 
@@ -565,9 +567,20 @@ Goal: DISP-NISAR at parity, multi-frame, performance targets met, published on c
   - [x] T37.4 Region batch runner (PRD C6), modeled on earth-mover `serverless-datacube-demo`: `init_store(template, store, encoding)` writes the metadata once; `plan_regions(template, encoding)` yields regions aligned to shard boundaries; a `RegionJob` dataclass (frame, region, granule list, parameters) serializes to JSON for AWS Batch array jobs; each job overwrites its shards whole and returns a result record; the records form a manifest used to resubmit failures. The coordinator resolves the granule list once, and workers refresh credentials. Document it end to end (full frame to downsampled velocity to GNSS residual report). Done: `disp_xr.batch` (`init_store` from a lazy template, `plan_regions`/`plan_jobs` aligned to shards, `RegionJob` JSON, `run_region` overwriting its shards and returning a `RegionResult`, JSON-lines manifest, `failed_jobs`); tests rebuild a 256 x 256 frame from 16 regions and resubmit a failed one; documented end to end in `docs/performance.md`. Spatial references and deramps run after assembly (they need the whole frame).
   - [x] T37.5 Gallery example: serve velocity and quality layers as web tiles with earth-mover `xpublish-tiles` (PRD C5). Done: gallery page `web_tiles.py` (a velocity served with `TilesPlugin` on a local server; a WebMercatorQuad tile and the legend fetched; MapLibre snippet); xpublish-tiles is a `tiles` pixi feature in the docs environment only. Found: `fit_velocity` output variables lack the `grid_mapping` attribute, so the server first fails to find the CRS; the page writes it with `rio.write_crs`; fixed in the library afterwards (`_grid.with_grid_mapping` on fit and downsample outputs).
 
+### T40. Read-only REST service
+
+- [ ] **T40. Read-only REST service** — Depends on: T34 · PRD: C7
+  - Context: web clients (the DISP portal on GeoLibre, Cal/Val dashboards) need derived products the archive does not serve: velocities with sigmas, quality-weighted or quadtree cells, GNSS residuals. A thin xpublish plugin over existing stores (Zarr, Icechunk, virtual frames) serves them; xpublish already gives the server, dataset routing and Zarr over HTTP, and xpublish-tiles the map tiles (T37.5). Nothing heavy runs on request: cubes are built by region jobs (T37.4) and only read here. Added 2026-10-05 at the user's request, scheduled after the v0.3 gate.
+  - Done when: `disp_xr serve STORE` starts a service whose endpoints return the documented JSON and GeoJSON for a test store, point queries on a time-series-chunked frame answer in well under a second, and a gallery page shows a client using it.
+  - [ ] T40.1 `disp_xr.serve`: an xpublish plugin (`serve` extra) with read-only routes under `/datasets/{id}/`: `timeseries` (lon, lat, buffer_m; values with quality and reference date), `velocity` (value, sigma, method), `cells` (bbox, size or quadtree; GeoJSON), `gnss` (station residuals and requirement summary), `provenance` (history, input granules, versions); tiles through xpublish-tiles.
+  - [ ] T40.2 Command line: `disp_xr serve STORE [STORE ...] --port --host`, datasets named after the stores, opened lazily (Zarr, Icechunk, virtual frames).
+  - [ ] T40.3 Response schemas as pydantic models, published in the OpenAPI page; CRS and units in every response.
+  - [ ] T40.4 Tests with an in-process client on a synthetic store (every route, errors for out-of-frame points), and a latency check for a point series on a time-series-chunked store.
+  - [ ] T40.5 Gallery page: serve a store and query it from Python and from a MapLibre snippet; a guide on deploying behind a reverse proxy.
+
 ### T38. 1.0 release preparation
 
-- [ ] **T38. 1.0 release preparation** — Depends on: T35, T36, T37 · PRD: NFR Packaging, Docs, Testing
+- [ ] **T38. 1.0 release preparation** — Depends on: T35, T36, T37, T40 · PRD: NFR Packaging, Docs, Testing
   - Context: 1.0 is a stability promise. Remove the deprecated shims, meet the 80% coverage target, finish the docs, and publish on conda-forge and PyPI.
   - Done when: coverage is at least 80%, no deprecated paths remain, the docs are complete (every public function has an example), the PyPI trusted-publishing workflow works on a release candidate, and the conda-forge feedstock PR is merged.
   - [ ] T38.1 Remove the T4.3 and T18.3 shims and update the changelog. Remove the `download.py` shim.
@@ -628,12 +641,13 @@ Each task, what it needs, and what it unlocks. Every task except T39 unlocks at 
 | T31 | T30 | T34 |
 | T32 | T23, T25, T27 | T29, T34 |
 | T33 | T24, T25 | T34 |
-| T34 | T22, T29, T31, T32, T33 | T35, T36, T37 |
+| T34 | T22, T29, T31, T32, T33 | T35, T36, T37, T40 |
 | T35 | T34 | T38 |
 | T36 | T34 | T38 |
 | T37 | T34 | T38 |
-| T38 | T35, T36, T37 | T39 |
+| T38 | T35, T36, T37, T40 | T39 |
 | T39 | T38 | — (final) |
+| T40 | T34 | T38 |
 
 ## Parallel work
 
