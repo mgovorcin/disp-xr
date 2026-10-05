@@ -33,7 +33,7 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 import yaml
-from prepare import OUT, WORKERS
+from prepare import WORKERS, frame_out, result_name
 from stations import HERE
 
 import disp_xr as dxr
@@ -240,7 +240,7 @@ def reliable_pixels(ds: xr.Dataset, frame: str) -> np.ndarray:
     Computed once per frame (one pass over the displacement) and kept as
     ``keep_<fraction>.npy`` next to the stack.
     """
-    path = OUT / frame / f"keep_{MIN_VALID_FRACTION:g}.npy"
+    path = frame_out(frame) / f"keep_{MIN_VALID_FRACTION:g}.npy"
     if path.exists():
         return np.load(path)
     valid = ds["displacement"].isel(time=slice(1, None)).notnull().mean("time")
@@ -257,7 +257,7 @@ def cached_weights(
     Every partition of a run reads the weights again; reading one stored
     layer costs about half of recomputing it from three quality layers.
     """
-    store = OUT / frame / "weights" / f"{label}.zarr"
+    store = frame_out(frame) / "weights" / f"{label}.zarr"
     if not (store / "zarr.json").exists():
         weight, static = weights_for(ds, params)
         out = xr.Dataset(
@@ -298,8 +298,8 @@ def run_frame(
         done = pd.read_csv(checkpoint)
         done = done[done["weights"] == label]
     done_sizes = set(done["size_km"]) if len(done) else set()
-    ds = xr.open_zarr(OUT / frame / "stack.zarr")
-    velocity_da = xr.open_zarr(OUT / frame / "velocity.zarr")["velocity"]
+    ds = xr.open_zarr(frame_out(frame) / "stack.zarr")
+    velocity_da = xr.open_zarr(frame_out(frame) / "velocity.zarr")["velocity"]
     keep = reliable_pixels(ds, frame)
     keep_da = xr.DataArray(keep, dims=("y", "x"), coords={"y": ds.y, "x": ds.x})
     ds = ds.assign(displacement=ds["displacement"].where(keep_da))
@@ -418,7 +418,7 @@ def best_metric(frame: str) -> str:
     The rank sums each metric's rank on velocity reconstruction, GNSS
     agreement and the gradient profile (lower is better).
     """
-    table = pd.read_csv(HERE / "results" / f"{frame}.csv")
+    table = pd.read_csv(HERE / "results" / f"{result_name(frame)}.csv")
     rows = table[(table["size_km"] == 2) & table["method"].isin(METRICS)]
     criteria = ["vel_rmse_mm_yr", "gnss_rms_mm_yr", "profile_rmse_mm_yr"]
     ranks = rows.set_index("method")[criteria].rank().sum(axis=1)
@@ -443,7 +443,7 @@ def sweep_frame(frame: str, profiles: list[list[float]]) -> pd.DataFrame:
             methods=methods,
             params=params,
             label=label,
-            checkpoint=HERE / "results" / f"{frame}_sweep.partial.csv",
+            checkpoint=HERE / "results" / f"{result_name(frame)}_sweep.partial.csv",
         )
         tables.append(table)
     return pd.concat(tables, ignore_index=True)
@@ -473,11 +473,13 @@ def run_frames(names: list[str], frames: dict, sweep: bool, out: Path) -> None:
     for frame in names:
         profiles = frames[frame]["profiles"]
         if sweep:
-            sweep_frame(frame, profiles).to_csv(out / f"{frame}_sweep.csv", index=False)
+            sweep_frame(frame, profiles).to_csv(
+                out / f"{result_name(frame)}_sweep.csv", index=False
+            )
         else:
-            checkpoint = out / f"{frame}.partial.csv"
+            checkpoint = out / f"{result_name(frame)}.partial.csv"
             run_frame(frame, profiles, checkpoint=checkpoint).to_csv(
-                out / f"{frame}.csv", index=False
+                out / f"{result_name(frame)}.csv", index=False
             )
 
 

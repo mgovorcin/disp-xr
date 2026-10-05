@@ -55,7 +55,14 @@ LAYERS = [
     "temporal_coherence",
     "timeseries_inversion_residuals",
     "recommended_mask",
+    "water_mask",
 ]
+# "masked": the recommended mask, as `disp_xr stack` does. "unmasked": only
+# water is removed and the quality weights do the rest (the primary arm since
+# 2026-10-05, the user's decision: downsample unmasked data, weighted by
+# quality).
+VARIANT = os.environ.get("DISP_XR_STUDY_VARIANT", "masked")
+assert VARIANT in ("masked", "unmasked"), VARIANT
 REFERENCE_HALF_BOX = 32  # pixels: a 2 km box
 # Two frames can run side by side with DISP_XR_STUDY_WORKERS=16.
 WORKERS = int(os.environ.get("DISP_XR_STUDY_WORKERS", "24"))
@@ -64,6 +71,16 @@ OUT = Path(
         "DISP_XR_STUDY_OUT", "/u/aurora-r0/govorcin/01_OPERA/DISP/data/split_metric"
     )
 )
+
+
+def frame_out(frame: str) -> Path:
+    """Return the folder of a frame's study inputs for ``VARIANT``."""
+    return OUT / frame if VARIANT == "masked" else OUT / frame / VARIANT
+
+
+def result_name(frame: str) -> str:
+    """Return the result file stem of a frame for ``VARIANT``."""
+    return frame if VARIANT == "masked" else f"{frame}_{VARIANT}"
 
 
 def product_floors(files: list[Path]) -> dict[str, float]:
@@ -128,7 +145,7 @@ def rereference_box(ds: xr.Dataset, frame: str) -> xr.Dataset:
 
 def build(frame: str, entry: dict) -> None:
     """Write the stack and the velocity of one frame."""
-    out = OUT / frame
+    out = frame_out(frame)
     out.mkdir(parents=True, exist_ok=True)
     files = frame_files(frame, entry)
     floors = product_floors(files)
@@ -139,13 +156,17 @@ def build(frame: str, entry: dict) -> None:
     ]
     if which:
         ds = dxr.correct(ds, which)
-    ds = dxr.mask(ds, "recommended")
+    ds = (
+        dxr.mask(ds, "recommended")
+        if VARIANT == "masked"
+        else dxr.mask(ds, None, water=True)
+    )
     ds = dxr.stack_disp(ds)
     ds = rereference_box(ds, frame)
     keep = list(range(0, ds.sizes["time"], STRIDE))
     if keep[-1] != ds.sizes["time"] - 1:
         keep.append(ds.sizes["time"] - 1)
-    keep_vars = [n for n in LAYERS[:4] if n in ds]
+    keep_vars = [n for n in LAYERS[:4] if n in ds]  # masks are applied, not kept
     ds = ds.isel(time=keep)[keep_vars]
     ds.attrs["study_stride"] = STRIDE
     ds.attrs["study_floors"] = json.dumps(floors)
