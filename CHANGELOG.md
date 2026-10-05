@@ -58,6 +58,9 @@ All notable changes to disp-xr. The format follows
   relative velocity 2 mm/yr on station-pair velocity differences
   (`Requirement`, `DISP_S1_DISPLACEMENT`, `DISP_S1_VELOCITY`,
   `Comparison.velocity_pairs`).
+- `disp_xr.tutorial.make_gnss_source` and `vertical_los`: synthetic GNSS
+  stations that follow a DISP frame, through the geepers source interface.
+- Gallery: comparing DISP with GNSS, and tying DISP to GNSS.
 
 ### Changed
 

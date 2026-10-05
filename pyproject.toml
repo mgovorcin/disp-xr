@@ -165,6 +165,10 @@ geopandas = "*"
 [tool.pixi.feature.test.pypi-dependencies]
 geepers = { git = "https://github.com/opera-adt/geepers.git", rev = "d5421787d9c41dbf7e4d0679249bb9d5145bcc40" }
 
+# The GNSS gallery pages run geepers on synthetic stations (gnss extra).
+[tool.pixi.feature.docs.pypi-dependencies]
+geepers = { git = "https://github.com/opera-adt/geepers.git", rev = "d5421787d9c41dbf7e4d0679249bb9d5145bcc40" }
+
 [tool.pixi.feature.docs.dependencies]
 mkdocs = "*"
 mkdocs-jupyter = ">=0.25"
