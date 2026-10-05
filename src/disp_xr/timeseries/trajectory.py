@@ -27,6 +27,7 @@ import pandas as pd
 import xarray as xr
 
 from .._chunks import data_chunks, time_contiguous
+from .._grid import with_grid_mapping
 from .._history import recorded
 from ._design_matrix import create_design_matrix, get_coefficient_names
 
@@ -317,7 +318,7 @@ def fit_trajectory(
         "reference_time": str(pd.Timestamp(da["time"].values[0])),
         "terms": repr(terms),
     }
-    return out
+    return with_grid_mapping(out)
 
 
 def predict_trajectory(
