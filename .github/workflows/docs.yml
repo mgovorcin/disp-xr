@@ -1,0 +1,51 @@
+# Publish the documentation on GitHub Pages from main.
+# Repository settings: Pages > Source = "GitHub Actions". Pages on a private
+# repository needs a paid plan; on a public one it is free.
+name: docs
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# One deployment at a time; a newer push replaces a queued one.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0  # setuptools_scm needs the tags to set the version
+
+      - uses: prefix-dev/setup-pixi@v0.10.2
+        with:
+          environments: docs
+          locked: true
+          cache: true
+
+      # Executes the gallery examples; a broken example or reference fails.
+      - name: Build the docs
+        run: pixi run -e docs mkdocs build --strict --site-dir site
+
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5

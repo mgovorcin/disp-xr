@@ -1,5 +1,6 @@
 site_name: disp-xr
 site_description: Xarray tools for OPERA DISP surface displacement products
+site_url: https://mgovorcin.github.io/disp-xr/
 repo_url: https://github.com/mgovorcin/disp-xr
 repo_name: mgovorcin/disp-xr
 edit_uri: edit/main/docs/

@@ -286,7 +286,7 @@ Ideas copied without a dependency:
 | Memory | Full-frame masking, re-referencing and export stay within a fixed per-worker memory budget (target to be set) |
 | Testing | pytest with small synthetic DISP fixtures; target 80% line coverage; doctests on every public example; CI on every PR |
 | Typing and style | mypy clean, ruff + black via pre-commit (already configured) |
-| Docs | mkdocs on ReadTheDocs: getting started, API reference from type hints, a verde-style gallery of short worked examples |
+| Docs | mkdocs on GitHub Pages: getting started, API reference from type hints, a verde-style gallery of short worked examples |
 | Packaging | Python 3.12+, conda-forge and PyPI; heavy extras optional (`[gnss]`, `[mintpy]`, `[plot]`, `[interactive]`, `[aws]`, `[cloud]`, `[eof]`); no opera_utils or verde dependency |
 | Compatibility | Supports every released DISP-S1 product version and DISP-NISAR at 1.0; version checks fail early with a clear error |
 | Provenance | Each output records the disp-xr version, the versions of xarray, zarr and dask, input granules and operations applied |
