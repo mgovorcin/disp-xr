@@ -63,6 +63,32 @@ DEFAULTS = {
 config = Config("disp_xr", defaults=[DEFAULTS])
 
 
+class LoadTooLargeError(ValueError):
+    """An array is larger than ``config["max_load_bytes"]`` allows to load."""
+
+
+def check_load(obj: Any, what: str, remedy: str) -> None:
+    """Raise if loading ``obj`` would exceed ``config["max_load_bytes"]``.
+
+    The size comes from shape and dtype (``obj.nbytes``), so nothing is read.
+    The error names the size, the limit, how to raise it and ``remedy``.
+
+    Examples
+    --------
+    >>> import numpy as np, xarray as xr
+    >>> check_load(xr.DataArray(np.zeros(10)), "a layer", "select less")
+
+    """
+    size = int(obj.nbytes)
+    limit = int(config.get("max_load_bytes"))
+    if size > limit:
+        raise LoadTooLargeError(
+            f"Loading {what} needs {size / 1e9:.1f} GB, more than max_load_bytes "
+            f"({limit / 1e9:.1f} GB). {remedy} Or raise the limit: "
+            'disp_xr.config.set({"max_load_bytes": ...}) or DISP_XR_MAX_LOAD_BYTES.'
+        )
+
+
 def _cap_numba_threads() -> None:
     """Set NUMBA_NUM_THREADS from the config, before numba is loaded."""
     threads = config.get("numba_threads")

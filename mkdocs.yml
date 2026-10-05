@@ -70,6 +70,7 @@ nav:
   - Product notes: product_notes.md
   - Choosing a velocity method: velocity-methods.md
   - Command line: cli.md
+  - Large frames and batch jobs: performance.md
   - View in bowser: bowser.md
   - Try it on your frame: try-it.md
   - Gallery:
