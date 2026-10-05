@@ -247,3 +247,18 @@ def test_maps_store_feeds_per_pixel_and_cell_functions(ds, tmp_path):
     assert np.isfinite(coarse.displacement.values).any()
     tree = dxr.quadtree(back, n_points=20, min_level=1, max_level=4)
     assert tree.points.sizes["point"] > 0
+
+
+def test_map_outputs_carry_grid_mapping(ds):
+    # Readers that look up the CRS per variable (GDAL, xpublish-tiles) need
+    # grid_mapping on every (y, x) variable.
+    chained = ds.disp.rereference("median")
+    outputs = {
+        "fit_velocity": dxr.fit_velocity(chained, method="ols"),
+        "fit_trajectory": dxr.fit_trajectory(chained),
+        "downsample": dxr.downsample(chained, factor=8),
+    }
+    for name, out in outputs.items():
+        for var, da in out.data_vars.items():
+            if {"y", "x"} <= set(da.dims):
+                assert da.attrs.get("grid_mapping") == "spatial_ref", (name, var)

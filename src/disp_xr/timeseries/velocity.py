@@ -49,6 +49,7 @@ import numpy as np
 import xarray as xr
 
 from .._chunks import time_contiguous
+from .._grid import with_grid_mapping
 from .._history import recorded
 from ._datetime import _decimal_year
 from .noise import _powerlaw_covariance, _sampling_grid
@@ -461,4 +462,4 @@ def fit_velocity(
     out.attrs = {**out.attrs, "method": method}
     if method != "midas":
         out.attrs["terms"] = repr(terms)
-    return out
+    return with_grid_mapping(out)

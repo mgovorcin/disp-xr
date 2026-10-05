@@ -90,6 +90,10 @@ All notable changes to disp-xr. The format follows
 
 ### Fixed
 
+- `fit_velocity`, `fit_trajectory` and `downsample` outputs lacked the
+  `grid_mapping` attribute on their map variables, so readers that look up
+  the CRS per variable (GDAL, xpublish-tiles) missed it.
+
 - `quality_weights` (and so `downsample` and `quadtree` with
   `weights="quality"`) loaded the whole inversion-residual stack into memory:
   `np.round` on a dask-backed DataArray falls back to `np.asarray`. It now
