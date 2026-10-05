@@ -12,7 +12,7 @@ map viewers that read one epoch per tile (bowser): chunks of one epoch by
 256 x 256 in shards of 4 epochs by 1,024 x 1,024.
 
 ``round_mantissa`` and the per-variable encoding idea are adapted from
-opera-utils (src/opera_utils/disp/_utils.py and _reformat.py, commit dff4b45),
+opera-utils (src/opera_utils/disp/_utils.py and _reformat.py, commit 97f77d9),
 Copyright (c) 2022 California Institute of Technology, BSD-3-Clause. See
 THIRD_PARTY_NOTICES.md. Changes: one chunk grid derived from byte targets,
 shards always a whole multiple of chunks, Zstd (a Zarr v3 codec) instead of

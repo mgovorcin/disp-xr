@@ -19,7 +19,7 @@ repeated, for example ``ds.disp.rechunk("timeseries")`` before many point reads
 of a store that fits in memory.
 
 Clamping is adapted from opera-utils (src/opera_utils/disp/_utils.py,
-``_clamp_chunk_dict``, commit dff4b45), Copyright (c) 2022 California Institute
+``_clamp_chunk_dict``, commit 97f77d9), Copyright (c) 2022 California Institute
 of Technology, BSD-3-Clause. See THIRD_PARTY_NOTICES.md.
 """
 

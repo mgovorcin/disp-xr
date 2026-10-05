@@ -1,6 +1,6 @@
 # Portions adapted from opera-utils (https://github.com/opera-adt/opera-utils,
-# src/opera_utils/disp/_search.py, _product.py, constants.py; source commit not
-# recorded), Copyright (c) 2022 California Institute of Technology,
+# src/opera_utils/disp/_search.py, _product.py, constants.py; commit 97f77d9),
+# Copyright (c) 2022 California Institute of Technology,
 # BSD-3-Clause. See THIRD_PARTY_NOTICES.md.
 from __future__ import annotations
 

@@ -1,7 +1,7 @@
 """Re-referencing (plan task T11).
 
 The ``get_reference_values`` cases are ported from opera-utils
-tests/test_disp_reference.py (commit dff4b45), Copyright (c) 2022 California
+tests/test_disp_reference.py (commit 97f77d9), Copyright (c) 2022 California
 Institute of Technology, BSD-3-Clause; modified for disp-xr.
 """
 

@@ -2,7 +2,7 @@
 
 ``ReferenceMethod`` and :func:`get_reference_values` are adapted from opera-utils
 (src/opera_utils/disp/_enums.py and src/opera_utils/disp/_reference.py, commit
-dff4b45), and the center-of-mass pick in :func:`find_stable_point` from
+97f77d9), and the center-of-mass pick in :func:`find_stable_point` from
 ``find_reference_point`` in src/opera_utils/disp/rebase_reference.py. Copyright
 (c) 2022 California Institute of Technology, BSD-3-Clause. See
 THIRD_PARTY_NOTICES.md. Changes: the point is bounds-checked, the median honors

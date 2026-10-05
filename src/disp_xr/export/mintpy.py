@@ -7,7 +7,7 @@ Files follow MintPy's layout (``writefile.layout_hdf5``): ``timeseries.h5``
 write them; MintPy reads them.
 
 The file set and metadata keys follow opera-utils ``disp_nc_to_mintpy``
-(src/opera_utils/disp/mintpy.py, commit dff4b45), Copyright (c) 2022 California
+(src/opera_utils/disp/mintpy.py, commit 97f77d9), Copyright (c) 2022 California
 Institute of Technology, BSD-3-Clause, and the earlier disp-xr ``get_metadata``.
 See THIRD_PARTY_NOTICES.md. Changes (upstream bug 6): every dataset is
 compressed, platform, wavelength and orbit height come from the product spec,
