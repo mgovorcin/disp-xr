@@ -70,6 +70,10 @@ class MixedProductionError(ValueError):
     """Granules of one frame differ in dtype or encoding and cannot be combined."""
 
 
+class MixedPrecisionWarning(UserWarning):
+    """Granules of one frame store a float layer at different precisions."""
+
+
 @dataclass(frozen=True)
 class ProductSpec:
     """What disp-xr needs to know about one DISP product.
@@ -422,12 +426,27 @@ def _layout(path: str, layers: tuple[str, ...]) -> tuple:
         )
 
 
-def check_granules(df: pd.DataFrame) -> pd.DataFrame:
+def _precision_free(layout: tuple) -> tuple:
+    """Return ``layout`` with float dtypes merged (float32 and float64 alike)."""
+    return tuple(
+        (name, "float" if dtype.startswith("float") else dtype, *rest)
+        for name, dtype, *rest in layout
+    )
+
+
+def check_granules(
+    df: pd.DataFrame, *, allow_mixed_precision: bool = False
+) -> pd.DataFrame:
     """Check that all granules share one dtype and encoding per layer.
 
-    DISP productions differ: the 2026 DISP-S1 production stores displacement as
-    float64, the 2025 one as float32. Such granules cannot be stacked or
-    virtualized together, so they are refused rather than cast.
+    DISP productions differ: the DISP-S1 productions of November 2025 and later
+    store displacement as float64, the earlier ones as float32 (all other
+    layers alike). Virtual stores reference the stored chunks and need one
+    dtype per array, so they refuse such granules. Reading them is safe:
+    with ``allow_mixed_precision`` a difference in float precision only is
+    accepted with a :class:`MixedPrecisionWarning`, and the layers it
+    concerns are listed in ``attrs["mixed_precision"]`` of the result
+    (:func:`disp_xr.open_disp` casts them to float32).
 
     One granule per production run is read (a run writes one layout), so the
     check costs a few file opens per frame.
@@ -436,18 +455,28 @@ def check_granules(df: pd.DataFrame) -> pd.DataFrame:
     ----------
     df : pd.DataFrame
         Output of :func:`find_products`.
+    allow_mixed_precision : bool
+        Accept layouts that differ only in the precision of float layers.
 
     Returns
     -------
     pd.DataFrame
-        ``df`` with a ``layout`` column (an integer id; 0 when all agree).
+        ``df`` with a ``layout`` column (an integer id; 0 when all agree) and
+        ``attrs["mixed_precision"]``, the float layers stored at several
+        precisions (empty when all agree).
 
     Raises
     ------
     MixedProductionError
-        If more than one layout is found. The message lists each group with
-        its displacement dtype, product versions and production dates, so the
-        caller can select one production.
+        If more than one layout is found (beyond float precision, when that
+        is allowed). The message lists each group with its displacement
+        dtype, product versions and production dates, so the caller can
+        select one production.
+
+    Warns
+    -----
+    MixedPrecisionWarning
+        If layouts differ only in float precision and that is allowed.
 
     """
     layers_by_product = {
@@ -469,6 +498,7 @@ def check_granules(df: pd.DataFrame) -> pd.DataFrame:
     ]
     ids = {layout: i for i, layout in enumerate(dict.fromkeys(layouts))}
     out = df.assign(layout=[ids[layout] for layout in layouts])
+    out.attrs["mixed_precision"] = []
     if len(ids) > 1:
         lines = []
         for layout, i in ids.items():
@@ -484,6 +514,20 @@ def check_granules(df: pd.DataFrame) -> pd.DataFrame:
                 f"  {len(group)} granules: displacement {dtype}, versions"
                 f" {sorted(set(group['version']))}, produced {productions}"
             )
+        if allow_mixed_precision and len({_precision_free(lo) for lo in ids}) == 1:
+            dtypes: dict[str, set] = {}
+            for layout in ids:
+                for name, dtype, *_ in layout:
+                    dtypes.setdefault(name, set()).add(dtype)
+            mixed = sorted(name for name, seen in dtypes.items() if len(seen) > 1)
+            out.attrs["mixed_precision"] = mixed
+            warnings.warn(
+                f"Granules store {mixed} at different float precisions; they are "
+                "read together and cast to float32:\n" + "\n".join(lines),
+                MixedPrecisionWarning,
+                stacklevel=2,
+            )
+            return out
         raise MixedProductionError(
             "Granules differ in dtype or encoding; select one production:\n"
             + "\n".join(lines)
