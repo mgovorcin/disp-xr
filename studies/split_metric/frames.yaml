@@ -15,7 +15,9 @@ disp_s1:
       a few cm/yr) with sharp edges against stable ground, plus salt domes;
       dense GNSS (HGCSD network). It is also the cal-disp frame, so results
       compare with that work.
-    path: /u/aurora-r0/govorcin/05_Applications/Portal/products/work/F08882/download
+    # Re-downloaded from CMR on 2026-10-05: the Portal work folder used first
+    # was cleaned up.
+    path: /u/aurora-r0/govorcin/01_OPERA/DISP/data/F08882
     bounds: [-97.46, 28.44, -94.47, 30.60]
     granules: 269
     dates: [2016-09-27, 2026-02-19]
