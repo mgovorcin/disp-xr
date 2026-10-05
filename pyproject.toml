@@ -138,7 +138,7 @@ libgdal-netcdf = "*"
 [tool.pixi.tasks]
 check = "pre-commit run -a"
 test = "pytest"
-cov = "pytest --cov=disp_xr --cov-report=term-missing"
+cov = "pytest --cov=disp_xr --cov-report=term-missing --cov-fail-under=80"
 
 [tool.pixi.feature.test.dependencies]
 cf_xarray = "*"

@@ -571,7 +571,7 @@ Goal: DISP-NISAR at parity, multi-frame, performance targets met, published on c
   - Context: 1.0 is a stability promise. Remove the deprecated shims, meet the 80% coverage target, finish the docs, and publish on conda-forge and PyPI.
   - Done when: coverage is at least 80%, no deprecated paths remain, the docs are complete (every public function has an example), the PyPI trusted-publishing workflow works on a release candidate, and the conda-forge feedstock PR is merged.
   - [ ] T38.1 Remove the T4.3 and T18.3 shims and update the changelog. Remove the `download.py` shim.
-  - [ ] T38.2 Raise test coverage to 80% and enforce the threshold in CI.
+  - [x] T38.2 Raise test coverage to 80% and enforce the threshold in CI. Done (2026-10-05): 89% on py312 without the cloud extra (601 tests); the cloud modules (`virtual.py`, `export/icechunk.py`, 21% here) run in `test-cloud`; the remaining low modules are the deprecated `download.py`, the optional jax solver and legacy `fit_timeseries_block` helpers. `--cov-fail-under=80` in `pixi run cov` and the CI coverage step.
   - [ ] T38.3 Do a docs completeness pass: every public API has a docstring example, and every PRD feature has a gallery example.
   - [ ] T38.3b Release checklist: diff the ported functions against current opera_utils (source commit in each header) and record the result; confirm `THIRD_PARTY_NOTICES.md` is complete and ships in the wheel.
   - [ ] T38.4 Add a PyPI publish workflow (trusted publishing) and tag `v1.0.0rc1`.
