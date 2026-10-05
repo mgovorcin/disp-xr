@@ -221,7 +221,11 @@ def find_stable_point(
     candidate closest to the candidates' center of mass, so it sits inside the
     good area rather than on an isolated pixel.
 
-    The quality layers are computed (2D maps); displacement is not read.
+    The quality layers of every epoch are read (once, in one compute);
+    displacement is not. On a full frame read from NetCDF granules this is
+    the slow part of ``auto``: the HDF5 library holds a process-wide lock, so
+    run it on a dask scheduler with processes (``distributed.LocalCluster``)
+    rather than threads.
 
     Raises
     ------
@@ -231,11 +235,13 @@ def find_stable_point(
     """
     from .quality import quality_summary
 
-    summary = quality_summary(ds).compute()
-    candidates_base = (summary["pct_masked"] == 0).values
+    lazy = quality_summary(ds)
     if "timeseries_inversion_residuals" in ds:
-        jumps = _phase_jump_epochs(ds["timeseries_inversion_residuals"]).compute()
-        candidates_base &= (jumps == 0).values
+        lazy["jumps"] = _phase_jump_epochs(ds["timeseries_inversion_residuals"])
+    summary = lazy.compute()
+    candidates_base = (summary["pct_masked"] == 0).values
+    if "jumps" in summary:
+        candidates_base &= (summary["jumps"] == 0).values
     coherence = summary["temporal_coherence_hmean"].fillna(0).values
     ps = (summary["pct_ps"] == 100).values
 
@@ -333,9 +339,19 @@ def rereference(
             y=float(ds["y"][row]),
         )
         kwargs.update(row=row, col=col)
+    crop: Optional[dict[str, slice]] = None
     if method is ReferenceMethod.area:
         area = _area_mask(ds, bbox, geometry)
-        kwargs["good_pixel_mask"] = area if good_pixels is None else area & good_pixels
+        # Only the rows and columns around the area are read: the median of
+        # a small box must not touch every chunk of the frame.
+        rows = np.flatnonzero(area.values.any(axis=1))
+        cols = np.flatnonzero(area.values.any(axis=0))
+        crop = {
+            "y": slice(int(rows[0]), int(rows[-1]) + 1),
+            "x": slice(int(cols[0]), int(cols[-1]) + 1),
+        }
+        good = area if good_pixels is None else area & good_pixels
+        kwargs["good_pixel_mask"] = good.isel(crop)
         method = ReferenceMethod.median
         if bbox is not None:
             record["bbox"] = list(bbox)
@@ -345,7 +361,8 @@ def rereference(
     out = ds.copy()
     for name in DISPLACEMENT_LAYERS:
         if name in ds:
-            ref = get_reference_values(ds[name], method=method, **kwargs)
+            source = ds[name] if crop is None else ds[name].isel(crop)
+            ref = get_reference_values(source, method=method, **kwargs)
             # Non-index coordinates (spatial_ref, reference_time) come from ds[name]
             # already; comparing them again could compute dask coordinates.
             out[name] = ds[name] - ref.reset_coords(drop=True)
