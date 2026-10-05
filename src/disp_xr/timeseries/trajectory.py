@@ -132,8 +132,14 @@ def _solve_block(
     )
     inverse = inverse.ravel()
     grouped = np.zeros(y.shape[0], dtype=bool)
+    # Pixels sorted by pattern, so each group is a slice: scanning all pixels
+    # once per pattern was quadratic (thousands of patterns per block).
+    order = np.argsort(inverse, kind="stable")
+    ends = np.cumsum(sizes)
+    eligible = enough & uniform
     for k in np.flatnonzero(sizes >= GROUP_MIN_PIXELS):
-        members = np.flatnonzero((inverse == k) & enough & uniform)
+        members = order[ends[k] - sizes[k] : ends[k]]
+        members = members[eligible[members]]
         if members.size < GROUP_MIN_PIXELS:
             continue
         rows = w[members[0]] > 0
