@@ -762,6 +762,12 @@ def to_geodataframe(hexes: xr.Dataset, time: Optional[Any] = -1) -> Any:
         One row per cell (and epoch), the cell variables, the coordinates and
         the hexagon polygon, in the data CRS (needs the ``hex`` extra).
 
+    Examples
+    --------
+    >>> hexes = dxr.downsample_hex(ds, spacing=1000.0)  # doctest: +SKIP
+    >>> gdf = dxr.to_geodataframe(hexes)  # doctest: +SKIP
+    >>> gdf.to_file("hexes.gpkg")  # doctest: +SKIP
+
     """
     import geopandas as gpd
     from shapely.geometry import Polygon

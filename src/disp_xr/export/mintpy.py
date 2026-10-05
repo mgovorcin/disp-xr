@@ -161,6 +161,12 @@ def to_mintpy(
     ValueError
         If ``ds`` is not chained, or a file exists and ``overwrite`` is False.
 
+    Examples
+    --------
+    >>> static = dxr.open_static(ds)  # doctest: +SKIP
+    >>> files = dxr.to_mintpy(ds, "mintpy/", static=static)  # doctest: +SKIP
+    >>> files["timeseries"]  # doctest: +SKIP
+
     """
     if "reference_date" not in ds.attrs:
         raise ValueError("MintPy needs one reference date; chain with stack_disp first")

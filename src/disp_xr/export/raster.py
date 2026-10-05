@@ -253,6 +253,12 @@ def to_geotiff(
         If the layer has no CRS, has the wrong dims, or one epoch is larger
         than ``config["max_load_bytes"]``.
 
+    Examples
+    --------
+    >>> dxr.to_geotiff(ds.isel(time=-1), "last.tif")  # doctest: +SKIP
+    >>> dxr.to_geotiff(velocity, "velocity.tif", layer="velocity")  # doctest: +SKIP
+    >>> dxr.to_geotiff(ds, "epochs.tif", per_epoch=True)  # doctest: +SKIP
+
     """
     import pandas as pd
     import rioxarray  # noqa: F401  (registers the .rio accessor)

@@ -311,6 +311,14 @@ def rereference(
     OutOfBoundsError
         If the point is outside the grid or masked, or the area is empty.
 
+    Examples
+    --------
+    >>> ds = dxr.rereference(ds, "median")  # doctest: +SKIP
+    >>> ds = dxr.rereference(ds, "point", lon=-120.43, lat=35.90)  # doctest: +SKIP
+    >>> ds = dxr.rereference(
+    ...     ds, "area", bbox=(-120.5, 35.8, -120.4, 35.9)
+    ... )  # doctest: +SKIP
+
     """
     method = ReferenceMethod(method)
     if method is ReferenceMethod.none:

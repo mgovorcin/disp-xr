@@ -146,6 +146,13 @@ def correct(
         already applied, or the processor already applied it (DISP-NISAR
         ionosphere).
 
+    Examples
+    --------
+    >>> raw = dxr.open_disp("F11116/", corrections=True)  # doctest: +SKIP
+    >>> layers = ["ionospheric_delay", "solid_earth_tide"]
+    >>> ds = dxr.correct(raw, layers)  # doctest: +SKIP
+    >>> ds = dxr.correct(raw, None, external={"troposphere": tropo})  # doctest: +SKIP
+
     """
     if "reference_date" in ds.attrs:
         raise CorrectionError(
@@ -329,6 +336,11 @@ def remove_plate_motion(ds: xr.Dataset, static: xr.Dataset, plate: str) -> xr.Da
     ------
     CorrectionError
         If plate motion was already removed.
+
+    Examples
+    --------
+    >>> static = dxr.open_static(ds)  # doctest: +SKIP
+    >>> fixed = dxr.remove_plate_motion(ds, static, "NOAM")  # doctest: +SKIP
 
     """
     name = "plate_motion"

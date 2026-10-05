@@ -36,6 +36,10 @@ def validate_disp(
     DispValidationError
         If any check fails.
 
+    Examples
+    --------
+    >>> dxr.validate_disp(ds, variables=["displacement"])  # doctest: +SKIP
+
     """
     problems = []
     missing_dims = [d for d in ("time", "y", "x") if d not in obj.dims]

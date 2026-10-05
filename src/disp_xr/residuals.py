@@ -84,6 +84,12 @@ class VariogramModel:
     0 at ``h = 0``. Ranges are practical ranges (the semivariance reaches
     95% of the partial sill for exponential and Gaussian models, all of it
     for spherical ones), in the CRS unit of the field.
+
+    Examples
+    --------
+    >>> model = dxr.fit_variogram(empirical)  # doctest: +SKIP
+    >>> model.sill, model.ranges  # doctest: +SKIP
+
     """
 
     nugget: float
@@ -161,6 +167,13 @@ def empirical_variogram(
         a coordinate), ``gamma`` (semivariance, half the mean squared
         difference) and ``count`` (pairs per bin). Empty bins are dropped.
 
+    Examples
+    --------
+    >>> residual = ds.displacement.isel(time=-1) - trend  # doctest: +SKIP
+    >>> empirical = dxr.empirical_variogram(
+    ...     residual, max_distance=20e3
+    ... )  # doctest: +SKIP
+
     """
     if set(field.dims) != {"y", "x"}:
         raise ValueError(f"field must have dimensions (y, x), not {field.dims}")
@@ -235,6 +248,13 @@ def fit_variogram(
     Returns
     -------
     VariogramModel
+
+    Examples
+    --------
+    >>> model = dxr.fit_variogram(empirical, ("exponential",))  # doctest: +SKIP
+    >>> coarse = dxr.downsample(
+    ...     ds, factor=33, variogram={"displacement": model}
+    ... )  # doctest: +SKIP
 
     """
     from scipy.optimize import curve_fit

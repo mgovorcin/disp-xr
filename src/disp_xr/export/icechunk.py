@@ -177,6 +177,13 @@ def to_icechunk(
         Snapshot id of the commit. Record it in downstream provenance;
         :func:`open_icechunk` does so as ``attrs["source_snapshot_id"]``.
 
+    Examples
+    --------
+    >>> dxr.to_icechunk(ds, "results/", message="first epochs")  # doctest: +SKIP
+    >>> dxr.to_icechunk(
+    ...     new_epochs, "results/", append_dim="time", tag="v1"
+    ... )  # doctest: +SKIP
+
     """
     icechunk = _import_icechunk()
     if append_dim not in (None, "time"):
@@ -266,6 +273,11 @@ def open_icechunk(
     mask_and_scale : bool
         Decode fill values to NaN. Off by default, so integer layers keep
         their dtype, as :func:`disp_xr.open_disp` does.
+
+    Examples
+    --------
+    >>> ds = dxr.open_icechunk("results/", tag="v1")  # doctest: +SKIP
+    >>> earlier = dxr.open_icechunk("results/", snapshot_id=sid)  # doctest: +SKIP
 
     """
     given = [v for v in (branch, tag, snapshot_id) if v is not None]

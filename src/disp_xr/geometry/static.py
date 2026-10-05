@@ -276,6 +276,14 @@ def open_static(
     FileNotFoundError
         If no static file is found or downloadable for the frame.
 
+    Examples
+    --------
+    >>> static = dxr.open_static(ds)  # doctest: +SKIP
+    >>> static.incidence_angle.plot.imshow()  # doctest: +SKIP
+    >>> static = dxr.open_static(
+    ...     ds, files={"line_of_sight_enu": "los_enu.tif"}
+    ... )  # doctest: +SKIP
+
     """
     if files is not None:
         paths = {k: Path(v) for k, v in files.items()}

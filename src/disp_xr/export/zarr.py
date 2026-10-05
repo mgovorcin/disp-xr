@@ -268,6 +268,14 @@ def to_zarr(
     group : str, optional
         Write into this group of the store instead of the root.
 
+    Examples
+    --------
+    >>> dxr.to_zarr(ds, "F11116.zarr")  # doctest: +SKIP
+    >>> dxr.to_zarr(ds, "F11116_maps.zarr", preset="maps")  # doctest: +SKIP
+    >>> dxr.to_zarr(
+    ...     ds, "s3://bucket/F11116.zarr", storage_options={"anon": False}
+    ... )  # doctest: +SKIP
+
     """
     out, _ = _prepare(ds, preset, keep_bits, target_mb, json_native=True)
     out = _with_zarr_conventions(out)
@@ -302,6 +310,11 @@ def to_netcdf(
     """Write ``ds`` to NetCDF-4 (h5netcdf) with zlib and the read-chunk layout.
 
     NetCDF has no shards, so the HDF5 chunk is the read chunk of ``preset``.
+
+    Examples
+    --------
+    >>> dxr.to_netcdf(ds, "F11116.nc")  # doctest: +SKIP
+
     """
     out, _ = _prepare(ds, preset, keep_bits, target_mb)
     chunks, _ = chunk_scheme(out, preset, target_mb)

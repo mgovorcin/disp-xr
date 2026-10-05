@@ -382,6 +382,12 @@ def denoise(
         output times; ``attrs["denoised"]`` names the method, so fits refuse
         it. Lazy if the input is.
 
+    Examples
+    --------
+    >>> smooth = dxr.denoise(ds, "kalman", tau_days=20)  # doctest: +SKIP
+    >>> on_grid = dxr.denoise(ds, "lowess", grid="auto")  # doctest: +SKIP
+    >>> stepped = dxr.denoise(ds, breaks=["2023-02-06"])  # doctest: +SKIP
+
     """
     if method not in ("kalman", "lowess"):
         raise ValueError(f"method must be 'kalman' or 'lowess', not {method!r}")

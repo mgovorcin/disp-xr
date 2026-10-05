@@ -196,6 +196,11 @@ def search(
     pd.DataFrame
         One row per granule found, filtered to the requested time range.
 
+    Examples
+    --------
+    >>> table = search(frame_id=11116)  # doctest: +SKIP
+    >>> table = search(frame_id=11116, url_type="s3")  # doctest: +SKIP
+
     """
     edl_host = "uat.earthdata" if use_uat else "earthdata"
     search_url = f"https://cmr.{edl_host}.nasa.gov/search/granules.umm_json"
