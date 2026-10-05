@@ -26,6 +26,29 @@ steps:
 On a full frame, `rereference("auto")` took half an hour on threads, because
 it reads every quality layer of every epoch.
 
+## Memory and graph size
+
+Measured on full DISP-S1 frames (2026-10-05):
+
+- **Workers:** 8 GB per worker was enough for every step of a full-frame
+  study (open, chain, write, velocity, downsampling, quadtrees) with 16 to
+  24 workers; no worker paused, spilled or restarted.
+- **Coordinator:** the process that builds the graph and, with
+  `LocalCluster`, runs the scheduler, holds the task graph. A frame
+  prepared for writing is about 200,000 tasks and 35 MB pickled, and the
+  process stays near 1 GB. (Before disp-xr 0.3 a frame-sized array of
+  default weights was embedded in velocity graphs and pushed it to
+  80-100 GB.)
+- **Opening:** `open_disp` reads each granule's metadata, about 0.2 s per
+  granule, so a 400-granule frame takes over a minute to open. Build a
+  virtual frame once when you open the same frame repeatedly.
+- **Task counts** grow with epochs times spatial blocks times layers: one
+  epoch per chunk by default, so downsampling a 389-epoch frame is about
+  2 million tasks, which the distributed scheduler handles.
+
+Proposed budget (for the maintainers to confirm, plan task T37.1): 8 GB per
+worker and 4 GB for the coordinator.
+
 ## disp-xr settings
 
 Each setting can be given in code (`disp_xr.config.set({...})`) or as an
