@@ -43,8 +43,13 @@ from typing import Any, Literal, Optional, Union
 import numpy as np
 import xarray as xr
 
+from .units import _SCALE, _canonical
+
 __all__ = [
+    "DISP_S1_DISPLACEMENT",
+    "DISP_S1_VELOCITY",
     "Comparison",
+    "Requirement",
     "VariogramModel",
     "common_mode",
     "compare",
@@ -357,6 +362,84 @@ def n_eff_correlated(sum_w, sum_w2, rho_bar: float):
 # --- DISP against GNSS (PRD S4, plan task T32) ---------------------------------
 
 
+@dataclass(frozen=True)
+class Requirement:
+    """Accuracy requirement ``a + b * sqrt(L)`` against the distance ``L``.
+
+    ``a_mm`` and ``b_mm`` are in millimeters (millimeters per year for a
+    velocity requirement); calling it with distances in kilometers returns
+    the threshold in meters (meters per year), the unit of DISP. The
+    requirement applies over ``distance_km``; pairs outside it are not
+    scored against it.
+
+    Examples
+    --------
+    >>> from disp_xr.residuals import DISP_S1_DISPLACEMENT
+    >>> float(DISP_S1_DISPLACEMENT(4.0))  # 3 + 3 * sqrt(4) mm
+    0.009
+
+    """
+
+    name: str
+    a_mm: float
+    b_mm: float = 0.0
+    distance_km: tuple[float, float] = (0.1, 50.0)
+    units: str = "mm"
+
+    def __call__(self, distance_km: Any) -> np.ndarray:
+        """Return the threshold in meters (or m/yr) at ``distance_km``."""
+        d = np.asarray(distance_km, dtype=np.float64)
+        return (self.a_mm + self.b_mm * np.sqrt(d)) / 1000.0
+
+    def applies(self, distance_km: Any) -> np.ndarray:
+        """Return True where ``distance_km`` is inside the requirement's range."""
+        d = np.asarray(distance_km, dtype=np.float64)
+        return (d >= self.distance_km[0]) & (d <= self.distance_km[1])
+
+
+# OPERA DISP-S1 requirements drawn by default (PRD S4 decision of 2026-10-04):
+# relative displacement 3 (1 + sqrt(L)) mm and relative velocity 2 mm/yr, for
+# 0.1 km < L < 50 km. Values to be confirmed against the OPERA requirements
+# document before v0.3.
+DISP_S1_DISPLACEMENT = Requirement("OPERA DISP-S1 displacement", 3.0, 3.0)
+DISP_S1_VELOCITY = Requirement("OPERA DISP-S1 velocity", 2.0, 0.0, units="mm/yr")
+
+
+def _haversine_km(lon1, lat1, lon2, lat2) -> np.ndarray:
+    lon1, lat1, lon2, lat2 = (
+        np.radians(np.asarray(v, float)) for v in (lon1, lat1, lon2, lat2)
+    )
+    h = (
+        np.sin((lat2 - lat1) / 2) ** 2
+        + np.cos(lat1) * np.cos(lat2) * np.sin((lon2 - lon1) / 2) ** 2
+    )
+    return 2 * 6371.0088 * np.arcsin(np.sqrt(h))
+
+
+def _velocity_pairs(
+    stations: Any, coords: dict, requirement: Requirement, scale: float
+):
+    """Return station-pair differences of velocity residuals against ``requirement``."""
+    import pandas as pd
+
+    ok = stations["velocity_residual"].dropna()
+    ids = [s for s in ok.index if str(s) in coords]
+    rows = []
+    for i, a in enumerate(ids):
+        for b in ids[i + 1 :]:
+            (lo1, la1), (lo2, la2) = coords[str(a)], coords[str(b)]
+            rows.append((a, b, float(_haversine_km(lo1, la1, lo2, la2))))
+    pairs = pd.DataFrame(rows, columns=["station_1", "station_2", "distance_km"])
+    pairs["difference"] = (
+        ok.reindex(pairs["station_1"]).to_numpy()
+        - ok.reindex(pairs["station_2"]).to_numpy()
+    )
+    pairs["requirement"] = requirement(pairs["distance_km"].to_numpy()) * scale
+    pairs["applies"] = requirement.applies(pairs["distance_km"].to_numpy())
+    pairs["passing"] = pairs["difference"].abs() <= pairs["requirement"]
+    return pairs
+
+
 @dataclass
 class Comparison:
     """DISP against GNSS at the stations; the metrics come from geepers.
@@ -386,7 +469,12 @@ class Comparison:
     """geepers ``misfit_semivariogram`` of ``pairs``."""
     summary: dict
     """geepers ``comparison_stats`` of the station velocities (bias, MAD,
-    RMSE, r², n)."""
+    RMSE, r², n), with ``velocity_fraction_passing`` and the requirement
+    names when requirements are given."""
+    velocity_pairs: Any = None
+    """Per station pair: distance, difference of the velocity residuals,
+    the velocity ``requirement`` there, ``applies`` (inside its distance
+    range) and ``passing``; None without a velocity requirement."""
 
     def plot_velocities(self, **kwargs: Any) -> Any:
         """Scatter GNSS against DISP velocities (geepers ``plot_velocity_scatter``)."""
@@ -449,7 +537,8 @@ def compare(
     min_common_dates: int = 3,
     min_stations: int = 3,
     n_bins: int = 10,
-    requirement: Optional[Any] = None,
+    requirement: Optional[Any] = DISP_S1_DISPLACEMENT,
+    velocity_requirement: Optional[Requirement] = DISP_S1_VELOCITY,
     outlier_sigma: float = 3.0,
     epoch_flag: float = 3.0,
 ) -> Comparison:
@@ -483,9 +572,17 @@ def compare(
         Largest gap between a DISP epoch and a GNSS day.
     min_common_dates, min_stations, n_bins
         Passed to geepers (pairs, epochs, profile).
-    requirement : callable, optional
-        ``requirement(distance_km) -> rmse`` threshold for the profile, in
-        the units of the data.
+    requirement : Requirement or callable, optional
+        Threshold of the pairwise relative displacement RMSE against
+        distance, drawn on the profile with geepers' ``fraction_passing``.
+        Default :data:`DISP_S1_DISPLACEMENT`. A :class:`Requirement` follows
+        the units of ``layer``; a plain ``requirement(distance_km)`` must
+        return the units of the data. None for no requirement.
+    velocity_requirement : Requirement, optional
+        Threshold of the relative velocity: every station pair's difference
+        of velocity residuals is scored against it (``velocity_pairs``,
+        ``summary["velocity_fraction_passing"]`` over the pairs inside its
+        distance range). Default :data:`DISP_S1_VELOCITY`; None to skip.
     outlier_sigma : float
         Stations with ``|normalized_residual|`` or ``sqrt(chi2)`` above this
         are flagged.
@@ -573,7 +670,15 @@ def compare(
     pairs = pairwise_differential_rmse(
         tables, coords, min_common_dates=min_common_dates
     )
-    profile = binned_rmse_profile(pairs, n_bins=n_bins, requirement=requirement)
+    units = _canonical(str(series["insar"].attrs.get("units", "m"))) or "m"
+    scale = 1.0 / _SCALE[units]  # requirements are in meters
+    threshold = requirement
+    if isinstance(requirement, Requirement):
+
+        def threshold(d, _r=requirement):
+            return _r(d) * scale
+
+    profile = binned_rmse_profile(pairs, n_bins=n_bins, requirement=threshold)
     epochs = epoch_rmse(tables, min_stations=min_stations)
     if len(epochs):
         median = epochs["rmse"].median()
@@ -583,7 +688,19 @@ def compare(
     summary = comparison_stats(
         stations["gps_velocity"].to_numpy(), stations["insar_velocity"].to_numpy()
     )
-    return Comparison(series, stations, pairs, profile, epochs, semivariogram, summary)
+    velocity_pairs = None
+    if isinstance(requirement, Requirement):
+        summary["requirement"] = requirement.name
+    if velocity_requirement is not None:
+        velocity_pairs = _velocity_pairs(stations, coords, velocity_requirement, scale)
+        scored = velocity_pairs[velocity_pairs["applies"]]
+        summary["velocity_requirement"] = velocity_requirement.name
+        summary["velocity_fraction_passing"] = (
+            float(scored["passing"].mean()) if len(scored) else np.nan
+        )
+    return Comparison(
+        series, stations, pairs, profile, epochs, semivariogram, summary, velocity_pairs
+    )
 
 
 def _residual_array(source: Any) -> xr.DataArray:

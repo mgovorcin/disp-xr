@@ -62,6 +62,45 @@ def test_requirement_line(frame, gps):
     assert {"requirement", "fraction_passing"} <= set(result.profile.columns)
 
 
+def test_opera_requirements_by_default(frame, gps):
+    from disp_xr.residuals import DISP_S1_DISPLACEMENT, DISP_S1_VELOCITY
+
+    result = compare(frame, gps, vertical_los(frame))
+    profile = result.profile
+    # The displacement curve 3 (1 + sqrt(L)) mm, in meters like the data.
+    centers = profile["requirement"].to_numpy()
+    assert np.all((centers >= 0.003) & (centers < 0.03))
+    pairs = result.velocity_pairs
+    assert (
+        len(pairs)
+        == len(result.stations.dropna(subset=["velocity_residual"]))
+        * (len(result.stations.dropna(subset=["velocity_residual"])) - 1)
+        // 2
+    )
+    np.testing.assert_allclose(pairs["requirement"], 0.002)
+    expected = (pairs["difference"].abs() <= 0.002)[pairs["applies"]].mean()
+    assert result.summary["velocity_fraction_passing"] == pytest.approx(expected)
+    assert result.summary["requirement"] == DISP_S1_DISPLACEMENT.name
+    assert result.summary["velocity_requirement"] == DISP_S1_VELOCITY.name
+    none = compare(
+        frame, gps, vertical_los(frame), requirement=None, velocity_requirement=None
+    )
+    assert none.velocity_pairs is None
+    assert "fraction_passing" not in none.profile.columns
+
+
+def test_requirement_curve():
+    from disp_xr.residuals import DISP_S1_DISPLACEMENT, Requirement
+
+    np.testing.assert_allclose(
+        DISP_S1_DISPLACEMENT([0.0, 1.0, 49.0]), [0.003, 0.006, 0.024]
+    )
+    flat = Requirement("flat", 2.0, units="mm/yr")
+    np.testing.assert_array_equal(
+        flat.applies([0.05, 0.1, 50.0, 51.0]), [False, True, True, False]
+    )
+
+
 def test_compare_on_cells(frame, gps):
     cells = dxr.to_points(dxr.downsample(frame, factor=3))
     on_cells = compare(cells, gps, vertical_los(frame))

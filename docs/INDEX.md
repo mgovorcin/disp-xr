@@ -66,7 +66,7 @@ Still open in M0: T1.4b (name maintainers), T3.4 badge and T3.5 branch protectio
 | S1 Colored-noise velocity | T20, T21, T22, T23 | Done: OLS, one-series colored noise, per-pixel Whittle and MIDAS, frame GLS with coherence groups; quadtree groups wait for T28; noise-model policy proposed, awaiting confirmation |
 | S2 Downsampling | T26, T27, T28, T29 | T26 and T27 done; quadtree (T28) done except its benchmark numbers; trade study (T29) open |
 | S3 Temporal denoising | T30, T31 | Done: grid, gaps and breaks (T30), Kalman and LOWESS `denoise` (T31); the deforming-site check goes with T29 |
-| S4 Residual analysis | T32 | Residual statistics on branch |
+| S4 Residual analysis | T32 | Done except the gallery (T32.7): `compare` over geepers, normalized residuals and flags, spectra, common mode, diagnostics; OPERA DISP-S1 requirement curves by default (T32.6) |
 | C1 Zarr v3 output | T14.2, T14.2a | Not started |
 | C2 Icechunk store (opt-in) | T14.2b | Done: `to_icechunk` / `open_icechunk`, one commit per write, append along time, tags, snapshot id in provenance |
 | C3 Virtual datasets (opt-in) | T5.8, T14.2c | Done for local granules: `build_virtual_frame`, `open_virtual`, `validate_virtual`; S3 path not run against S3; `/corrections` not referenced |
@@ -135,6 +135,8 @@ Still open in M0: T1.4b (name maintainers), T3.4 badge and T3.5 branch protectio
 | Date | Decision |
 | --- | --- |
 | 2026-10-04 | `open_disp` reads productions that differ only in float precision (DISP-S1 displacement float64 from November 2025) with a warning, cast to float32; virtual stores still refuse them |
+| 2026-10-04 | Residual plots draw both OPERA DISP-S1 requirements by default: displacement 3 (1 + sqrt(L)) mm, velocity 2 mm/yr, 0.1 to 50 km (values to confirm against the requirements document) |
+| 2026-10-04 | Documentation is published on GitHub Pages, not ReadTheDocs |
 | 2026-10-02 | `open_disp` keeps the file layout (`chunks="native"`); each operation gets the chunks it needs (chaining keeps chunks, per-pixel functions rechunk themselves, `dxr.rechunk` for explicit control); disp-xr computes with at most 32 dask threads by default |
 | 2026-09-30 | 1.0 supports DISP-S1 and DISP-NISAR |
 | 2026-09-30 | verde is a design reference only; disp-xr has its own fit/predict estimators |
