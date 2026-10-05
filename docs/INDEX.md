@@ -28,7 +28,7 @@ The PRD also lives as a shared doc; `specs.md` is its copy in the repo and must 
 | Milestone | Tasks | Done |
 | --- | --- | --- |
 | M0 Foundation (v0.1) | T1–T8 | 5 / 8 (T2, T4, T5, T6, T7 done; T1 open only for T1.4b; T3 open for T3.4–T3.5) |
-| M1 Core API (v0.2) | T9–T18 | 7 / 10 (T9, T10, T11, T13, T14, T15, T17; T12 open only for T12.5, T16 only for ReadTheDocs publishing) |
+| M1 Core API (v0.2) | T9–T18 | 7 / 10 (T9, T10, T11, T13, T14, T15, T17; T12 open only for T12.5, T16 only for GitHub Pages publishing (T16.6, waits for the repository to go public)) |
 | M2 Analysis (v0.3) | T19–T34 | 13 / 16 (T19, T20, T21, T22, T23, T24, T25, T26, T27, T30, T31, T32, T33; started before the T18 review) |
 | M3 Release (v1.0) | T35–T39 | 0 / 5 |
 
@@ -81,7 +81,7 @@ Still open in M0: T1.4b (name maintainers), T3.4 badge and T3.5 branch protectio
 | NFR Compatibility | T5.7, T35 | Not started |
 | NFR Metadata, Provenance | T14.2a, T14.4 | Not started |
 | NFR Benchmarks, Performance, Memory | T37 | Not started |
-| NFR Docs | T16 | mkdocs site with executed gallery and strict CI build done; ReadTheDocs publishing waits for an account |
+| NFR Docs | T16 | mkdocs site with executed gallery and strict CI build done; GitHub Pages workflow ready; publishing waits for the repository to go public |
 | API rules (config, history, order) | T4.9, T9, T15.2 | Config and history done; processing order in T15.2 |
 
 ## Modules (branch `refactor/package-layout`, `src/disp_xr`)

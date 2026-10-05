@@ -281,13 +281,14 @@ Goal: the everyday DISP workflow (open, mask, re-reference, correct, export, plo
 ### T16. Documentation site
 
 - [ ] **T16. Documentation site** — Depends on: T9 · PRD: NFR Docs
-  - Context: the target is mkdocs on ReadTheDocs, with an API reference from type hints and a short gallery of worked examples in the style of verde. Existing notebooks: `notebooks/workflow.ipynb`, `interactive_workflow.ipynb`, `validation/Compare_disp_versions.ipynb`.
-  - Done when: the docs build in CI and publish on ReadTheDocs with getting started, API reference and at least 3 gallery examples. Later tasks add one example each.
+  - Context: the target is mkdocs on GitHub Pages (changed from ReadTheDocs on 2026-10-04), with an API reference from type hints and a short gallery of worked examples in the style of verde. Existing notebooks: `notebooks/workflow.ipynb`, `interactive_workflow.ipynb`, `validation/Compare_disp_versions.ipynb`.
+  - Done when: the docs build in CI and publish on GitHub Pages with getting started, API reference and at least 3 gallery examples. Later tasks add one example each.
   - [x] T16.1 Add `mkdocs.yml` with material, mkdocstrings (numpy style) and mkdocs-jupyter, plus `.readthedocs.yaml`. Done; the pixi `docs` feature now has matplotlib and ipykernel, and mkdocs-material 9.7.
   - [x] T16.2 Write the pages: install, getting started (open, mask, re-reference, plot), concepts (ministacks, reference dates, units, quality layers). Done, plus command line, chunks in concepts, and an API reference grouped by task; the getting-started code was run as written.
   - [x] T16.3 Write gallery examples as short executed notebooks under `docs/gallery/`, using fixture data or a small public subset. Done as `# %%` scripts executed by mkdocs-jupyter: quick look, quality masks, export, chunks. The synthetic-granule writer moved from `tests/fixtures/make_disp.py` into the package as `disp_xr.tutorial`, so the gallery runs anywhere.
   - [x] T16.4 Add a CI job that builds the docs with `--strict` (broken references fail). Done; it also executes the gallery.
   - [x] T16.5 Link `specs.md` and `todo.md` from a "Development" section. Done with the index, code review, porting and references pages too. Not done: publishing on ReadTheDocs, which needs the project connected on readthedocs.org (a private repository needs a ReadTheDocs for Business account, or a public one).
+  - [ ] T16.6 Publish on GitHub Pages. Done: `.github/workflows/docs.yml` (strict build, `upload-pages-artifact`, `deploy-pages` on push to main), `site_url`, `.readthedocs.yaml` removed. Waiting: the repository going public (Pages on a private repository needs a paid plan), then Settings > Pages > Source "GitHub Actions" and CI re-enabled.
 
 ### T17. Quick-look plotting
 
