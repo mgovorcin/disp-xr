@@ -9,32 +9,65 @@ strict: true
 
 theme:
   name: material
+  icon:
+    logo: material/satellite-variant
+    repo: fontawesome/brands/github
+  favicon: assets/favicon.svg
+  font:
+    text: Inter
+    code: JetBrains Mono
   features:
+    - content.code.annotate
     - content.code.copy
+    - content.tabs.link
+    - navigation.footer
+    - navigation.indexes
+    - navigation.path
     - navigation.sections
+    - navigation.tabs
+    - navigation.tabs.sticky
     - navigation.top
+    - search.highlight
     - search.suggest
+    - toc.follow
   palette:
     - media: "(prefers-color-scheme: light)"
       scheme: default
+      primary: custom
+      accent: amber
       toggle:
         icon: material/weather-night
         name: Dark mode
     - media: "(prefers-color-scheme: dark)"
       scheme: slate
+      primary: custom
+      accent: amber
       toggle:
         icon: material/weather-sunny
         name: Light mode
 
+extra_css:
+  - stylesheets/extra.css
+
 markdown_extensions:
   - admonition
   - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
   - tables
   - toc:
       permalink: true
-  - pymdownx.highlight
-  - pymdownx.superfences
   - pymdownx.details
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
 
 plugins:
   - search
@@ -63,38 +96,47 @@ exclude_docs: |
   check_plan.py
 
 nav:
-  - Home: README.md
-  - Install: install.md
-  - Getting started: getting-started.md
-  - Finding and reading granules remotely: remote.md
-  - Concepts: concepts.md
-  - Product notes: product_notes.md
-  - Choosing a velocity method: velocity-methods.md
-  - Command line: cli.md
-  - Large frames and batch jobs: performance.md
-  - View in bowser: bowser.md
-  - Try it on your frame: try-it.md
-  - Gallery:
-      - Quick look at a frame: gallery/quicklook.py
-      - The command line, end to end: gallery/command_line.py
-      - Quality layers and masking: gallery/quality_masks.py
-      - Quality weights: gallery/quality_weights.py
-      - Corrections and reference methods: gallery/reference.py
-      - Line-of-sight geometry and plate motion: gallery/geometry.py
-      - Downsampling with quality weights: gallery/downsample.py
-      - Exporting results: gallery/export.py
-      - Chunks for maps and time series: gallery/chunking.py
-      - Velocity from a trajectory fit: gallery/velocity.py
-      - Velocity with colored-noise uncertainty: gallery/colored_noise.py
-      - Comparing DISP with GNSS: gallery/gnss_compare.py
-      - Tying DISP to GNSS: gallery/gnss_tie.py
-      - Checking a velocity fit: gallery/diagnostics.py
-      - Denoising and regular time grids: gallery/denoise.py
-      - Interactive browsing of a full frame: gallery/interactive.py
-      - Virtual frames and versioned stores: gallery/virtual_frames.py
-      - Serving results as web map tiles: gallery/web_tiles.py
+  - Home: index.md
+  - Get started:
+      - Install: install.md
+      - Getting started: getting-started.md
+      - Concepts: concepts.md
+      - Try it on your frame: try-it.md
+  - Tutorials:
+      - gallery/index.md
+      - Basics:
+          - Quick look at a frame: gallery/quicklook.py
+          - The command line, end to end: gallery/command_line.py
+          - Exporting results: gallery/export.py
+          - Chunks for maps and time series: gallery/chunking.py
+      - Quality and references:
+          - Quality layers and masking: gallery/quality_masks.py
+          - Quality weights: gallery/quality_weights.py
+          - Corrections and reference methods: gallery/reference.py
+          - Line-of-sight geometry and plate motion: gallery/geometry.py
+      - Time series:
+          - Velocity from a trajectory fit: gallery/velocity.py
+          - Velocity with colored-noise uncertainty: gallery/colored_noise.py
+          - Checking a velocity fit: gallery/diagnostics.py
+          - Denoising and regular time grids: gallery/denoise.py
+      - Downsampling:
+          - Downsampling with quality weights: gallery/downsample.py
+      - GNSS:
+          - Comparing DISP with GNSS: gallery/gnss_compare.py
+          - Tying DISP to GNSS: gallery/gnss_tie.py
+      - Cloud and serving:
+          - Virtual frames and versioned stores: gallery/virtual_frames.py
+          - Serving results as web map tiles: gallery/web_tiles.py
+          - Interactive browsing of a full frame: gallery/interactive.py
+  - Guides:
+      - Finding and reading granules remotely: remote.md
+      - Choosing a velocity method: velocity-methods.md
+      - Command line: cli.md
+      - Large frames and batch jobs: performance.md
+      - Product notes: product_notes.md
+      - View in bowser: bowser.md
   - API reference:
-      - Overview: api/index.md
+      - api/index.md
       - Find and open: api/open.md
       - Process: api/process.md
       - Spatial models: api/models.md
