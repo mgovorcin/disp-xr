@@ -495,9 +495,10 @@ class Comparison:
     stations: Any
     """DataFrame per station: velocities of both series from the same
     estimator (geepers ``fit_velocities``) with sigmas, ``velocity_residual``,
-    ``velocity_sigma`` (combined), ``normalized_residual``, ``chi2`` (reduced,
-    of the displacement residual against the GNSS sigma), ``n_dates`` and
-    ``outlier``."""
+    ``relative_residual`` (less the datum offset), ``velocity_sigma``
+    (combined), ``normalized_residual`` (relative residual over its sigma),
+    ``chi2`` (reduced, of the displacement residual against the GNSS and
+    DISP sigmas in quadrature), ``n_dates`` and ``outlier``."""
     pairs: Any
     """geepers ``pairwise_differential_rmse``: RMSE of the relative misfit of
     every station pair against distance."""
@@ -511,8 +512,10 @@ class Comparison:
     """geepers ``misfit_semivariogram`` of ``pairs``."""
     summary: dict
     """geepers ``comparison_stats`` of the station velocities (bias, MAD,
-    RMSE, r², n), with ``velocity_fraction_passing`` and the requirement
-    names when requirements are given."""
+    RMSE, r², n), ``datum_offset`` (median velocity residual: DISP is
+    relative to its reference, GNSS absolute), ``disp_sigma`` (the DISP
+    noise used in ``chi2``), with ``velocity_fraction_passing`` and the
+    requirement names when requirements are given."""
     velocity_pairs: Any = None
     """Per station pair: distance, difference of the velocity residuals,
     the velocity ``requirement`` there, ``applies`` (inside its distance
@@ -583,6 +586,7 @@ def compare(
     velocity_requirement: Optional[Requirement] = DISP_S1_VELOCITY,
     outlier_sigma: float = 3.0,
     epoch_flag: float = 3.0,
+    disp_sigma: Optional[float] = None,
 ) -> Comparison:
     """Compare DISP with GNSS at the stations (or the cells holding them).
 
@@ -628,6 +632,11 @@ def compare(
     outlier_sigma : float
         Stations with ``|normalized_residual|`` or ``sqrt(chi2)`` above this
         are flagged.
+    disp_sigma : float, optional
+        Noise of one DISP epoch at a station, in the units of ``layer``,
+        added in quadrature to the GNSS sigma in ``chi2``. Default: estimated
+        from all stations' residuals (1.4826 MAD, less the median GNSS
+        variance), so one bad station does not raise it.
     epoch_flag : float
         Epochs whose RMSE exceeds the median plus this many MADs are flagged.
 
@@ -702,12 +711,20 @@ def compare(
     stations["velocity_sigma"] = np.hypot(
         stations["insar_sigma"], stations["gps_sigma"]
     )
+    # DISP is relative to its reference area and GNSS is absolute, so every
+    # velocity residual carries the same datum offset; the median over
+    # stations estimates it without knowing which station is the reference.
+    datum_offset = float(np.nanmedian(stations["velocity_residual"]))
+    stations["relative_residual"] = stations["velocity_residual"] - datum_offset
     stations["normalized_residual"] = (
-        stations["velocity_residual"] / stations["velocity_sigma"]
+        stations["relative_residual"] / stations["velocity_sigma"]
     )
     resid = series["residual"] - series["residual"].mean("time")
     if "sigma_gnss" in series:
-        z2 = (resid / series["sigma_gnss"]) ** 2
+        if disp_sigma is None:
+            disp_sigma = _disp_sigma(resid, series["sigma_gnss"])
+        variance = series["sigma_gnss"] ** 2 + disp_sigma**2
+        z2 = resid**2 / variance
         count = z2.notnull().sum("time")
         chi2 = z2.sum("time") / (count - 1).where(count > 1)
         stations["chi2"] = chi2.to_series().reindex(stations.index).to_numpy()
@@ -737,6 +754,8 @@ def compare(
     summary = comparison_stats(
         stations["gps_velocity"].to_numpy(), stations["insar_velocity"].to_numpy()
     )
+    summary["datum_offset"] = datum_offset
+    summary["disp_sigma"] = np.nan if disp_sigma is None else float(disp_sigma)
     velocity_pairs = None
     if isinstance(requirement, Requirement):
         summary["requirement"] = requirement.name
@@ -750,6 +769,16 @@ def compare(
     return Comparison(
         series, stations, pairs, profile, epochs, semivariogram, summary, velocity_pairs
     )
+
+
+def _disp_sigma(resid: xr.DataArray, sigma_gnss: xr.DataArray) -> float:
+    """Per-epoch DISP noise: robust residual scatter less the GNSS part."""
+    values = resid.values[np.isfinite(resid.values)]
+    if values.size == 0:
+        return 0.0
+    scatter = 1.4826 * np.median(np.abs(values - np.median(values)))
+    gnss_var = float(np.nanmedian(sigma_gnss.values**2))
+    return float(np.sqrt(max(scatter**2 - gnss_var, 0.0)))
 
 
 def _residual_array(source: Any) -> xr.DataArray:

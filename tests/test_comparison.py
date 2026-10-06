@@ -43,6 +43,39 @@ def test_compare_at_stations(frame, gps):
     assert set(result.summary) >= {"bias", "mad", "rmse", "r2", "n"}
 
 
+def test_datum_offset_is_removed(frame, tmp_path):
+    # GNSS 1 cm/yr off DISP everywhere (DISP relative, GNSS absolute), S003
+    # another 5 cm/yr off.
+    rates = dict.fromkeys(range(len(PIXELS)), 0.01) | {3: 0.06}
+    src = stations_from_disp(frame, PIXELS, tmp_path / "cache", extra_rate=rates)
+    result = compare(frame, dxr.gnss.load(frame, source=src), vertical_los(frame))
+    stations = result.stations
+    assert result.summary["datum_offset"] == pytest.approx(-0.01, abs=0.002)
+    assert stations.loc["S003", "relative_residual"] == pytest.approx(-0.05, abs=0.01)
+    assert list(stations.index[stations.outlier]) == ["S003"]
+
+
+def test_disp_noise_does_not_flag_good_stations(frame, tmp_path):
+    # Stations that follow DISP, DISP noise of 1 cm per epoch, GNSS sigmas of
+    # 1 mm: with the GNSS sigma alone in chi2 every station was flagged
+    # (F08882, plan task T34.0).
+    src = stations_from_disp(frame, PIXELS, tmp_path / "cache")
+    gps = dxr.gnss.load(frame, source=src)
+    rng = np.random.default_rng(1)
+    noisy = frame.copy()
+    noisy["displacement"] = frame.displacement + rng.normal(
+        0, 0.01, frame.displacement.shape
+    ).astype("float32")
+    result = compare(noisy, gps, vertical_los(frame))
+    assert result.summary["disp_sigma"] == pytest.approx(0.01, rel=0.3)
+    # chi2 only: 11 epochs of 1 cm noise also make the velocities noisy
+    assert (np.sqrt(result.stations.chi2) < 3).all()
+    gnss_only = compare(noisy, gps, vertical_los(frame), disp_sigma=0.0)
+    assert gnss_only.summary["disp_sigma"] == 0.0
+    assert (np.sqrt(gnss_only.stations.chi2) > 3).all()
+    assert gnss_only.stations.outlier.all()
+
+
 def test_metrics_are_geepers(frame, gps):
     result = compare(frame, gps, vertical_los(frame))
     tables = _merged_tables(result.series)
