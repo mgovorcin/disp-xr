@@ -70,6 +70,14 @@ All notable changes to disp-xr. The format follows
 
 ### Changed
 
+- `residuals.compare` flags fewer stations: the reduced `chi2` now adds a
+  DISP noise term (`disp_sigma`, estimated from all stations' residuals by
+  default) to the GNSS sigma, which alone flagged almost every station on
+  real frames (9 of 10 on F08882). `normalized_residual` is computed from the
+  new `relative_residual`, the velocity residual less the datum offset (the
+  median over stations, now `summary["datum_offset"]`), since DISP is
+  relative to its reference and GNSS is absolute.
+
 - Export and plotting check `max_load_bytes` from shape and dtype before
   loading, and raise `LoadTooLargeError` (a `ValueError`) naming the size,
   the limit and the remedy. New page: large frames and batch jobs.

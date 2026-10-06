@@ -178,6 +178,7 @@ since #30 was checked locally and says so in its description.
 
 | Date | Trigger | Changes |
 | --- | --- | --- |
+| 2026-10-06 | T34.0 finished | `residuals.compare`: DISP noise in `chi2` (`disp_sigma`), datum offset and `relative_residual`; Houston notebook now flags 0 of 10 stations (was 9) |
 | 2026-10-06 | Real-data notebooks 3 and 4 | `real_data/san_andreas` (creep step -11.9 mm/yr observed against -12.1 expected from 26 mm/yr) and `real_data/troposphere` (Copernicus GLO-30 elevation; per-epoch slope; series scatter above 1300 m 14.7 to 8.2 mm); larger site font |
 | 2026-10-05 | Real-data notebooks | `docs/real_data/` (Houston F08882, production change F11116) under Tutorials > Real data; new T34.0 (`compare` outlier flag ignores DISP noise); this file renamed from `INDEX.md`, which clashed with the landing page `index.md` on case-insensitive file systems |
 | 2026-10-05 | Full cycle after PRs #35–#51 | Status, requirements, modules and Out of sync rebuilt from the code and plan: production-change reading, laziness and graph fixes, requirement curves, GNSS and tutorial gallery pages (18), region jobs, web tiles, memory budget proposal; stale branch notes removed |

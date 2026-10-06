@@ -44,9 +44,13 @@ print(f"{gps.sizes['station']} stations, {gps.sizes['time']} daily solutions")
 
 # %%
 result = dxr.residuals.compare(ds, gps, vertical_los(ds))
-columns = ["insar_velocity", "gps_velocity", "velocity_residual", "outlier"]
+columns = ["insar_velocity", "gps_velocity", "relative_residual", "outlier"]
 print((result.stations[columns] * [1e3, 1e3, 1e3, 1]).round(2))
 summary = result.summary
+print(
+    f"datum offset {1e3 * summary['datum_offset']:+.1f} mm/yr, "
+    f"DISP noise per epoch {1e3 * summary['disp_sigma']:.1f} mm"
+)
 print(f"velocity RMSE {1e3 * summary['rmse']:.1f} mm/yr, r2 {summary['r2']:.2f}")
 print(f"station pairs within 2 mm/yr: {summary['velocity_fraction_passing']:.0%}")
 

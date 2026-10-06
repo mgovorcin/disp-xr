@@ -135,26 +135,31 @@ plt.show()
 #
 # DISP is relative to the reference area at the reference station; the GNSS
 # velocities are in the IGS frame. Every residual therefore carries the same
-# datum offset, the residual at the reference station itself. The OPERA
-# velocity requirement is scored on differences between station pairs, where
-# that offset cancels; the last column removes it explicitly.
+# datum offset, which `compare` estimates as the median residual over
+# stations and removes in `relative_residual`. The OPERA velocity
+# requirement is scored on differences between station pairs, where the
+# offset cancels anyway.
+#
+# A station is flagged when its relative residual is more than 3 sigma, or
+# its displacement residual scatters more than 3 times what the GNSS and
+# DISP noise allow (reduced chi-square; the DISP noise per epoch is estimated
+# from all stations).
 
 # %%
 static = dxr.open_static(ds, static_dir=static_dir)
 result = dxr.residuals.compare(ds, gps, static, buffer_m=60, velocity_method="midas")
-table = (
-    1e3
-    * result.stations[
-        ["insar_velocity", "gps_velocity", "velocity_residual", "velocity_sigma"]
-    ]
-)
-offset = table.loc[station, "velocity_residual"]
-table["relative_residual"] = table["velocity_residual"] - offset
+columns = ["insar_velocity", "gps_velocity", "relative_residual", "velocity_sigma"]
+table = 1e3 * result.stations[columns]
+table["chi2"] = result.stations["chi2"]
+table["outlier"] = result.stations["outlier"]
 print(table.round(1).to_string())
-relative = table["relative_residual"].drop(station).dropna()
 stats = result.summary
+relative = table["relative_residual"].dropna()
 print(
-    f"\ndatum offset (residual at {station}): {offset:+.1f} mm/yr"
+    f"\ndatum offset: {1e3 * stats['datum_offset']:+.1f} mm/yr"
+    f" (residual at the reference {station}:"
+    f" {1e3 * result.stations.loc[station, 'velocity_residual']:+.1f})"
+    f"\nDISP noise per epoch: {1e3 * stats['disp_sigma']:.1f} mm"
     f"\nRMS of the relative residuals: {np.sqrt((relative**2).mean()):.1f} mm/yr"
     f" over {len(relative)} stations"
     f"\nstation pairs within the velocity requirement:"
