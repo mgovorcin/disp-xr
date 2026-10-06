@@ -156,6 +156,8 @@ The Brisbane notebook also does things that are not in the branch and become dis
 
 `notebooks/validation/Compare_disp_versions.ipynb` becomes a gallery example for the product-team use case (compare DISP versions).
 
+Done (2026-10-06): the four notebooks (with `test_time.ipynb`, a solver timing scratchpad) were deleted; the gallery and `docs/real_data/` cover their workflows, and git history keeps them. The version comparison is plan task T16.7.
+
 ## Changes to the plan
 
 These updates are applied in [todo.md](todo.md):

@@ -204,7 +204,7 @@ disp-xr follows current practice in the xarray and Zarr community: Zarr v3 on ob
 
 | ID | Capability | What disp-xr does | Reference |
 | --- | --- | --- | --- |
-| C1 | Zarr v3 output | The default analysis-ready store is Zarr v3 with sharding and zstd. Two presets: `timeseries` (whole time axis per chunk) for per-pixel work, `maps` (one epoch per chunk) for viewing | [zarr.dev](https://zarr.dev/), [workshop-cng-2025-zarr](https://github.com/earth-mover/workshop-cng-2025-zarr) |
+| C1 | Zarr v3 output | The default analysis-ready store is Zarr v3 with sharding; float layers use Blosc (zstd, bit shuffle), and quality layers in time-spanning chunks and integer layers use zstd (benchmark, plan task T37.3b). Two presets: `timeseries` (whole time axis per chunk) for per-pixel work, `maps` (one epoch per chunk) for viewing | [zarr.dev](https://zarr.dev/), [workshop-cng-2025-zarr](https://github.com/earth-mover/workshop-cng-2025-zarr) |
 | C2 | Versioned stores (opt-in) | [Icechunk](https://github.com/earth-mover/icechunk) store: one commit per appended ministack, a tag per Cal/Val run, and the snapshot id recorded in provenance so any result can be reproduced | [icechunk](https://github.com/earth-mover/icechunk) |
 | C3 | Virtual datasets (opt-in) | Index a whole frame as one store without copying DISP granules, via VirtualiZarr references kept in Icechunk. Used as an ingest and index layer; analysis runs on a native Zarr copy | [VirtualiZarr](https://github.com/zarr-developers/VirtualiZarr), [icechunk-nasa](https://github.com/earth-mover/icechunk-nasa) |
 | C4 | Multiscale pyramids | Regular-grid levels from S2 are written as sibling groups with GeoZarr multiscales, `spatial:` and `proj:` metadata next to the CF `spatial_ref`. These conventions are at pilot maturity, so the writer lives in one module and records the convention version. A `bowser` profile writes stores that [bowser](https://github.com/opera-adt/bowser) opens directly (display levels by factor 2, NaN as missing, bowser attributes) | [icechunk-multiscales-demo](https://github.com/earth-mover/icechunk-multiscales-demo), [topozarr](https://github.com/earth-mover/topozarr) |
@@ -284,7 +284,7 @@ Ideas copied without a dependency:
 | --- | --- |
 | Performance | Opening a full frame is metadata-only (no pixel reads); dask chunk shape computed from a byte target (about 100 MB) and overridable |
 | Scale | Same code runs on a laptop, a dask cluster and AWS Batch; reads local files or S3 via `s3fs`/`fsspec`; any Zarr store object can be passed for output |
-| Memory | Full-frame masking, re-referencing and export stay within a fixed per-worker memory budget (target to be set) |
+| Memory | Full-frame masking, re-referencing and export stay within 8 GB per dask worker and 4 GB for the coordinator (decided 2026-10-06; see `docs/performance.md`) |
 | Testing | pytest with small synthetic DISP fixtures; target 80% line coverage; doctests on every public example; CI on every PR |
 | Typing and style | mypy clean, ruff + black via pre-commit (already configured) |
 | Docs | mkdocs on GitHub Pages: getting started, API reference from type hints, a verde-style gallery of short worked examples |
@@ -309,10 +309,10 @@ M0 comes first because nothing else is safe to refactor without tests. Each diam
 - [x] GNSS source: UNR only, or pluggable (UNR, NGL, local CSV)? Decided (2026-10-03): geepers is the GNSS engine. Its sources (UNR, UNR grid, sideshow, behind `BaseGpsSource`) load the series and its sampler reads DISP at the stations; disp-xr's `gnss` module adapts them to xarray `(station, time)` datasets and aligns them with DISP epochs and reference. No GNSS reader is re-implemented in disp-xr.
 - [x] Keep MintPy export in core, or move it to an optional extra? Decided: `mintpy` extra.
 - [x] Download: keep `download.py`, or defer to another package? Decided: the CMR search code stays in disp-xr as `search.py` (ported with attribution, extended to DISP-NISAR); `download.py` remains one release as a deprecated shim.
-- [x] Home organization: opera-adt or OPERA Cal/Val? Decided: OPERA Cal/Val.
+- [x] Home organization: opera-adt or OPERA Cal/Val? Decided (2026-10-06, by the OPERA ADT lead): the repository stays on `mgovorcin/disp-xr`, which can go public there; moving it to a project organization is decided later.
 - [ ] Maintainers and reviewers: to name.
 - [ ] Target dates for each milestone.
-- [ ] Memory budget per dask worker for the full-frame target.
+- [x] Memory budget per dask worker for the full-frame target. Decided (2026-10-06): 8 GB per worker, 4 GB for the coordinator (plan task T37.1).
 - [x] S1: should the S1 estimator live in disp-xr and geepers depend on it, or the reverse (one implementation shared by both)? Decided: inside disp-xr.
 - [ ] S1: run a noise-model selection (AIC/BIC) per cell, or fix PLWN as default? Proposed in T23, awaiting confirmation: PLWN by default, with `fit_velocity(method="gls", noise="auto")` choosing FNWN, PLWN or RWFNWN per group by the median BIC of its sampled pixels.
 - [x] S2: default quality layers for the pixel weight? Decided: phase similarity, temporal coherence, time-series inversion residuals; cycle jumps in the residuals down-weight and never mask.

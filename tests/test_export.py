@@ -149,6 +149,25 @@ def test_source_encoding_is_dropped(stack_dir, tmp_path):
     assert "chunks" in zarr_encoding(raw)["temporal_coherence"]
 
 
+@pytest.mark.parametrize(
+    ("preset", "coherence"), [("timeseries", "ZstdCodec"), ("maps", "BloscCodec")]
+)
+def test_codec_per_layer_and_layout(stack_dir, preset, coherence):
+    ds = dxr.open_disp(stack_dir)
+    ds["water_mask"] = ds.water_mask.astype("uint8")
+    encoding = zarr_encoding(ds, preset)
+
+    def name(var):
+        return [type(c).__name__ for c in encoding[var]["compressors"]]
+
+    assert name("displacement") == ["BloscCodec"]
+    blosc = encoding["displacement"]["compressors"][0].to_dict()["configuration"]
+    assert (blosc["cname"], blosc["shuffle"]) == ("zstd", "bitshuffle")
+    # Quality layers repeat along time within a ministack: zstd finds it.
+    assert name("temporal_coherence") == [coherence]
+    assert name("water_mask") == ["ZstdCodec"]
+
+
 # --- NetCDF ----------------------------------------------------------------------
 
 

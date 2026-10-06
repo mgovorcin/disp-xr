@@ -34,7 +34,7 @@ The PRD also lives as a shared doc; `specs.md` is its copy in the repo and must 
 | M0 Foundation (v0.1) | T1–T8 | 5 / 8 (T2, T4, T5, T6, T7). Open: T1.4b (name maintainers), T3.4–T3.5 (coverage badge, branch protection: need CI), T8 (tag `v0.1.0`, milestone dates) |
 | M1 Core API (v0.2) | T9–T18 | 7 / 10 (T9, T10, T11, T13, T14, T15, T17). Open: T12.5 (needs DISP-NI-STATIC), T16.6 (GitHub Pages, waits for the repository to go public), T18 (tag and API review with Cal/Val users) |
 | M2 Analysis (v0.3) | T19–T34 | 13 / 16. Open: T28.5 (benchmark numbers, need a quiet node), T29 (trade study, running on branch `feat/split-metric-study`), T34 (validation gate, needs T29) |
-| M3 Release (v1.0) | T35–T40 | 0 / 6. T37 4 of 6 subtasks done (T37.3a, T37.4, T37.5 and most of T37.3; T37.1 budget proposed); T35 waits for beta DISP-NISAR products; T36 parked (decision of 2026-10-04); T38–T39 not started |
+| M3 Release (v1.0) | T35–T40 | 0 / 6. T37 5 of 6 subtasks done (T37.1 budget decided 2026-10-06, T37.3a, T37.4, T37.5 and most of T37.3; T37.3b S3 half needs AWS); T35 waits for beta DISP-NISAR products; T36 parked (decision of 2026-10-04); T38–T39 not started |
 
 Subtasks: 187 done, 45 open. All work is merged in `main` except the T29
 study branch. CI is off (Actions minutes on a private repository); every PR
@@ -156,8 +156,6 @@ since #30 was checked locally and says so in its description.
 ## Out of sync
 
 - GitHub Actions is off on `mgovorcin/disp-xr`: the private repository used up its Actions minutes (2026-10-04). The `test` workflow is disabled; the `docs` workflow (GitHub Pages, PR #43) fails at start for the same reason until it is disabled or the repository goes public. Local hooks stand in: pre-commit on commit, pytest (py312) and `mkdocs --strict` on push.
-- Ownership of the fork is unresolved: disp-xr came from `opera-adt/disp-xr` (BSD-3, Caltech headers, other contributors), and the PRD still says the package belongs to OPERA Cal/Val. Settle it before going public.
-- The four notebooks under `notebooks/` use deprecated module names and are not in the site; port, move to a legacy folder or retire them (decision pending).
 - Local checkouts `01_OPERA/STAKEHOLDER/disp-xr` and `01_OPERA/VLM/disp-xr` are on the old `timeseries_fitting` branch, and the conda envs `disp_xr` and `disp_xr_py311` hold non-editable installs of old commits.
 - The OPERA requirement values drawn by default (3 (1 + sqrt(L)) mm, 2 mm/yr) are to be confirmed against the requirements document before v0.3.
 ## Not verified
@@ -178,6 +176,7 @@ since #30 was checked locally and says so in its description.
 
 | Date | Trigger | Changes |
 | --- | --- | --- |
+| 2026-10-06 | Decisions on codec, memory budget, notebooks, home | Blosc (zstd, bit shuffle) default for float layers (T37.3b local half); memory budget 8 GB per worker, 4 GB coordinator (T37.1 done, PRD NFR Memory); `notebooks/` deleted, version comparison moved to new T16.7; the repository stays on `mgovorcin/disp-xr` (PRD decision), so ownership is no longer out of sync |
 | 2026-10-06 | T34.0 finished | `residuals.compare`: DISP noise in `chi2` (`disp_sigma`), datum offset and `relative_residual`; Houston notebook now flags 0 of 10 stations (was 9) |
 | 2026-10-06 | Real-data notebooks 3 and 4 | `real_data/san_andreas` (creep step -11.9 mm/yr observed against -12.1 expected from 26 mm/yr) and `real_data/troposphere` (Copernicus GLO-30 elevation; per-epoch slope; series scatter above 1300 m 14.7 to 8.2 mm); larger site font |
 | 2026-10-05 | Real-data notebooks | `docs/real_data/` (Houston F08882, production change F11116) under Tutorials > Real data; new T34.0 (`compare` outlier flag ignores DISP noise); this file renamed from `INDEX.md`, which clashed with the landing page `index.md` on case-insensitive file systems |
