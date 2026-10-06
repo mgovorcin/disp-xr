@@ -73,9 +73,11 @@ plugins:
   - search
   - mkdocs-jupyter:
       # Gallery examples are `# %%` scripts, executed at every build so a
-      # broken example fails the build.
-      include: ["gallery/*.py"]
+      # broken example fails the build. Real-data notebooks read granules
+      # that are not on the build machine: their saved outputs are shown.
+      include: ["gallery/*.py", "real_data/*.ipynb"]
       execute: true
+      execute_ignore: ["real_data/*.ipynb"]
       allow_errors: false
       include_source: true
   - mkdocstrings:
@@ -94,6 +96,7 @@ plugins:
 
 exclude_docs: |
   check_plan.py
+  real_data/*.py
 
 nav:
   - Home: index.md
@@ -124,6 +127,9 @@ nav:
       - GNSS:
           - Comparing DISP with GNSS: gallery/gnss_compare.py
           - Tying DISP to GNSS: gallery/gnss_tie.py
+      - Real data:
+          - Houston subsidence, end to end: real_data/houston.ipynb
+          - Reading a frame across a production change: real_data/production_change.ipynb
       - Cloud and serving:
           - Virtual frames and versioned stores: gallery/virtual_frames.py
           - Serving results as web map tiles: gallery/web_tiles.py
@@ -149,7 +155,7 @@ nav:
       - Settings and chunks: api/config.md
       - Synthetic data: api/tutorial.md
   - Development:
-      - Project index: INDEX.md
+      - Project index: project_index.md
       - API review (v0.2): api_review.md
       - API policy: api_policy.md
       - Requirements (PRD): specs.md

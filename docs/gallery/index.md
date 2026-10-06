@@ -95,6 +95,23 @@ synthetic folder with your own granules to run them on real data.
 
 </div>
 
+## Real data
+
+Run on production granules; the saved outputs are shown and the build does
+not run them again.
+
+<div class="grid cards" markdown>
+
+-   :material-home-city-outline: **[Houston subsidence, end to end](../real_data/houston.ipynb)**
+
+    Frame F08882: quality, GNSS reference, MIDAS velocity and the requirements.
+
+-   :material-swap-horizontal: **[Reading a frame across a production change](../real_data/production_change.ipynb)**
+
+    Frame F11116: float64 granules from November 2025 chained with older ones.
+
+</div>
+
 ## Cloud and serving
 
 <div class="grid cards" markdown>
