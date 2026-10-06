@@ -28,6 +28,9 @@ took at most 0.24 s). Medians:
   in 0.003 s from time-series chunks and 0.03 s from map chunks. Chunks of
   256 x 256 write 3-4 times slower with no gain.
 - The S3 half (NetCDF on S3, virtual Icechunk) needs AWS and is not run.
+- Default since 2026-10-06: Blosc-zstd-3 with bit shuffle for float layers,
+  zstd-3 for quality layers in chunks that span time and for integer and
+  boolean layers. The "zstd-3 (default)" label above is the old default.
 
 ## `suite.py` (plan task T37.2)
 

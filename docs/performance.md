@@ -46,8 +46,10 @@ Measured on full DISP-S1 frames (2026-10-05):
   epoch per chunk by default, so downsampling a 389-epoch frame is about
   2 million tasks, which the distributed scheduler handles.
 
-Proposed budget (for the maintainers to confirm, plan task T37.1): 8 GB per
-worker and 4 GB for the coordinator.
+Memory budget (decided 2026-10-06, plan task T37.1): 8 GB per worker and
+4 GB for the coordinator. No worker of the full-frame T29 runs paused,
+spilled or restarted at 8 GB, and a frame prepared for writing peaks at
+about 1.2 GB on the coordinator.
 
 ## disp-xr settings
 

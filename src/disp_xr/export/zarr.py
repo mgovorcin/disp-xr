@@ -11,12 +11,19 @@ chunk, for small arrays such as coarse pyramid levels. ``"tiles"`` is for
 map viewers that read one epoch per tile (bowser): chunks of one epoch by
 256 x 256 in shards of 4 epochs by 1,024 x 1,024.
 
+Float variables are compressed with Blosc (zstd, bit shuffle), which stored
+DISP-S1 displacement 16% and coherence maps 32% smaller than plain zstd at
+the same speed (``benchmarks/README.md``). Quality layers, which repeat
+along time within a ministack, keep plain zstd when a chunk spans time: its
+long matches find the repeats (12x against 6x for temporal coherence).
+Integer and boolean variables keep zstd.
+
 ``round_mantissa`` and the per-variable encoding idea are adapted from
 opera-utils (src/opera_utils/disp/_utils.py and _reformat.py, commit 97f77d9),
 Copyright (c) 2022 California Institute of Technology, BSD-3-Clause. See
 THIRD_PARTY_NOTICES.md. Changes: one chunk grid derived from byte targets,
-shards always a whole multiple of chunks, Zstd (a Zarr v3 codec) instead of
-Blosc, explicit fill values, and rounding opt-in.
+shards always a whole multiple of chunks, the codec chosen per variable and
+layout from a benchmark, explicit fill values, and rounding opt-in.
 """
 
 from __future__ import annotations
@@ -134,6 +141,18 @@ def _fill_value(var: xr.DataArray) -> Any:
     return var.attrs.get("_FillValue", var.encoding.get("_FillValue"))
 
 
+def _compressors(name: str, var: xr.DataArray, time_chunk: int, level: int) -> list:
+    """Return the compressor of one variable (see the module docstring)."""
+    from zarr.codecs import BloscCodec, ZstdCodec
+
+    from ..product import QUALITY_LAYERS
+
+    repeats_in_chunk = name in QUALITY_LAYERS and time_chunk > 1
+    if var.dtype.kind != "f" or repeats_in_chunk:
+        return [ZstdCodec(level=level)]
+    return [BloscCodec(cname="zstd", clevel=level, shuffle="bitshuffle")]
+
+
 def zarr_encoding(
     ds: xr.Dataset,
     preset: Preset = "timeseries",
@@ -142,8 +161,6 @@ def zarr_encoding(
     target_mb: Optional[float] = None,
 ) -> dict[str, dict[str, Any]]:
     """Build the Zarr v3 encoding of every variable and coordinate of ``ds``."""
-    from zarr.codecs import ZstdCodec
-
     chunks, shards = chunk_scheme(ds, preset, target_mb)
     encoding: dict[str, dict[str, Any]] = {}
     for name, var in ds.data_vars.items():
@@ -152,7 +169,12 @@ def zarr_encoding(
         enc: dict[str, Any] = {
             "chunks": tuple(chunks[d] for d in var.dims),
             "shards": tuple(shards[d] for d in var.dims),
-            "compressors": [ZstdCodec(level=compression_level)],
+            "compressors": _compressors(
+                str(name),
+                var,
+                chunks["time"] if "time" in var.dims else 1,
+                compression_level,
+            ),
         }
         fill = _fill_value(var)
         if fill is not None:
@@ -258,7 +280,7 @@ def to_zarr(
         Mantissa bits to keep in float variables (lossy). ``None`` keeps the
         data exact, as Cal/Val outputs need.
     compression_level : int
-        Zstd level.
+        Zstd level (inside Blosc for float layers).
     target_mb : float, optional
         Shard size target; defaults to ``config["chunks.target_mb"]``.
     consolidated : bool

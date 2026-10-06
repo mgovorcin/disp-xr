@@ -255,8 +255,6 @@ version_scheme = "no-guess-dev" # Will not guess the next version
 
 [tool.ruff]
 src = ["src"]
-# The notebooks are rewritten as gallery examples in T16 (docs/todo.md).
-extend-exclude = ["notebooks"]
 force-exclude = true
 unsafe-fixes = true
 

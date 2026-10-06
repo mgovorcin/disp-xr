@@ -70,6 +70,12 @@ All notable changes to disp-xr. The format follows
 
 ### Changed
 
+- `to_zarr` compresses float layers with Blosc (zstd, bit shuffle) instead of
+  plain zstd: displacement stores 16% smaller and coherence maps 32% smaller
+  at the same speed. Quality layers keep zstd in chunks that span time (it
+  compresses them twice as well there), as do integer and boolean layers.
+  Lossless; stores written before read as before.
+
 - `residuals.compare` flags fewer stations: the reduced `chi2` now adds a
   DISP noise term (`disp_sigma`, estimated from all stations' residuals by
   default) to the GNSS sigma, which alone flagged almost every station on
