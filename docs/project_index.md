@@ -21,7 +21,7 @@ How and when this file is rebuilt: see "Project Index (cyclical indexing)" in `C
 | [performance.md](performance.md) | Running full frames: processes against threads, disp-xr settings, environment for batch jobs, memory stalls on shared nodes | — |
 | [check_plan.py](check_plan.py) | Mechanical check of `todo.md` (run in every indexing cycle) | — |
 | [gallery/](gallery/) | 18 executed example pages (`# %%` scripts run by mkdocs-jupyter), one or more per feature | — |
-| [real_data/](real_data/) | Pre-executed notebooks on production granules (saved outputs, not run by the docs build): Houston F08882, production change F11116 | — |
+| [real_data/](real_data/) | Pre-executed notebooks on production granules (saved outputs, not run by the docs build): Houston F08882, production change F11116, San Andreas creep F11116, terrain-following troposphere F39362 | — |
 | [img/](img/) | `architecture.png`, `roadmap.png`, exported from the PRD doc | — |
 | `CLAUDE.md` (repository root) | Coding rules and the indexing cycle | — |
 
@@ -178,6 +178,7 @@ since #30 was checked locally and says so in its description.
 
 | Date | Trigger | Changes |
 | --- | --- | --- |
+| 2026-10-06 | Real-data notebooks 3 and 4 | `real_data/san_andreas` (creep step -11.9 mm/yr observed against -12.1 expected from 26 mm/yr) and `real_data/troposphere` (Copernicus GLO-30 elevation; per-epoch slope; series scatter above 1300 m 14.7 to 8.2 mm); larger site font |
 | 2026-10-05 | Real-data notebooks | `docs/real_data/` (Houston F08882, production change F11116) under Tutorials > Real data; new T34.0 (`compare` outlier flag ignores DISP noise); this file renamed from `INDEX.md`, which clashed with the landing page `index.md` on case-insensitive file systems |
 | 2026-10-05 | Full cycle after PRs #35–#51 | Status, requirements, modules and Out of sync rebuilt from the code and plan: production-change reading, laziness and graph fixes, requirement curves, GNSS and tutorial gallery pages (18), region jobs, web tiles, memory budget proposal; stale branch notes removed |
 | 2026-10-04 | T32 and T33 finished | Requirement curves (T32.6); gallery pages `gnss_compare` and `gnss_tie` on synthetic stations (`tutorial.make_gnss_source`, `vertical_los`; geepers added to the docs environment) |

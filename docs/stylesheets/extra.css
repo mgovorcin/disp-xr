@@ -58,9 +58,25 @@
   transform: translateY(-2px);
 }
 
-/* Executed notebooks: tighter output blocks. */
+/* Larger reading size than the Material default (0.8rem body, 0.7rem nav). */
+.md-typeset {
+  font-size: 0.9rem;
+}
+
+.md-nav {
+  font-size: 0.8rem;
+}
+
+.md-typeset code,
+.md-typeset pre {
+  font-size: 0.85em;
+}
+
+/* Executed notebooks: code and output at the same size as other code. */
+.jupyter-wrapper .jp-InputArea-editor pre,
+.jupyter-wrapper .jp-OutputArea-output pre,
 .jp-OutputArea-output pre {
-  font-size: 0.72rem;
+  font-size: 0.78rem;
 }
 
 /* Primary color: deep teal (custom palette). */

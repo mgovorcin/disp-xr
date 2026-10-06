@@ -110,6 +110,14 @@ not run them again.
 
     Frame F11116: float64 granules from November 2025 chained with older ones.
 
+-   :material-map-marker-path: **[Creep on the San Andreas Fault](../real_data/san_andreas.ipynb)**
+
+    Frame F11116: the velocity step across the creeping section, against the LOS projection of 26 mm/yr.
+
+-   :material-weather-cloudy: **[Troposphere that follows the terrain](../real_data/troposphere.ipynb)**
+
+    Frame F39362 (Canberra): seasonal displacement-elevation slope per epoch, and what it does to velocity.
+
 </div>
 
 ## Cloud and serving
