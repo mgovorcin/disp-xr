@@ -63,11 +63,11 @@ f = open(filename)
 
 ## Project Index (cyclical indexing)
 
-`docs/INDEX.md` is the map of this project: which documents exist, which module
+`docs/project_index.md` is the map of this project: which documents exist, which module
 implements which requirement, which task owns it, and what state it is in. It is
 re-built on a fixed cycle, not when someone remembers.
 
-**Read `docs/INDEX.md` first** at the start of every session, before opening
+**Read `docs/project_index.md` first** at the start of every session, before opening
 `docs/specs.md`, `docs/todo.md` or the source. If its "Last indexed" commit is
 not `HEAD`, or files changed since, run an indexing cycle before doing other work.
 
