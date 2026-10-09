@@ -162,6 +162,7 @@ nav:
       - API policy: api_policy.md
       - Requirements (PRD): specs.md
       - Plan: todo.md
+      - "Trade study: split metric (T29)": studies/split_metric.md
       - Code review: code_review.md
       - Porting from opera-utils: porting.md
       - References: references.md

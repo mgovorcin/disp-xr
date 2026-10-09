@@ -138,7 +138,9 @@ def test_compare_on_cells(frame, gps):
     cells = dxr.to_points(dxr.downsample(frame, factor=3))
     on_cells = compare(cells, gps, vertical_los(frame))
     assert on_cells.series.insar.notnull().any()
-    tree = dxr.quadtree(frame, threshold=1.0, min_level=1, max_level=3)
+    tree = dxr.quadtree(
+        frame, threshold=1.0, metric="displacement", min_level=1, max_level=3
+    )
     on_leaves = compare(tree, gps, vertical_los(frame))
     assert on_leaves.series.sizes["station"] == 5
     assert list(on_leaves.stations.index[on_leaves.stations.outlier]) == ["S003"]

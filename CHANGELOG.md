@@ -70,6 +70,13 @@ All notable changes to disp-xr. The format follows
 
 ### Changed
 
+- `quadtree` splits by the `"structure"` metric by default (was
+  `"displacement"`), the best of the three in the T29 trade study
+  (`docs/studies/split_metric.md`). Pass `metric="displacement"` to keep the
+  old behavior; thresholds of the two metrics are in different units. The
+  study recommends the regular grid of `downsample` as the default
+  downsampling.
+
 - `to_zarr` compresses float layers with Blosc (zstd, bit shuffle) instead of
   plain zstd: displacement stores 16% smaller and coherence maps 32% smaller
   at the same speed. Quality layers keep zstd in chunks that span time (it

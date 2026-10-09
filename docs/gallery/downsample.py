@@ -144,9 +144,23 @@ gdf[["h3_cell", "displacement", "n_eff", "geometry"]].head()
 # enough reliable pixels. With `metric="displacement"` the score is the RMS
 # weighted spread of the pixels in the cell, in meters. `to_raster` paints
 # the leaves back on the 30 m grid.
+#
+# Which to use: in the T29 trade study (three DISP-S1 frames,
+# [report](../studies/split_metric.md)), the regular grid of `downsample`
+# reconstructed the 30 m field better than any quadtree with the same number
+# of points, and agreed better with GNSS except across a creeping fault. Use
+# the grid by default and the quadtree for sharp, local gradients. The
+# quadtree's default metric is `"structure"`, which splits where the four
+# children differ by more than their noise; the displacement metric used
+# here reads in meters and, on real frames, splits noisy cells first.
+# For Cal/Val accuracy runs, a stricter coherence floor in the weights
+# (`dxr.quality_weights(ds, floors={"temporal_coherence": 0.8})`) agreed
+# better with GNSS, at the cost of 12 to 39% of the pixels.
 
 # %%
-tree = dxr.quadtree(ds, threshold=0.002, min_level=2, max_level=5)
+tree = dxr.quadtree(
+    ds, threshold=0.002, metric="displacement", min_level=2, max_level=5
+)
 leaves = tree.points.compute()
 print(leaves.level.to_series().value_counts().sort_index().rename("leaves"))
 fig, axes = plt.subplots(1, 2, figsize=(11, 4.2), layout="constrained")

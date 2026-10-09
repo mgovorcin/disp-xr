@@ -143,7 +143,9 @@ def test_matches_recursive_reference(metric, threshold):
 
 def test_hole_and_counts():
     ds, w = _dataset()
-    tree = quadtree(ds, threshold=0.004, min_level=1, max_level=4, weights=w)
+    tree = quadtree(
+        ds, threshold=0.004, metric="displacement", min_level=1, max_level=4, weights=w
+    )
     points = tree.points.compute()
     assert (points.valid_fraction <= 1).all()
     np.testing.assert_allclose(points.size, 30.0 * 2**points.level)
@@ -221,12 +223,18 @@ def test_n_points_out_of_range():
     assert fine.points.sizes["point"] == finest.points.sizes["point"]
 
 
-def test_edge_cells_split():
+@pytest.mark.parametrize("metric", ["displacement", "structure"])
+def test_edge_cells_split(metric):
     # Cells larger than the frame, or hanging over its edge, split like the
     # others: children outside the frame do not block the split.
     ds, w = _dataset(ny=45, nx=70)
-    ds = ds.fillna(0.0)  # no hole: only the frame edge could block a split
-    tree = quadtree(ds, threshold=-1.0, min_level=1, max_level=7, weights=w)
+    # No hole, so only the frame edge could block a split. Noise, not a
+    # constant: `structure` does not split cells with no noise estimate.
+    noise = np.random.default_rng(0).normal(0, 1e-3, ds.displacement.shape)
+    ds = ds.fillna(xr.zeros_like(ds.displacement) + noise)
+    tree = quadtree(
+        ds, threshold=-1.0, metric=metric, min_level=1, max_level=7, weights=w
+    )
     assert set(tree.points.level.values) == {1}
 
 
