@@ -258,9 +258,17 @@ averaging into cells beats it on the two noisier frames.
   from very large cells averaging nearly zero velocities, not from
   resolving anything; 19 stations.
 
-Figure: `img/quadtree_structure.png`, the 30 m velocity, the 2 km grid and
-the `structure` quadtree on two windows (made with
-`studies/split_metric/figure.py`).
+![30 m velocity, regular 2 km grid and structure quadtree on two windows](img/quadtree_structure.png)
+
+The 30 m velocity, the regular 2 km grid and the `structure` quadtree with
+the same number of cells, on two 45 x 40 km windows (unmasked arm; made
+with `studies/split_metric/figure.py`). Across the creeping San Andreas
+(top) the quadtree puts its smallest cells along the trace and keeps the
+step sharp, where the grid smears it into 2 km blocks. Over Houston
+(bottom) it spends its cells on the patchy northeast and gives the deepest
+subsidence, in the southwest, large blocks: the split follows
+heterogeneity, much of it noise, rather than the deformation gradient
+(plan task T28.6).
 
 ### Masked against unmasked arm
 
