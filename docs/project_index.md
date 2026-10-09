@@ -176,6 +176,7 @@ since #30 was checked locally and says so in its description.
 
 | Date | Trigger | Changes |
 | --- | --- | --- |
+| 2026-10-09 | T27.10 finished | `downsample` and `downsample_hex` take `spread=` (`<layer>_std`, `_rmse`, `_mad`, weighted); gallery section |
 | 2026-10-09 | T29 finished, study branch merged | Report results and decision; `studies/split_metric/` (scripts, station lists, result tables, `figure.py`); quadtree default metric `structure`; PRD S2 questions closed; new T28.6; `docs/docs_plan.md` (audit of 2026-10-04) came with the branch |
 | 2026-10-06 | Decisions on codec, memory budget, notebooks, home | Blosc (zstd, bit shuffle) default for float layers (T37.3b local half); memory budget 8 GB per worker, 4 GB coordinator (T37.1 done, PRD NFR Memory); `notebooks/` deleted, version comparison moved to new T16.7; the repository stays on `mgovorcin/disp-xr` (PRD decision), so ownership is no longer out of sync |
 | 2026-10-06 | T34.0 finished | `residuals.compare`: DISP noise in `chi2` (`disp_sigma`), datum offset and `relative_residual`; Houston notebook now flags 0 of 10 stations (was 9) |

@@ -8,6 +8,13 @@ Each output cell aggregates a ``factor x factor`` block of 30 m pixels:
 - integer mask and label layers: the most common value (``"mode"``) or
   whether any pixel is set (``"any"``), never a mean.
 
+With ``spread``, each float layer also gets its spatial variation within
+the cell, all weighted with the same weights: ``<layer>_std`` (weighted
+standard deviation of the pixels), ``<layer>_rmse`` (weighted RMS of the
+pixels about the cell value; equal to the std for ``"wmean"``) and
+``<layer>_mad`` (weighted median of the absolute deviations from the
+weighted median; times 1.4826 it estimates the std of Gaussian data).
+
 Every cell also gets ``n_valid``, ``valid_fraction`` (of the full block, so
 edge cells padded beyond the frame show how much they hold) and ``quality``
 (mean static weight). Weighted-mean levels keep ``sum_w`` and ``sum_w2`` so a
@@ -25,7 +32,7 @@ re-referencing: averaging series with different reference dates is wrong.
 from __future__ import annotations
 
 import math
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Mapping, Sequence
 from typing import Literal, Optional, Union
 
 import numpy as np
@@ -41,6 +48,8 @@ from .residuals import VariogramModel, mean_block_correlation, n_eff_correlated
 __all__ = ["downsample", "to_points"]
 
 Stat = Literal["wmean", "wmedian"]
+Spread = Literal["std", "rmse", "mad"]
+SPREADS: tuple[Spread, ...] = ("std", "rmse", "mad")
 Categorical = Literal["mode", "any"]
 # Mask and label layers and their default reduction.
 CATEGORICAL_DEFAULTS: dict[str, Categorical] = {
@@ -158,6 +167,20 @@ def _weighted_median_blocks(values: np.ndarray, weights: np.ndarray) -> np.ndarr
     idx = np.argmax(cw >= 0.5 * total, axis=-1)
     out = np.take_along_axis(v, idx[..., None], axis=-1)[..., 0]
     return np.where(total[..., 0] > 0, out, np.nan)
+
+
+def _weighted_mad_blocks(values: np.ndarray, weights: np.ndarray) -> np.ndarray:
+    """Return the weighted median absolute deviation from the weighted median."""
+    median = _weighted_median_blocks(values, weights)
+    return _weighted_median_blocks(np.abs(values - median[..., None]), weights)
+
+
+def _spreads(spread: Union[Spread, Sequence[Spread], None]) -> tuple[Spread, ...]:
+    """Parse ``spread`` into a tuple of names, refusing unknown ones."""
+    names = (spread,) if isinstance(spread, str) else tuple(spread or ())
+    if unknown := [n for n in names if n not in SPREADS]:
+        raise ValueError(f"spread must be among {SPREADS}, not {unknown}")
+    return names
 
 
 def _mode_blocks(block: np.ndarray, fill) -> np.ndarray:
@@ -302,8 +325,10 @@ def _aggregate_layers(
     layers: list[str],
     cell_sums: Callable[[xr.DataArray, xr.DataArray], tuple[xr.DataArray, ...]],
     median: Callable[[xr.DataArray, xr.DataArray], xr.DataArray],
+    mad: Callable[[xr.DataArray, xr.DataArray], xr.DataArray],
     full: float,
     stat: Stat,
+    spread: tuple[Spread, ...],
     nan_threshold: float,
     variogram: Mapping[str, VariogramModel],
     rho_bar: Callable[[VariogramModel], float],
@@ -311,9 +336,10 @@ def _aggregate_layers(
     """Per-cell value, sigma and counts of float layers, for any cell shape.
 
     ``cell_sums(v, w)`` returns the per-cell sums named in ``SUMS``,
-    ``median`` returns the weighted
-    median per cell, ``full`` is the pixel count of a full cell, and
-    ``rho_bar`` the mean pixel correlation of a full cell under a variogram.
+    ``median`` the weighted median per cell and ``mad`` the weighted median
+    absolute deviation; ``spread`` names the within-cell variations to
+    return, ``full`` is the pixel count of a full cell, and ``rho_bar`` the
+    mean pixel correlation of a full cell under a variogram.
     Returns the per-layer variables and those shared by all layers.
     """
     out: dict[str, xr.DataArray] = {}
@@ -334,7 +360,7 @@ def _aggregate_layers(
         # E[v²] - E[v]² cancels; below this relative size it is rounding.
         variance = mean_square - mean**2
         variance = variance.where(variance > 1e-12 * mean_square, 0.0)
-        spread = np.sqrt(variance)
+        std = np.sqrt(variance)
         n_eff = sum_w**2 / sum_w2.where(sum_w2 > 0)
         if stat == "wmean":
             value = mean
@@ -347,7 +373,7 @@ def _aggregate_layers(
         attrs = {k: v for k, v in ds[name].attrs.items() if k != "_FillValue"}
         out[name] = value.where(keep).drop_attrs().assign_attrs(attrs, aggregation=stat)
         out[f"{name}_sigma"] = (
-            (spread / np.sqrt(n_eff))
+            (std / np.sqrt(n_eff))
             .where(keep)
             .drop_attrs()
             .assign_attrs(
@@ -355,6 +381,30 @@ def _aggregate_layers(
                 long_name=f"sigma of the cell {stat} (pixels independent)",
             )
         )
+        units = ds[name].attrs.get("units", "")
+        within = {
+            "std": (std, "weighted std of the pixels in the cell"),
+            "rmse": (
+                np.sqrt(variance + (mean - value) ** 2),
+                f"weighted RMS of the pixels about the cell {stat}",
+            ),
+        }
+        for kind in spread:
+            if kind == "mad":
+                found = mad(v, wb.where(v.notnull(), 0.0))
+                found = found.drop_vars(
+                    [c for c in found.coords if c not in found.dims]
+                )
+                long_name = (
+                    "weighted median absolute deviation from the weighted median"
+                )
+            else:
+                found, long_name = within[kind]
+            out[f"{name}_{kind}"] = (
+                found.where(keep)
+                .drop_attrs()
+                .assign_attrs(units=units, long_name=long_name)
+            )
         if name in variogram:
             model = variogram[name]
             rho = rho_bar(model)
@@ -413,6 +463,7 @@ def downsample(
     categorical: Optional[Mapping[str, Categorical]] = None,
     nan_threshold: float = 1.0,
     variogram: Optional[Mapping[str, VariogramModel]] = None,
+    spread: Union[Spread, Sequence[Spread], None] = None,
 ) -> xr.Dataset:
     """Aggregate a DISP dataset to coarse cells with quality weights.
 
@@ -453,6 +504,15 @@ def downsample(
         the effective number of independent pixels of the cell mean given the
         spatial correlation (Hugonnet et al. 2022). The model is the same for
         every epoch.
+    spread : {"std", "rmse", "mad"} or list of them, optional
+        Spatial variation of each float layer within the cell, weighted
+        with the same weights: ``<layer>_std`` (weighted standard deviation),
+        ``<layer>_rmse`` (weighted RMS about the cell value; equals the std
+        for ``"wmean"``, and adds the mean-median offset for ``"wmedian"``)
+        and ``<layer>_mad`` (weighted median absolute deviation from the
+        weighted median; robust to outlier pixels). Per epoch when the data
+        have time. Unlike ``<layer>_sigma``, these describe the pixels, not
+        the uncertainty of the cell value.
 
     Returns
     -------
@@ -461,17 +521,23 @@ def downsample(
         ``<layer>_sigma`` and, shared by all, ``n_eff``, ``n_valid``,
         ``valid_fraction``, ``quality``, ``centroid_x``, ``centroid_y``, and
         for ``"wmean"`` ``sum_w`` and ``sum_w2``; with ``variogram``,
-        ``<layer>_sigma_corr`` and ``n_eff_corr``. Integer layers are reduced
-        with mode or any. Lazy if the input is.
+        ``<layer>_sigma_corr`` and ``n_eff_corr``; with ``spread``,
+        ``<layer>_std``, ``<layer>_rmse`` or ``<layer>_mad``. Integer layers
+        are reduced with mode or any. Lazy if the input is.
 
     Examples
     --------
     >>> coarse = dxr.downsample(ds, factor=33)  # doctest: +SKIP
     >>> points = dxr.to_points(coarse)  # doctest: +SKIP
+    >>> robust = dxr.downsample(
+    ...     ds, factor=67, stat="wmedian", spread="mad"
+    ... )  # doctest: +SKIP
+    >>> robust.displacement_mad  # doctest: +SKIP
 
     """
     if stat not in ("wmean", "wmedian"):
         raise ValueError(f"stat must be 'wmean' or 'wmedian', not {stat!r}")
+    spreads = _spreads(spread)
     f = _factor(ds, factor, spacing)
     w, static = _resolve_weights(ds, weights)
     weight_layers = {
@@ -507,8 +573,10 @@ def downsample(
         median=lambda v, wv: _block_reduce(
             [v, wv], f, _weighted_median_blocks, np.float64
         ),
+        mad=lambda v, wv: _block_reduce([v, wv], f, _weighted_mad_blocks, np.float64),
         full=f**2,
         stat=stat,
+        spread=spreads,
         nan_threshold=nan_threshold,
         variogram=variogram,
         rho_bar=lambda model: mean_block_correlation(model, f, spacing_yx),

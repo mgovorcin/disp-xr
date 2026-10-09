@@ -60,6 +60,35 @@ plt.show()
 # kilometre scales, which the next section fixes.
 
 # %% [markdown]
+# ## Spatial variation within a cell
+#
+# `sigma` is the uncertainty of the cell value. How much the pixels differ
+# inside the cell is a different question, answered with `spread`: the
+# weighted standard deviation (`std`), the weighted RMS about the cell value
+# (`rmse`), and the weighted median absolute deviation from the weighted
+# median (`mad`), which outlier pixels (unwrapping errors, a building) barely
+# move. All use the same weights as the cell value. With a weighted median
+# and `mad`, every statistic of the cell is robust.
+
+# %%
+robust = dxr.downsample(ds, factor=9, stat="wmedian", spread=["std", "mad"]).compute()
+fig, axes = plt.subplots(1, 3, figsize=(12, 3.6), layout="constrained")
+(robust.displacement.isel(**last) * 1000).plot.imshow(
+    ax=axes[0], cmap="RdBu_r", cbar_kwargs={"label": "mm"}
+)
+for ax, name in zip(axes[1:], ("std", "mad")):
+    (robust[f"displacement_{name}"].isel(**last) * 1000).plot.imshow(
+        ax=ax, cmap="magma", cbar_kwargs={"label": "mm"}
+    )
+for ax, title in zip(
+    axes,
+    ("270 m weighted median", "within-cell weighted std", "within-cell weighted MAD"),
+):
+    ax.set_title(title, loc="left")
+    ax.set_aspect("equal")
+plt.show()
+
+# %% [markdown]
 # ## Sigma with spatially correlated errors
 #
 # InSAR errors (troposphere, unwrapping) are correlated over kilometres, so

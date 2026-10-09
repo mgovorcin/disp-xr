@@ -48,6 +48,20 @@ def _brute(values, weights, factor, stat):
     return out, n_valid
 
 
+def _weighted_spread(v, w, value):
+    """Reference within-cell spread: weighted std, RMS about value, MAD."""
+
+    def wmedian(a):
+        order = np.argsort(a)
+        cw = np.cumsum(w[order])
+        return a[order][np.argmax(cw >= 0.5 * cw[-1])]
+
+    mean = np.sum(w * v) / w.sum()
+    std = np.sqrt(np.sum(w * (v - mean) ** 2) / w.sum())
+    rmse = np.sqrt(np.sum(w * (v - value) ** 2) / w.sum())
+    return std, rmse, wmedian(np.abs(v - wmedian(v)))
+
+
 def _dataset(nt=3, ny=20, nx=23, seed=0, chunks=None):
     rng = np.random.default_rng(seed)
     values = rng.normal(size=(nt, ny, nx))
@@ -189,3 +203,47 @@ def test_averaged_integer_layer_drops_its_fill(stack_dir):
     assert "_FillValue" not in out.shp_counts.attrs  # 0 is a valid mean
     assert out.recommended_mask.attrs["_FillValue"] == 255
     assert "_FillValue" not in out.n_valid.encoding
+
+
+@pytest.mark.parametrize("stat", ["wmean", "wmedian"])
+def test_spread_matches_brute_force(stat):
+    factor = 3
+    ds, w = _dataset(chunks={"y": 7, "x": 9})  # chunks not aligned to factors
+    out = downsample(
+        ds, factor=factor, stat=stat, weights=w, spread=["std", "rmse", "mad"]
+    )
+    assert isinstance(out.displacement_mad.data, darr.Array)
+    out = out.compute()
+    values, weights = ds.displacement.values, w.values
+    ref = {k: np.full(out.displacement.shape, np.nan) for k in ("std", "rmse", "mad")}
+    for t, i, j in np.ndindex(out.displacement.shape):
+        block = (
+            t,
+            slice(i * factor, (i + 1) * factor),
+            slice(j * factor, (j + 1) * factor),
+        )
+        v, wt = values[block].ravel(), weights[block].ravel()
+        ok = np.isfinite(v) & (wt > 0)
+        if ok.any():
+            spread = _weighted_spread(v[ok], wt[ok], float(out.displacement[t, i, j]))
+            for k, value in zip(("std", "rmse", "mad"), spread):
+                ref[k][t, i, j] = value
+    for k in ("std", "rmse", "mad"):
+        np.testing.assert_allclose(
+            out[f"displacement_{k}"], ref[k], rtol=1e-8, atol=1e-12, equal_nan=True
+        )
+        assert out[f"displacement_{k}"].attrs["units"] == "meters"
+    if stat == "wmean":
+        np.testing.assert_allclose(out.displacement_rmse, out.displacement_std)
+
+
+def test_spread_is_opt_in():
+    ds, w = _dataset()
+    plain = downsample(ds, factor=3, weights=w)
+    assert not {"displacement_std", "displacement_rmse", "displacement_mad"} & set(
+        plain.data_vars
+    )
+    one = downsample(ds, factor=3, weights=w, spread="mad")
+    assert "displacement_mad" in one and "displacement_std" not in one
+    with pytest.raises(ValueError, match="spread"):
+        downsample(ds, factor=3, weights=w, spread="iqr")
