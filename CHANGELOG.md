@@ -8,6 +8,12 @@ All notable changes to disp-xr. The format follows
 
 ### Added
 
+- `downsample(spread=...)` and `downsample_hex(spread=...)`: the spatial
+  variation of each layer within a cell, weighted like the cell value:
+  `<layer>_std`, `<layer>_rmse` (about the cell mean or median) and
+  `<layer>_mad` (weighted median absolute deviation, robust to outlier
+  pixels).
+
 - `disp_xr.batch`: build a frame cube with independent region jobs aligned
   to shards (`init_store`, `plan_jobs`, `RegionJob` as JSON for AWS Batch
   array jobs, `run_region`, a manifest and `failed_jobs` to resubmit).

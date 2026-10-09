@@ -25,7 +25,7 @@ here the cells carry quality weights and sigmas, lazily.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any, Literal, Optional, Union
 
@@ -39,10 +39,12 @@ from .downsample import (
     CATEGORICAL_DEFAULTS,
     SUMS,
     Categorical,
+    Spread,
     Stat,
     _aggregate_layers,
     _pixel_sums,
     _resolve_weights,
+    _spreads,
 )
 from .residuals import VariogramModel, mean_mask_correlation
 
@@ -274,6 +276,17 @@ def _weighted_median_cells(
         idx = np.searchsorted(cw, before + 0.5 * total, side="left")
         out[i, groups] = val[np.minimum(idx, ends - 1)]
     return out.reshape(*lead, n_ids)
+
+
+def _weighted_mad_cells(
+    values: np.ndarray, weights: np.ndarray, labels: np.ndarray, n_ids: int
+) -> np.ndarray:
+    """Weighted median absolute deviation from the weighted median, per cell id."""
+    median = _weighted_median_cells(values, weights, labels, n_ids)
+    inside = labels >= 0
+    at_pixel = np.take(median, np.where(inside, labels, 0), axis=-1)
+    deviation = np.where(inside, np.abs(values - at_pixel), np.nan)
+    return _weighted_median_cells(deviation, weights, labels, n_ids)
 
 
 def _mode_cells(values: np.ndarray, labels: np.ndarray, n_ids: int, fill) -> np.ndarray:
@@ -568,6 +581,7 @@ def downsample_hex(
     categorical: Optional[Mapping[str, Categorical]] = None,
     nan_threshold: float = 1.0,
     variogram: Optional[Mapping[str, VariogramModel]] = None,
+    spread: Union[Spread, Sequence[Spread], None] = None,
 ) -> xr.Dataset:
     """Aggregate a DISP dataset to hexagonal cells with quality weights.
 
@@ -588,7 +602,7 @@ def downsample_hex(
         zones. H3 cells are hexagons on the sphere, so their pixel counts
         vary slightly; ``valid_fraction`` and ``quality`` use each cell's
         own area.
-    stat, weights, layers, categorical, nan_threshold, variogram
+    stat, weights, layers, categorical, nan_threshold, variogram, spread
         As in :func:`disp_xr.downsample`. ``valid_fraction`` is relative to
         the expected pixel count of a full cell (its area over the pixel
         area), so it can slightly exceed 1.
@@ -661,8 +675,12 @@ def downsample_hex(
         median=lambda v, wv: _banded(
             _weighted_median_cells, [v, wv], labels, n_ids, np.float64, np.nan
         ),
+        mad=lambda v, wv: _banded(
+            _weighted_mad_cells, [v, wv], labels, n_ids, np.float64, np.nan
+        ),
         full=full,
         stat=stat,
+        spread=_spreads(spread),
         nan_threshold=nan_threshold,
         variogram=variogram,
         rho_bar=lambda model: mean_mask_correlation(model, cells.shape, (dy, dx)),

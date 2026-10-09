@@ -33,6 +33,20 @@ def _nearest_center(x, y, spacing):
     return best_q, best_r
 
 
+def _weighted_spread(v, w, value):
+    """Reference within-cell spread: weighted std, RMS about value, MAD."""
+
+    def wmedian(a):
+        order = np.argsort(a)
+        cw = np.cumsum(w[order])
+        return a[order][np.argmax(cw >= 0.5 * cw[-1])]
+
+    mean = np.sum(w * v) / w.sum()
+    std = np.sqrt(np.sum(w * (v - mean) ** 2) / w.sum())
+    rmse = np.sqrt(np.sum(w * (v - value) ** 2) / w.sum())
+    return std, rmse, wmedian(np.abs(v - wmedian(v)))
+
+
 def _dataset(nt=3, ny=20, nx=23, seed=0, chunks=None):
     rng = np.random.default_rng(seed)
     values = rng.normal(size=(nt, ny, nx))
@@ -408,3 +422,27 @@ def test_plot_hex_h3():
     hexes = downsample_hex(ds, grid="h3", resolution=8, weights=w)
     ax = dxr.plot.plot_hex(hexes)
     assert "H3 resolution 8" in ax.get_title(loc="left")
+
+
+@pytest.mark.parametrize("stat", ["wmean", "wmedian"])
+def test_spread_matches_brute_force(stat):
+    ds, w = _dataset(chunks={"y": 7, "x": 9})
+    out = downsample_hex(
+        ds, spacing=SPACING, stat=stat, weights=w, spread=["std", "rmse", "mad"]
+    ).compute()
+    xx, yy = np.meshgrid(ds.x.values, ds.y.values)
+    q, r = _nearest_center(xx, yy, SPACING)
+    values, weights = ds.displacement.values, w.values
+    for k, (cq, cr) in enumerate(zip(out.q.values, out.r.values)):
+        inside = (q == cq) & (r == cr)
+        for t in range(values.shape[0]):
+            v, wt = values[t][inside], weights[t][inside]
+            ok = np.isfinite(v) & (wt > 0)
+            if not ok.any():
+                assert np.isnan(out.displacement_mad[t, k])
+                continue
+            ref = _weighted_spread(v[ok], wt[ok], float(out.displacement[t, k]))
+            got = [
+                float(out[f"displacement_{n}"][t, k]) for n in ("std", "rmse", "mad")
+            ]
+            np.testing.assert_allclose(got, ref, rtol=1e-8, atol=1e-12)
