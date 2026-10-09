@@ -48,6 +48,7 @@ coarse.valid_fraction.isel(**last).plot.imshow(ax=axes[3], vmin=0, vmax=1)
 for ax, title in zip(
     axes, ("30 m", "270 m weighted mean", "cell sigma", "valid fraction")
 ):
+    ax.set_title("")  # drop xarray's automatic title
     ax.set_title(title, loc="left")
     ax.set_aspect("equal")
 plt.show()
@@ -68,7 +69,9 @@ plt.show()
 # (`rmse`), and the weighted median absolute deviation from the weighted
 # median (`mad`), which outlier pixels (unwrapping errors, a building) barely
 # move. All use the same weights as the cell value. With a weighted median
-# and `mad`, every statistic of the cell is robust.
+# and `mad`, every statistic of the cell is robust. For Gaussian noise the
+# MAD is about 0.67 times the std, as in the maps below (1.4826 MAD
+# estimates the std).
 
 # %%
 robust = dxr.downsample(ds, factor=9, stat="wmedian", spread=["std", "mad"]).compute()
@@ -84,6 +87,7 @@ for ax, title in zip(
     axes,
     ("270 m weighted median", "within-cell weighted std", "within-cell weighted MAD"),
 ):
+    ax.set_title("")  # drop xarray's automatic title
     ax.set_title(title, loc="left")
     ax.set_aspect("equal")
 plt.show()
@@ -200,6 +204,7 @@ fig, axes = plt.subplots(1, 2, figsize=(11, 4.2), layout="constrained")
     ax=axes[1], cmap="RdBu_r", cbar_kwargs={"label": "mm"}
 )
 for ax, title in zip(axes, ("30 m", "quadtree leaves")):
+    ax.set_title("")  # drop xarray's automatic title
     ax.set_title(title, loc="left")
     ax.set_aspect("equal")
 plt.show()
