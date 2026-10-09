@@ -1,6 +1,6 @@
 # disp-xr project index
 
-**Last indexed:** 2026-10-05 · `main` at `ae55945` on `origin` = `mgovorcin/disp-xr` (through PR #51); open branch `feat/split-metric-study` holds the T29 study and report
+**Last indexed:** 2026-10-09 · `main` at `90e34e1` on `origin` = `mgovorcin/disp-xr` (through PR #63), plus the T29 study merged on branch `study/t29-split-metric`
 
 How and when this file is rebuilt: see "Project Index (cyclical indexing)" in `CLAUDE.md` at the repository root.
 
@@ -19,6 +19,8 @@ How and when this file is rebuilt: see "Project Index (cyclical indexing)" in `C
 | [product_notes.md](product_notes.md) | Differences between DISP productions that affect reading a frame (float32 to float64 displacement in November 2025) | — |
 | [remote.md](remote.md) | Finding and reading granules remotely: credentials, search, download, HTTPS and S3, static layers | — |
 | [performance.md](performance.md) | Running full frames: processes against threads, disp-xr settings, environment for batch jobs, memory stalls on shared nodes | — |
+| [docs_plan.md](docs_plan.md) | Documentation coverage per feature, stale notebooks, GitHub Pages gaps, tutorial order before going public | — |
+| [studies/split_metric.md](studies/split_metric.md) | T29 trade study report: frames, criteria, decision (scripts in `studies/split_metric/` at the root) | — |
 | [check_plan.py](check_plan.py) | Mechanical check of `todo.md` (run in every indexing cycle) | — |
 | [gallery/](gallery/) | 18 executed example pages (`# %%` scripts run by mkdocs-jupyter), one or more per feature | — |
 | [real_data/](real_data/) | Pre-executed notebooks on production granules (saved outputs, not run by the docs build): Houston F08882, production change F11116, San Andreas creep F11116, terrain-following troposphere F39362 | — |
@@ -33,13 +35,11 @@ The PRD also lives as a shared doc; `specs.md` is its copy in the repo and must 
 | --- | --- | --- |
 | M0 Foundation (v0.1) | T1–T8 | 5 / 8 (T2, T4, T5, T6, T7). Open: T1.4b (name maintainers), T3.4–T3.5 (coverage badge, branch protection: need CI), T8 (tag `v0.1.0`, milestone dates) |
 | M1 Core API (v0.2) | T9–T18 | 7 / 10 (T9, T10, T11, T13, T14, T15, T17). Open: T12.5 (needs DISP-NI-STATIC), T16.6 (GitHub Pages, waits for the repository to go public), T18 (tag and API review with Cal/Val users) |
-| M2 Analysis (v0.3) | T19–T34 | 13 / 16. Open: T28.5 (benchmark numbers, need a quiet node), T29 (trade study, running on branch `feat/split-metric-study`), T34 (validation gate, needs T29) |
+| M2 Analysis (v0.3) | T19–T34 | 14 / 16. Open: T28.5 (benchmark numbers, need a quiet node), T28.6 (noise-normalized split metric, from T29), T34 (validation gate; T34.0 done) |
 | M3 Release (v1.0) | T35–T40 | 0 / 6. T37 5 of 6 subtasks done (T37.1 budget decided 2026-10-06, T37.3a, T37.4, T37.5 and most of T37.3; T37.3b S3 half needs AWS); T35 waits for beta DISP-NISAR products; T36 parked (decision of 2026-10-04); T38–T39 not started |
 
-Subtasks: 187 done, 45 open. All work is merged in `main` except the T29
-study branch. CI is off (Actions minutes on a private repository); every PR
+Subtasks: 197 done, 43 open. All work is merged in `main`. CI is off (Actions minutes on a private repository); every PR
 since #30 was checked locally and says so in its description.
-## Requirements to tasks
 
 | Requirement | Tasks | Status |
 | --- | --- | --- |
@@ -60,8 +60,8 @@ since #30 was checked locally and says so in its description.
 | F15 Plate motion | T13.5 | Done: `plate_motion_los`, `remove_plate_motion` (ITRF2014-PMM) |
 | F16 Search | T4.5 | Done: `search.py` (CMR, DISP-S1 and DISP-NISAR short names), `disp_xr search`; remote reading documented in `remote.md` |
 | S1 Colored-noise velocity | T20, T21, T22, T23 | Done: OLS, one-series colored noise, per-pixel Whittle and MIDAS, frame GLS with coherence groups; quadtree groups wait for T28; noise-model policy proposed, awaiting confirmation |
-| S2 Downsampling | T26, T27, T28, T29 | T26 and T27 done; quadtree (T28) done except its benchmark numbers; trade study (T29) open |
-| S3 Temporal denoising | T30, T31 | Done: grid, gaps and breaks (T30), Kalman and LOWESS `denoise` (T31); the deforming-site check goes with T29 |
+| S2 Downsampling | T26, T27, T28, T29 | T26 and T27 done; quadtree (T28) done except its benchmark numbers; trade study (T29) done 2026-10-09: grid recommended, quadtree default metric `structure`, unmasked downsampling with quality weights |
+| S3 Temporal denoising | T30, T31 | Done: grid, gaps and breaks (T30), Kalman and LOWESS `denoise` (T31); the deforming-site check ran in T29 (F11116) |
 | S4 Residual analysis | T32 | Done: `compare` over geepers, normalized residuals and flags, spectra, common mode, diagnostics; OPERA DISP-S1 requirement curves by default (T32.6) |
 | C1 Zarr v3 output | T14.2, T14.2a | Done: `to_zarr` (Zarr v3, sharded, zstd, presets) |
 | C2 Icechunk store (opt-in) | T14.2b | Done: `to_icechunk` / `open_icechunk`, one commit per write, append along time, tags, snapshot id in provenance |
@@ -176,6 +176,7 @@ since #30 was checked locally and says so in its description.
 
 | Date | Trigger | Changes |
 | --- | --- | --- |
+| 2026-10-09 | T29 finished, study branch merged | Report results and decision; `studies/split_metric/` (scripts, station lists, result tables, `figure.py`); quadtree default metric `structure`; PRD S2 questions closed; new T28.6; `docs/docs_plan.md` (audit of 2026-10-04) came with the branch |
 | 2026-10-06 | Decisions on codec, memory budget, notebooks, home | Blosc (zstd, bit shuffle) default for float layers (T37.3b local half); memory budget 8 GB per worker, 4 GB coordinator (T37.1 done, PRD NFR Memory); `notebooks/` deleted, version comparison moved to new T16.7; the repository stays on `mgovorcin/disp-xr` (PRD decision), so ownership is no longer out of sync |
 | 2026-10-06 | T34.0 finished | `residuals.compare`: DISP noise in `chi2` (`disp_sigma`), datum offset and `relative_residual`; Houston notebook now flags 0 of 10 stations (was 9) |
 | 2026-10-06 | Real-data notebooks 3 and 4 | `real_data/san_andreas` (creep step -11.9 mm/yr observed against -12.1 expected from 26 mm/yr) and `real_data/troposphere` (Copernicus GLO-30 elevation; per-epoch slope; series scatter above 1300 m 14.7 to 8.2 mm); larger site font |

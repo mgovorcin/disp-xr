@@ -1,0 +1,94 @@
+# T29 split-metric and weight-defaults study: test frames (T29.1).
+#
+# Paths are where the stacks live on aurora; set DISP_XR_STUDY_DATA to a
+# directory holding <frame>/*.nc to run elsewhere. `static` is the directory
+# of the LOS layers: DISP-S1-STATIC files (downloaded there if missing), or
+# los_east/los_north/los_up GeoTIFFs on the frame grid. Bounds are the frame grid
+# in degrees (west, south, east, north), read from the granules.
+
+disp_s1:
+  F08882:
+    role: subsidence
+    site: Houston and the upper Texas Gulf Coast
+    why: >
+      Groundwater-withdrawal subsidence (Harris and Fort Bend counties, up to
+      a few cm/yr) with sharp edges against stable ground, plus salt domes;
+      dense GNSS (HGCSD network). It is also the cal-disp frame, so results
+      compare with that work.
+    # Re-downloaded from CMR on 2026-10-05: the Portal work folder used first
+    # was cleaned up.
+    path: /u/aurora-r0/govorcin/01_OPERA/DISP/data/F08882
+    bounds: [-97.46, 28.44, -94.47, 30.60]
+    granules: 269
+    dates: [2016-09-27, 2026-02-19]
+    version: "1.0"
+    static: /u/aurora-r0/govorcin/01_OPERA/DISP/data/static/F08882
+    # Gradient profiles (T29.4), [lon0, lat0, lon1, lat1]: across the
+    # northwest Harris County subsidence (Katy to Jersey Village and Spring).
+    profiles:
+      - [-96.10, 29.70, -95.30, 30.10]
+  F11116:
+    role: tectonic, topography-correlated troposphere
+    site: Central California (Parkfield, creeping San Andreas, San Joaquin Valley)
+    why: >
+      About 3 cm/yr of fault-parallel motion across the creeping San Andreas
+      with surface creep (a sharp step in velocity), San Joaquin Valley
+      subsidence on the east side and Coast Range and Sierra foothill
+      topography; dense GNSS (PBO / NOTA). The deforming site with
+      topography-correlated troposphere asked for in T31.7.
+    path: /u/aurora-r0/govorcin/01_OPERA/DISP/data/F11116
+    bounds: [-123.00, 35.27, -119.75, 37.18]
+    # Three productions: 314 granules of April 2025 (displacement float32,
+    # up to 2024-10-03) and 75 of November 2025 and August 2026 (float64,
+    # continuing the series). open_disp reads them together with a
+    # MixedPrecisionWarning (docs/product_notes.md). `production` can select
+    # one production instead (a prefix of the generation time in the name).
+    granules: 389
+    dates: [2016-07-05, 2026-04-26]
+    version: "1.0"
+    static: /u/aurora-r0/govorcin/01_OPERA/DISP/data/static/F11116
+    # 30 km profiles across the creeping San Andreas at a quarter, half and
+    # three quarters of the trace from San Juan Bautista (36.845 N, 121.537
+    # W) to Parkfield (35.900 N, 120.433 W), both on the fault.
+    profiles:
+      - [-121.383, 36.515, -121.139, 36.702]
+      - [-121.107, 36.279, -120.863, 36.466]
+      - [-120.831, 36.043, -120.587, 36.230]
+  F39362:
+    role: quiet (troposphere control)
+    site: Canberra, Southern Tablelands and the Snowy Mountains (Australia)
+    why: >
+      Little deformation, about 1500 m of relief from the coast to the Snowy
+      Mountains, so stratified troposphere that follows elevation shows up
+      with no deformation under it. Sparser GNSS (34 stations in the grid).
+    path: /u/aurora-r0/govorcin/01_OPERA/STAKEHOLDER/AUSTRALIA/Canberra/ncs
+    bounds: [147.90, -37.17, 151.38, -34.92]
+    granules: 247
+    dates: [2016-07-12, 2025-04-20]
+    # Stakeholder run outside North America: pre-release product version.
+    version: "0.10"
+    # No DISP-S1-STATIC outside North America: LOS layers of the stakeholder
+    # run (from CSLC-S1-STATIC bursts), on the same grid as the granules.
+    static: /u/aurora-r0/govorcin/01_OPERA/STAKEHOLDER/AUSTRALIA/canberra/static_lyrs
+    # From the coast at Batemans Bay up to the Snowy Mountains near
+    # Kosciuszko: about 1500 m of relief, no deformation expected.
+    profiles:
+      - [150.17, -35.71, 148.40, -36.40]
+
+# Candidates for T35.5 (re-run on DISP-NISAR). Frames of the Whirlwind
+# campaign (03_DISP_NI/Whirlwind), which already has GNSS for each of them.
+disp_nisar:
+  042_D_070:
+    pairs_with: F11116
+    bounds: [-123.0, 35.0, -119.0, 38.2]
+    gnss_stations: 232
+  062_A_016:
+    pairs_with: F08882
+    bounds: [-97.9, 27.1, -94.3, 30.3]
+    gnss_stations: 100
+  133_A_022:
+    # No campaign frame covers Australia: quiet site with moderate relief
+    # (Appalachians, Catskills) instead.
+    pairs_with: F39362
+    bounds: [-75.6, 38.9, -71.3, 42.2]
+    gnss_stations: 77

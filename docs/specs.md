@@ -143,6 +143,14 @@ Evaluation, per candidate and target size (1, 2, 10 km):
 2. GNSS agreement at cell level using S4 (RMSE, normalized residuals).
 3. Gradient preservation across known features (fault, subsidence bowl edge).
 4. Cell count and runtime for a full frame.
+
+Outcome (2026-10-09, `docs/studies/split_metric.md`): spatial structure is the
+quadtree default. At equal point counts the regular grid of `downsample`
+reconstructs better on every test frame, so the grid is the recommended
+downsampling and the quadtree is for signals with sharp local gradients
+(structure beats the grid only across the creeping San Andreas). Downsampling
+works on unmasked data with quality weights; masking first agreed with GNSS
+0.1 to 0.3 mm/yr better but covered 6 to 19% fewer cells.
 5. Test frames: a flat, quiet site, a subsidence site and a tectonic site, DISP-S1 and DISP-NISAR.
 
 ### S3. Temporal resampling and denoising
@@ -316,8 +324,8 @@ M0 comes first because nothing else is safe to refactor without tests. Each diam
 - [x] S1: should the S1 estimator live in disp-xr and geepers depend on it, or the reverse (one implementation shared by both)? Decided: inside disp-xr.
 - [ ] S1: run a noise-model selection (AIC/BIC) per cell, or fix PLWN as default? Proposed in T23, awaiting confirmation: PLWN by default, with `fit_velocity(method="gls", noise="auto")` choosing FNWN, PLWN or RWFNWN per group by the median BIC of its sampled pixels.
 - [x] S2: default quality layers for the pixel weight? Decided: phase similarity, temporal coherence, time-series inversion residuals; cycle jumps in the residuals down-weight and never mask.
-- [ ] S2: default exponents, cycle penalty, f0, per-layer floors and the exclusion floor (set by the trade study).
-- [x] S2: quadtree split metric: velocity variance, displacement variance over time, or structure function? Decided: trade study of all three (see S2).
+- [x] S2: default exponents, cycle penalty, f0, per-layer floors and the exclusion floor (set by the trade study). Decided (2026-10-09, T29): unchanged. Penalty and f0 make no measurable difference at 1-10 km; floors stay at the processor's thresholds on `recommended_mask`; exponents equal. A coherence floor of 0.8 is the documented opt-in for Cal/Val accuracy runs (better GNSS agreement, 12-39% fewer pixels). The similarity floor and the minimum residual weight were not swept.
+- [x] S2: quadtree split metric: velocity variance, displacement variance over time, or structure function? Decided: trade study of all three (see S2). Outcome (2026-10-09): structure function by default; the regular grid is the recommended downsampling.
 - [ ] S3: test denoising on a deforming site with topography-correlated troposphere; experiments so far cover one flat, aseismic site (Kiritimati).
 - [x] S4: which OPERA requirement thresholds to draw on the residual plots? Decided (2026-10-04): both DISP-S1 requirements, by default: relative displacement 3 (1 + sqrt(L)) mm on the pairwise RMSE profile, and relative velocity 2 mm/yr on station-pair differences of velocity residuals, for 0.1 km < L < 50 km (`residuals.DISP_S1_DISPLACEMENT`, `DISP_S1_VELOCITY`). The values are to be confirmed against the OPERA requirements document before v0.3.
 - [x] Cloud: should Icechunk be the default store for analysis-ready outputs, or an opt-in extra? Decided: follow the earth-mover practices; Icechunk is opt-in where useful.

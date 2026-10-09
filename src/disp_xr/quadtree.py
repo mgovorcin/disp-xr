@@ -254,7 +254,7 @@ def quadtree(
     *,
     threshold: Optional[float] = None,
     n_points: Optional[int] = None,
-    metric: Metric = "displacement",
+    metric: Metric = "structure",
     min_level: int = 3,
     max_level: int = 8,
     min_reliable: float = 0.5,
@@ -277,7 +277,10 @@ def quadtree(
         Counts outside what ``min_level`` and ``max_level`` allow give the
         nearest extreme. Pass ``threshold`` or ``n_points``, not both.
     metric : {"displacement", "velocity", "structure"} or callable
-        Split metric.
+        Split metric. Default ``"structure"``, the best of the three in the
+        T29 trade study (``docs/studies/split_metric.md``); at the same
+        number of points the regular grid of :func:`downsample` still
+        reconstructs smooth signals better.
     min_level, max_level : int
         Finest and coarsest levels: cells of ``2**min_level`` to
         ``2**max_level`` pixels on a side (3 and 8 are 240 m and 7.7 km at
