@@ -1,11 +1,11 @@
 # GNSS validation against geepers (T34)
 
-Status (2026-10-09): T34.1 is done. For T34.2 the report is written, and
-three GNSS bugs are fixed on feature branches: two in date matching, and
-stations being dropped when they have no GNSS on the reference date. The
-results below are from runs with all three fixes. Open items are listed
-at the end; the most pressing is a minimum record length for station
-velocities. T34.3, the v0.3.0 tag, is not started.
+Status (2026-10-09): T34.1 and T34.2 are done; T34.3, the v0.3.0 tag, is
+not started. The validation found five problems in disp-xr's GNSS
+handling and two in geepers. All are fixed on unmerged feature branches,
+and the results below are from runs with every fix. With them, disp-xr
+agrees with geepers to rounding, and the GNSS tie improves the
+leave-one-out score on all three frames.
 
 This is the M2 gate "GNSS tie validated". disp-xr's GNSS comparison
 (`residuals.compare`, T32) and GNSS tie (`models.fit_tie`, T33) are run on
@@ -18,9 +18,10 @@ least-squares plane and by leave-one-station-out cross-validation.
 Scripts are in `studies/gnss_validation/` at the repository root:
 `extract.py` writes the station blocks and `validate.py` runs both tools
 and writes `results/`. These results come from disp-xr
-`feature/gnss-station-reference` (c282c1d, which includes
-`feature/gnss-daily-day`) and geepers `feature/gps-start-date` (607a271).
-The pre-fix results are in commit 75cbb62.
+`feature/tie-loso-median` (924fbf2, the top of a stack of five branches,
+listed under "Discrepancies and fixes") and geepers
+`feature/gps-start-date` (607a271). The pre-fix results are in commit
+75cbb62.
 
 ## Frames
 
@@ -84,7 +85,7 @@ A station is usable with at least 10 epochs over at least 2 years.
 
 | Frame | Pairs | Pair RMSE, p95 / max difference | Epochs | Epoch RMSE, median difference |
 | --- | --- | --- | --- | --- |
-| F08882 | 7405 | 0.001 / 2.6 mm | 91 | 1.0 mm |
+| F08882 | 7404 | 0.001 / 23 mm | 91 | 1.0 mm |
 | F11116 | 7249 | 0.007 / 0.38 mm | 131 | 0.06 mm |
 | F39362 | 287 | 0.15 / 0.68 mm | 84 | 0.08 mm |
 
@@ -95,8 +96,18 @@ A station is usable with at least 10 epochs over at least 2 years.
   except one F39362 epoch. Before the fix, they differed at almost every
   epoch, and so did the epoch RMSE (by about 1 mm, with outliers up to
   46 m).
-- F08882 keeps a steady 1 mm difference in epoch RMSE. Its cause is not
-  found yet (open item 3).
+- On the station-days both tools hold, the epoch RMSE is identical
+  (0.000 mm on F08882). The remaining difference, 1 mm on F08882, comes
+  from 89 of about 7,900 rows that only geepers keeps:
+  - DEN4's segment before its relocation, which disp-xr drops.
+  - Days whose own GPS solution is missing. geepers then takes the
+    neighbouring day on either side; disp-xr takes a solution only within
+    24 h of the acquisition.
+
+  The second is a difference in gap-filling policy, not an error. The F08882
+  pair maximum (23 mm) is the same rows.
+- geepers keeps relocated stations, so its epoch RMSE still carries GINN's
+  1 km jump on two F39362 epochs (46 m).
 
 ### The station tables do not compare as they stand
 
@@ -116,34 +127,26 @@ for stations with short GPS records.
 
 ### GNSS tie
 
-Leave-one-station-out velocity residual, mm/yr, degree-1 plane. In
-brackets: before the station fix.
+Leave-one-station-out velocity residual, mm/yr, degree-1 plane, with all
+the fixes. In brackets: the first run, before any fix.
 
 | Frame | Tie stations | Plane against independent weighted fit | RMSE before / after | Median per station before / after |
 | --- | --- | --- | --- | --- |
-| F08882 | 126 (92) | 5e-14 mm/yr | 15.9 / 15.3 (12.6 / 11.9) | 4.8 / 1.1 (4.7 / 0.9) |
-| F11116 | 122 (106) | 2e-14 mm/yr | 27.8 / 6.3 (27.9 / 3.9) | 28.6 / 1.2 (28.6 / 1.1) |
-| F39362 | 25 (17) | 2e-13 mm/yr | 1.4e5 / 1.4e5 (6.5 / 7.2) | 4.1 / 2.2 (4.5 / 1.6) |
+| F08882 | 109 (92) | 2e-14 mm/yr | 11.9 / 11.1 (12.6 / 11.9) | 4.7 / 0.95 (4.7 / 0.9) |
+| F11116 | 116 (106) | 2e-14 mm/yr | 28.0 / 3.8 (27.9 / 4.2) | 28.7 / 1.1 (28.6 / 1.1) |
+| F39362 | 21 (17) | 1e-13 mm/yr | 4.0 / 2.8 (5.1 / 5.7) | 4.0 / 1.6 (4.5 / 1.6) |
 
 - `fit_tie` computes the plane it should.
-- The median per-station error improves on every frame.
+- The tie improves both scores on every frame. On F39362 the RMSE used to
+  get worse; GINN's relocation and stations with short records were behind
+  it.
 - On F11116 the tie removes a large offset: before the tie, the residual
   is the datum offset between the DISP reference and absolute GNSS.
-- The RMSE is driven by single stations, and the station fix lets in
-  stations whose velocities don't mean anything:
-  - Stations sharing very few epochs with DISP. TXH3 and TXS9 on F08882
-    share 2, and come out at 94 and 78 mm/yr.
-  - GINN on F39362, with a 195 m gross error in its UNR series and 2
-    shared epochs: 7e5 mm/yr.
-  - UH01 on F08882: 105 mm/yr, local subsidence that a plane can't hold.
-
-  These stations need a minimum record length, and a gross-error screen,
-  before they enter the tie or the velocity statistics (open items 1
-  and 2).
-- On F39362 the network is clustered. Before the station fix, the 12
-  stations within about 25 km of Canberra improved from about 5 to about
-  1–2 mm/yr each. The four distant stations, 65–160 km away, got worse,
-  because leaving one out makes the plane extrapolate to it.
+- On F08882 the RMSE stays high because of UH01 (105 mm/yr): local
+  subsidence that a plane can't hold, and that the tie should not absorb.
+  Such stations are what `exclude=` is for. The median, now reported by
+  `cross_validate_tie`, describes the typical station: about 1 mm/yr after
+  the tie on every frame.
 
 ## Discrepancies and fixes
 
@@ -187,23 +190,34 @@ brackets: before the station fix.
    on the reference date unchanged, and gives the others a double
    difference in time with no offset. It changes values; it is in the
    changelog.
+4. **Velocities from a few epochs entered the tie.** Keeping late
+   stations (item 3) let in rates from 2 shared epochs: 94 mm/yr for TXH3.
+   `compare(min_epochs=10, min_span_years=2.0)` now leaves such velocities
+   NaN (`velocity_usable`). The station's displacement series stays in the
+   pair and epoch statistics. On `feature/gnss-velocity-gate` (f8ff61d).
+5. **Monument relocations under one station id.** GINN (UNR) jumps about
+   1 km between 2019 and 2020, and so does DEN4 on F08882. Before, GINN's
+   two segments became a 7e5 mm/yr velocity. `gnss.load(max_step_m=10.0)`
+   now splits a record at any 3-D step above 10 m and keeps the longest
+   segment (`relocated` coordinate). Near-field coseismic steps reach about
+   5 m and stay. On `feature/gnss-relocation-screen` (03faba3). geepers has
+   no such screen yet.
+6. **Leave-one-out summary.** `cross_validate_tie` also reports the median
+   per-station score (`median_before`, `median_after`). On
+   `feature/tie-loso-median` (924fbf2).
+
+The disp-xr branches are stacked, each on the one before:
+`feature/gnss-daily-day`, `feature/gnss-station-reference`,
+`feature/gnss-velocity-gate`, `feature/gnss-relocation-screen`,
+`feature/tie-loso-median`. Each changes values and has a changelog entry.
 
 ## Open items
 
-1. **Minimum record length for station velocities.** `compare` fits a
-   velocity to any station with 2 shared epochs. Those velocities enter the
-   tie, the velocity pairs and the leave-one-out scores. A gate is needed,
-   for example at least 10 shared epochs over at least 2 years (the values
-   this report uses for the double difference). Below it, `gps_velocity`,
-   `insar_velocity` and `velocity_residual` would be NaN, while the
-   station's displacement series stays in the pair and epoch statistics.
-   The thresholds are a maintainer decision.
-2. **No gross-error screen on GNSS series.** GINN's 195 m jump reaches
-   `compare` unflagged; it is caught as an outlier, but only after it has
-   entered the statistics. A jump or median absolute deviation test in
-   `gnss.load` is needed.
-3. **F08882 epoch RMSE differs from geepers by a steady 1 mm,** with the
-   same stations and identical double-differenced series. Not explained
-   yet.
-4. **Leave-one-out summary:** report the median, or a score per distance
-   from the network centre, from `cross_validate_tie`.
+1. Push the branches, open the pull requests and merge them in order;
+   then merge this study branch.
+2. geepers: add a relocation screen like `drop_relocations`. Its epoch
+   RMSE still carries GINN's jump.
+3. Optional: align the gap-filling policy of the two tools (a neighbouring
+   day on either side, or within 24 h), if exact agreement of epoch RMSE
+   is wanted. It changes about 1% of station-days.
+4. T34.3: tag v0.3.0, update the changelog and publish the docs.

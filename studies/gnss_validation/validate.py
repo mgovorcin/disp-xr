@@ -84,10 +84,15 @@ def run_geepers(frame: str, reference: str | None) -> Path:
     return out
 
 
+RELOCATED: dict[str, list[str]] = {}  # stations gnss.load split, per frame
+
+
 def run_disp_xr(frame: str, entry: dict):
     """Return the disp-xr comparison on the station blocks."""
     ds = xr.open_zarr(store_path(frame))
     gps = dxr.gnss.load(ds)
+    if "relocated" in gps.coords:
+        RELOCATED[frame] = [str(s) for s in gps.station.values[gps.relocated.values]]
     static = los_layers(ds, Path(entry["static"]))
     return dxr.residuals.compare(
         ds, gps, static, buffer_m=BUFFER_M, velocity_method="lsq"
@@ -235,6 +240,8 @@ def tie_check(result) -> dict:
         "tie_max_diff_mm_yr": float(1e3 * np.max(np.abs(ours - theirs))),
         "loso_rmse_before_mm_yr": float(1e3 * scores.attrs["rmse_before"]),
         "loso_rmse_after_mm_yr": float(1e3 * scores.attrs["rmse_after"]),
+        "loso_median_before_mm_yr": float(1e3 * scores.attrs["median_before"]),
+        "loso_median_after_mm_yr": float(1e3 * scores.attrs["median_after"]),
     }
 
 
@@ -271,6 +278,8 @@ def validate(frame: str, entry: dict) -> dict:
         diff = 1e3 * (series[name] - series[f"{name}_geepers"]).abs()
         summary[f"dd_{name}_series_p95_diff_mm"] = float(diff.quantile(0.95))
     summary |= tie_check(result)
+    summary["velocity_usable"] = int(result.stations["velocity_usable"].sum())
+    summary["relocated"] = RELOCATED.get(frame, [])
     print(json.dumps(summary), flush=True)
     return summary
 
