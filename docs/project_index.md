@@ -1,6 +1,6 @@
 # disp-xr project index
 
-**Last indexed:** 2026-10-09 · `main` at `90e34e1` on `origin` = `mgovorcin/disp-xr` (through PR #63), plus the T29 study merged on branch `study/t29-split-metric`; T34 validation on branch `study/t34-gnss-validation`
+**Last indexed:** 2026-10-10 · `main` at the v0.3.0 release (`chore/release-v0.3.0`, tag `v0.3.0`) on `origin` = `mgovorcin/disp-xr`, through PR #74
 
 How and when this file is rebuilt: see "Project Index (cyclical indexing)" in `CLAUDE.md` at the repository root.
 
@@ -34,12 +34,12 @@ The PRD also lives as a shared doc; `specs.md` is its copy in the repo and must 
 
 | Milestone | Tasks | Done |
 | --- | --- | --- |
-| M0 Foundation (v0.1) | T1–T8 | 5 / 8 (T2, T4, T5, T6, T7). Open: T1.4b (name maintainers), T3.4–T3.5 (coverage badge, branch protection: need CI), T8 (tag `v0.1.0`, milestone dates) |
-| M1 Core API (v0.2) | T9–T18 | 7 / 10 (T9, T10, T11, T13, T14, T15, T17). Open: T12.5 (needs DISP-NI-STATIC), T16.6 (GitHub Pages, waits for the repository to go public), T18 (tag and API review with Cal/Val users) |
-| M2 Analysis (v0.3) | T19–T34 | 14 / 16. Open: T28.5 (benchmark numbers, need a quiet node), T28.6 (noise-normalized split metric, from T29), T34 (validation gate; T34.0 to T34.2 done, fixes on unmerged branches; T34.3 tag open) |
+| M0 Foundation (v0.1) | T1–T8 | 5 / 8 (T2, T4, T5, T6, T7). Released as `v0.1.0` (2026-10-02). Open: T1.4b (name maintainers), T3.4–T3.5 (coverage badge, branch protection: need CI), T8.4 (milestone dates, needs the maintainers) |
+| M1 Core API (v0.2) | T9–T18 | 7 / 10 (T9, T10, T11, T13, T14, T15, T17). No `v0.2.0`: released with M2 as `v0.3.0` (decision of 2026-10-10). Open: T12.5 (needs DISP-NI-STATIC), T16.6 (GitHub Pages, waits for the repository to go public), T18 (API review with Cal/Val users, then the freeze) |
+| M2 Analysis (v0.3) | T19–T34 | 15 / 16. Released as `v0.3.0` (2026-10-10); gate T34 passed (`studies/gnss_validation.md`). Open: T28 (T28.5 benchmark numbers, need a quiet node; T28.6 noise-normalized split metric, from T29) |
 | M3 Release (v1.0) | T35–T40 | 0 / 6. T37 5 of 6 subtasks done (T37.1 budget decided 2026-10-06, T37.3a, T37.4, T37.5 and most of T37.3; T37.3b S3 half needs AWS); T35 waits for beta DISP-NISAR products; T36 parked (decision of 2026-10-04); T38–T39 not started |
 
-Subtasks: 197 done, 43 open. All work is merged in `main`. CI is off (Actions minutes on a private repository); every PR
+Subtasks: 203 done, 38 open. All work is merged in `main`. CI is off (Actions minutes on a private repository); every PR
 since #30 was checked locally and says so in its description.
 
 | Requirement | Tasks | Status |
@@ -112,14 +112,14 @@ since #30 was checked locally and says so in its description.
 | `models/trend.py` | F9 | `Trend`, `deramp`, `polynomial_terms` | T24 |
 | `models/gridding.py` | F9 | `Spline`, `Nearest` | T24.4 |
 | `diagnostics.py` | S4 | `model_diagnostics`, `significance`, `anderson_darling` | T32.6b–c |
-| `gnss.py` | F10 | `gnss.load`, `stations`, `get_source`, `to_los`, `sample`, `align` (geepers engine) | T25 |
+| `gnss.py` | F10 | `gnss.load` (with the relocation screen), `stations`, `get_source`, `to_los`, `sample`, `align`, `centred`, `drop_relocations` (geepers engine) | T25, T34.2 |
 | `models/base.py` | F9, API (Estimators) | `BaseEstimator`, `Chain`, `Mean`, `coordinates`, `cross_val_score`, `clone` | T19 |
 | `timeseries/denoise.py` | S3 | `denoise`, `kalman_smooth`, `lowess`, `q_from_timescale` | T31 |
 | `timeseries/temporal.py` | S3 | `regular_time_grid`, `grid_step_days`, `gap_mask`, `split_at_breaks`, `apply_segmented` | T30 |
 | `quadtree.py` | S2 (quadtree) | `quadtree` (by threshold or `n_points`), `Quadtree` (`points`, `leaf_id`, `to_raster`) | T28, T29 |
 | `hexagons.py` | S2 (hexagon mode) | `downsample_hex` (planar and H3), `to_geodataframe`, `cell_polygons`, `hex_axial`, `hex_centers`, `hexagon_vertices` | T27.8 |
 | `downsample.py` | S2 | `downsample`, `to_points` | T27 |
-| `residuals.py` | S2 (cell uncertainty), S4 | Variograms and correlated cell sigma; `compare`, `Comparison`, `Requirement`, `DISP_S1_DISPLACEMENT`, `DISP_S1_VELOCITY` (geepers metrics) | T27.3b, T27.8, T32 |
+| `residuals.py` | S2 (cell uncertainty), S4 | Variograms and correlated cell sigma; `compare` (per-station reference epoch, velocity gate), `Comparison`, `Requirement`, `DISP_S1_DISPLACEMENT`, `DISP_S1_VELOCITY` (geepers metrics) | T27.3b, T27.8, T32, T34.2 |
 | `weights.py` | S2 | `quality_weights`, `residual_cycles`, `network_degree`, `residual_cycle_histogram` | T26 |
 | `plot.py` | F13 | `plot_map`, `plot_point`, `diverging_cmap` (`plot` extra, imported lazily) | T17 |
 | `accessor.py`, `_history.py`, `units.py`, `validate.py` | API rules | `.disp` accessor, operation history, unit conversion, validation | — |
@@ -134,6 +134,8 @@ since #30 was checked locally and says so in its description.
 
 | Date | Decision |
 | --- | --- |
+| 2026-10-10 | No `v0.2.0`: M1 and M2 are released together as `v0.3.0`; the core API is not frozen until the T18 review with Cal/Val users |
+| 2026-10-09 | GNSS against DISP (T34.2): daily GNSS solutions match the acquisition's UTC day; `compare` references InSAR and GNSS per station to the first shared epoch; station velocities need 10 shared epochs over 2 years; a GNSS step above 10 m is a monument relocation |
 | 2026-10-05 | A read-only REST service becomes requirement C7 (task T40, M3): an xpublish plugin over existing stores, no processing on request |
 | 2026-10-04 | `open_disp` reads productions that differ only in float precision (DISP-S1 displacement float64 from November 2025) with a warning, cast to float32; virtual stores still refuse them |
 | 2026-10-04 | Residual plots draw both OPERA DISP-S1 requirements by default: displacement 3 (1 + sqrt(L)) mm, velocity 2 mm/yr, 0.1 to 50 km (values to confirm against the requirements document) |
@@ -158,8 +160,7 @@ since #30 was checked locally and says so in its description.
 
 - GitHub Actions is off on `mgovorcin/disp-xr`: the private repository used up its Actions minutes (2026-10-04). The `test` workflow is disabled; the `docs` workflow (GitHub Pages, PR #43) fails at start for the same reason until it is disabled or the repository goes public. Local hooks stand in: pre-commit on commit, pytest (py312) and `mkdocs --strict` on push.
 - Local checkouts `01_OPERA/STAKEHOLDER/disp-xr` and `01_OPERA/VLM/disp-xr` are on the old `timeseries_fitting` branch, and the conda envs `disp_xr` and `disp_xr_py311` hold non-editable installs of old commits.
-- Unmerged T34.2 fixes on five stacked branches (`feature/gnss-daily-day` to `feature/tie-loso-median`, see `studies/gnss_validation.md`); `main` still has the GNSS day-matching and dropped-station bugs and no velocity gate or relocation screen.
-- The OPERA requirement values drawn by default (3 (1 + sqrt(L)) mm, 2 mm/yr) are to be confirmed against the requirements document before v0.3.
+- The OPERA requirement values drawn by default (3 (1 + sqrt(L)) mm, 2 mm/yr) were to be confirmed against the requirements document before v0.3; they are released in `v0.3.0` unconfirmed (`specs.md` S4).
 ## Not verified
 
 - `code_review.md` and the Context lines of `todo.md` were not checked by a second reader against the code. The 7 bugs were read from the source when the review was written.
@@ -178,6 +179,7 @@ since #30 was checked locally and says so in its description.
 
 | Date | Trigger | Changes |
 | --- | --- | --- |
+| 2026-10-10 | Release `v0.3.0` (milestone M2), T34 branches merged (#68 to #73) | Full cycle: status per milestone recounted (203 / 38 subtasks), `gnss.py` and `residuals.py` rows, two decisions (no `v0.2.0`; GNSS rules from T34.2), unmerged-branch line removed from "Out of sync"; T8.2 and T34 ticked |
 | 2026-10-10 | T16.7 finished | `docs/real_data/versions.ipynb` (F08622 v1.0 against v1.1) in the nav and gallery index |
 | 2026-10-09 | T34.2 finished | Rerun on the full fix stack (velocity gate, relocation screen, median LOSO): the tie improves on all three frames; 1 mm epoch-RMSE gap on F08882 explained (DEN4 relocation, gap-filling policy) |
 | 2026-10-09 | T34.2 rerun with the station-reference fix | More stations in every statistic (F08882 tie 92 to 126); epochs now use the same stations as geepers; new open item: minimum record length for station velocities |

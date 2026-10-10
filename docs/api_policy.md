@@ -1,9 +1,10 @@
 # API policy
 
 What disp-xr promises about its interface, its outputs and the products it
-reads, and how changes are made. The list of names frozen at v0.2 is filled
-in after the [API review](api_review.md) (plan task T18.3); everything else
-here applies now.
+reads, and how changes are made. The list of frozen names is filled in after
+the [API review](api_review.md) (plan task T18.3); everything else here
+applies now. The freeze was planned for v0.2; no v0.2.0 was tagged, and
+v0.3.0 shipped before the review, so the core API is not frozen yet.
 
 ## Versions
 
@@ -89,8 +90,9 @@ its granules pass the test suite; the product notes record what changed.
   `mintpy`, `jax`, and `serve` when added); a missing extra raises an
   `ImportError` that names it.
 
-## Frozen at v0.2
+## Frozen names
 
-To be filled in after the review: the function names, parameter names and
+To be filled in after the review (planned for v0.2, now the first release
+after it): the function names, parameter names and
 defaults that are frozen, and the outcome of each open question in the
 [API review](api_review.md).

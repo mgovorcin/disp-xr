@@ -190,7 +190,7 @@ Goal: make the existing code safe to change. That means installable, tested, in 
   - Context: gate "CI green, tests pass". This first tagged release lets early users install the package.
   - Done when: tag `v0.1.0` exists, CI is green on the tag, and a short changelog is published.
   - [x] T8.1 Add `CHANGELOG.md` (Keep a Changelog format) and fill in v0.1.0. Done on `chore/release-v0.1` (`c3b5763`); dated when tagged.
-  - [ ] T8.2 Configure `.github/release.yml` categories and tag `v0.1.0` (setuptools_scm picks it up). `release.yml` done (T18 preparation). Waiting: the tag, on `1c04c1c` (the last `main` commit of M0, before T9), pushed by a maintainer.
+  - [x] T8.2 Configure `.github/release.yml` categories and tag `v0.1.0` (setuptools_scm picks it up). Done: `release.yml` (T18 preparation); tag `v0.1.0` on `1c04c1c` (2026-10-02), the last `main` commit of M0; the changelog section dated in the v0.3.0 release.
   - [x] T8.3 Update the README quick start to `dxr.find_products`, `dxr.open_disp` and chaining. Done (`c3b5763`); the snippet was run on a fixture stack.
   - [ ] T8.4 Set target dates for M1–M3 with the maintainers (PRD open question) and record them in the PRD. Waiting: needs the maintainers (T1.4b).
 
@@ -308,7 +308,7 @@ Goal: the everyday DISP workflow (open, mask, re-reference, correct, export, plo
 - [ ] **T18. Release v0.2 and API review** — Depends on: T10, T11, T12, T13, T15, T16, T17 · PRD: Milestones (M1 gate)
   - Context: gate "API reviewed by users". Names change cheaply now and expensively after M2.
   - Done when: tag `v0.2.0` exists, at least 3 Cal/Val users have run the getting-started flow on their own frames, their feedback is triaged into issues, and the core names are frozen.
-  - [ ] T18.1 Tag `v0.2.0`, update the changelog and publish the docs. Prepared: the changelog has an Unreleased section ready to date, `.github/release.yml` groups release notes by label. Waiting: the review below, the tag, and ReadTheDocs.
+  - [ ] T18.1 Tag `v0.2.0`, update the changelog and publish the docs. Decision (maintainer, 2026-10-10): no `v0.2.0`; M1 and M2 were released together as `v0.3.0` because the review below had not taken place. The review and the API freeze (T18.2, T18.3) stay open and land in a later 0.x release.
   - [ ] T18.2 Run the API review: share the getting-started page and collect feedback in one issue per topic. Prepared: `docs/api_review.md` (public API, settled decisions, seven open questions, each to become an issue) and `docs/try-it.md` (a 30-minute guide for users on their own frames). Already fixed: an internal parameter in `to_geotiff`'s signature; deprecated names out of `__all__`. Waiting: at least 3 Cal/Val users.
   - [ ] T18.3 Apply the agreed renames (with deprecation shims) and record the frozen core API in `docs/api_policy.md`. Prepared: `docs/api_policy.md` draft (what is public, deprecation rules); the frozen list waits for the review.
 
@@ -521,13 +521,13 @@ Goal: the Cal/Val science features S1–S4, fit/predict estimators and the GNSS 
 
 ### T34. Release v0.3 and GNSS validation gate
 
-- [ ] **T34. Release v0.3 and GNSS validation gate** — Depends on: T22, T29, T31, T32, T33 · PRD: Milestones (M2 gate)
+- [x] **T34. Release v0.3 and GNSS validation gate** — Depends on: T22, T29, T31, T32, T33 · PRD: Milestones (M2 gate)
   - Context: gate "GNSS tie validated". This is the first release with the science features.
   - Done when: tag `v0.3.0` exists, and a validation report (`docs/studies/gnss_validation.md`) on the T29 frames shows tie and residual results consistent with the geepers baseline.
   - [x] T34.0 Fix the `compare` outlier flag before the validation runs. Found on F08882 (Houston real-data notebook, 2026-10-05): 9 of 10 stations were flagged, because the reduced χ² of the displacement residual uses only the GNSS LOS sigma (a few mm) and leaves out the DISP noise (cm level per epoch), so `sqrt(chi2) > outlier_sigma` holds almost everywhere. Add a DISP noise term to the χ² denominator (per-epoch sigma from the residual scatter, or a structure-function estimate at the station's distance from the reference), or flag on `normalized_residual` alone until one exists. This changes which stations are flagged; record it in the changelog. Also report the datum offset (the residual at the reference station) in `summary`, since DISP is relative and GNSS is absolute. Done: `compare(disp_sigma=)` adds DISP noise in quadrature to the GNSS sigma in `chi2`, estimated by default as the robust scatter (1.4826 MAD) of all stations' mean-removed residuals less the median GNSS variance, reported as `summary["disp_sigma"]`. The datum offset is the median velocity residual over stations (`summary["datum_offset"]`; the reference station is not known to `compare`), removed in the new `relative_residual`, which `normalized_residual` now uses. A structure-function estimate by distance from the reference is left for later.
   - [x] T34.1 Run T32 and T33 on the T29 frames and compare with geepers results on the same stations. Done 2026-10-09 (`studies/gnss_validation/`): with InSAR and GPS double-differenced to the stack's reference station on common epochs, the InSAR sampling is identical and GPS velocities agree within 0.16 mm/yr on all three frames; the tie plane matches an independent weighted fit. The raw station tables are not comparable (geepers fits InSAR only on GPS dates).
   - [x] T34.2 Write the validation report and fix discrepancies (open issues for anything deferred). Done 2026-10-09: report `docs/studies/gnss_validation.md`. Fixed on stacked disp-xr branches, each value-changing with a changelog entry: GNSS matched to the acquisition's UTC day (`feature/gnss-daily-day`), stations without GNSS on the reference date kept with InSAR and GNSS re-referenced per station (`feature/gnss-station-reference`), minimum record length for velocities (`feature/gnss-velocity-gate`), monument relocations split (`feature/gnss-relocation-screen`), median leave-one-out score (`feature/tie-loso-median`); geepers `feature/gps-start-date` (first-epoch and day matching). With them disp-xr matches geepers to rounding and the tie improves the leave-one-out score on all three frames. Deferred: merging the branches, a relocation screen in geepers, aligning the gap-filling policy.
-  - [ ] T34.3 Tag `v0.3.0`, update the changelog and publish the docs.
+  - [x] T34.3 Tag `v0.3.0`, update the changelog and publish the docs. Done 2026-10-10: changelog section `[0.3.0]`, tag `v0.3.0` and a GitHub release. Publishing the docs waits for GitHub Pages (T16.6: the repository is private and Actions is off); `mkdocs build --strict` passes.
 
 ---
 
