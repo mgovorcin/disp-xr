@@ -6,6 +6,15 @@ All notable changes to disp-xr. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- `quadtree(metric="normalized")`: the weighted spread of a cell's pixels
+  against the spread their noise alone would give (a reduced chi-square per
+  cell, about 1 for noise). Pixel noise is `sigma0**2 / w`, with `w` the quality
+  weight and `sigma0` per epoch the median spread of the finest cells. Unlike
+  `"displacement"` and `"velocity"`, which are variances in data units, it
+  does not split low-coherence cells for being noisy (plan task T28.6).
+
 ## [0.3.0] - 2026-10-10
 
 Science features (milestone M2), released with the core API of milestone M1.
