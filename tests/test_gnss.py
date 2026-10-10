@@ -147,6 +147,35 @@ def test_align_on_disp_epochs_and_reference(frame, fake):
         gnss.align(los, frame.time, method="cubic")
 
 
+def test_align_takes_the_epochs_own_utc_day():
+    """Regression: epochs after 12:00 UTC took the next day's daily solution."""
+    days = pd.date_range("2020-01-01", periods=6, freq="D")
+    daily = xr.DataArray(
+        np.arange(6.0)[None, :],
+        dims=("station", "time"),
+        coords={"station": ["A"], "time": days},
+    )
+    epochs = pd.DatetimeIndex(
+        ["2020-01-02 00:26", "2020-01-03 14:07", "2020-01-04 19:16"]
+    )
+    aligned = gnss.align(daily, epochs)
+    # Day index of each epoch's own day, relative to the first epoch's day.
+    np.testing.assert_array_equal(aligned.values[0], [0.0, 1.0, 2.0])
+    linear = gnss.align(daily, epochs, method="linear")
+    # The value is the day index at noon, so linear in days since 2020-01-01 12:00.
+    days_since_noon = (epochs - pd.Timestamp("2020-01-01 12:00")) / pd.Timedelta("1D")
+    expected = days_since_noon - days_since_noon[0]
+    np.testing.assert_allclose(linear.values[0], expected, atol=1e-3)
+
+
+def test_centred_leaves_sub_daily_series():
+    times = pd.date_range("2020-01-01 03:00", periods=4, freq="6h")
+    series = xr.DataArray(np.arange(4.0), dims="time", coords={"time": times})
+    assert gnss.centred(series)["time"].equals(series["time"])
+    daily = series.assign_coords(time=pd.date_range("2020-01-01", periods=4))
+    assert (gnss.centred(daily)["time"].dt.hour == 12).all()
+
+
 @pytest.mark.parametrize(
     "dx, dy", [(-10.0, 10.0), (10.0, 10.0), (-10.0, -10.0), (10.0, -10.0)]
 )

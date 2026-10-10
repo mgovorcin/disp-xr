@@ -684,7 +684,7 @@ def compare(
         }
     )
     if "sigma_los" in projected:
-        sigma = projected["sigma_los"].reindex(
+        sigma = gnss_mod.centred(projected["sigma_los"]).reindex(
             time=series["time"].values,
             method="nearest",
             tolerance=np.timedelta64(1, "D"),
