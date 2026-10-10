@@ -11,7 +11,15 @@ pytest.importorskip("geepers.validation")  # geepers >= 0.4
 from fixtures.fake_gnss import stations_from_disp, vertical_los  # noqa: E402
 from geepers.analysis import epoch_rmse, pairwise_differential_rmse  # noqa: E402
 
-from disp_xr.residuals import _merged_tables, compare  # noqa: E402
+from disp_xr.residuals import _merged_tables  # noqa: E402
+from disp_xr.residuals import compare as _compare  # noqa: E402
+
+
+def compare(*args, **kwargs):
+    """``compare`` with the span gate off: the fixture stack spans 4 months."""
+    kwargs.setdefault("min_span_years", 0)
+    return _compare(*args, **kwargs)
+
 
 PIXELS = [(8, 10), (20, 40), (35, 15), (50, 50), (12, 55)]
 
@@ -51,7 +59,7 @@ def test_station_without_gnss_on_the_reference_date(frame, gps):
         late[name] = gps[name].where(
             (gps.station != "S001") | (gps.time >= start - np.timedelta64(12, "h"))
         )
-    result = compare(frame, late, vertical_los(frame))
+    result = compare(frame, late, vertical_los(frame), min_epochs=5)
     stations = result.stations
     assert stations.loc["S001", "reference_epoch"] == pd.Timestamp(start)
     assert stations.loc["S000", "reference_epoch"] == pd.Timestamp(frame.time.values[0])
@@ -60,6 +68,23 @@ def test_station_without_gnss_on_the_reference_date(frame, gps):
     # InSAR is re-referenced at the same epoch, so no offset is left.
     assert float(np.abs(residual).max()) < 0.005
     assert np.isfinite(stations.loc["S001", "gps_velocity"])
+
+
+def test_short_records_get_no_velocity(frame, gps):
+    # The fixture spans 4 months: under the default 2-year span no velocity.
+    result = _compare(frame, gps, vertical_los(frame))
+    stations = result.stations
+    assert not stations["velocity_usable"].any()
+    assert stations[["insar_velocity", "gps_velocity"]].isna().all().all()
+    assert np.isnan(result.summary["datum_offset"])
+    assert len(result.pairs) == 10  # displacement statistics are kept
+    # And on epochs: drop all but 5 epochs of one station's GNSS.
+    few = gps.copy()
+    keep = (gps.station != "S002") | (gps.time <= frame.time.values[4])
+    for name in ("east", "north", "up"):
+        few[name] = gps[name].where(keep)
+    stations = compare(frame, few, vertical_los(frame)).stations
+    assert list(stations.index[~stations["velocity_usable"]]) == ["S002"]
 
 
 def test_datum_offset_is_removed(frame, tmp_path):

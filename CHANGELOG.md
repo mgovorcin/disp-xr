@@ -76,6 +76,16 @@ All notable changes to disp-xr. The format follows
 
 ### Changed
 
+- `residuals.compare(min_epochs=10, min_span_years=2.0)`: a station's
+  velocities count only with at least 10 epochs shared by DISP and GNSS,
+  over at least 2 years. Below that, `insar_velocity`, `gps_velocity` and
+  their sigmas are NaN and the new `velocity_usable` column is False. The
+  station's displacement series still enters the pairs and the epoch RMSE.
+  Without the gate, rates from 2 epochs (94 mm/yr on a DISP-S1 frame)
+  entered the velocity residuals, the outlier flag and the GNSS tie.
+  **This changes results** for short records. Pass `min_span_years=0` to
+  compare short stacks.
+
 - `quadtree` splits by the `"structure"` metric by default (was
   `"displacement"`), the best of the three in the T29 trade study
   (`docs/studies/split_metric.md`). Pass `metric="displacement"` to keep the

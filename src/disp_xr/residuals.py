@@ -498,7 +498,9 @@ class Comparison:
     ``relative_residual`` (less the datum offset), ``velocity_sigma``
     (combined), ``normalized_residual`` (relative residual over its sigma),
     ``chi2`` (reduced, of the displacement residual against the GNSS and
-    DISP sigmas in quadrature), ``n_dates``, ``outlier`` and
+    DISP sigmas in quadrature), ``n_dates``, ``outlier``,
+    ``velocity_usable`` (enough shared epochs and time span for the
+    velocities, which are NaN otherwise) and
     ``reference_epoch`` (the first epoch with both series, where both are
     zero: the DISP reference date unless the station has no GNSS that day)."""
     pairs: Any
@@ -583,6 +585,8 @@ def compare(
     tolerance: str = "1D",
     min_common_dates: int = 3,
     min_stations: int = 3,
+    min_epochs: int = 10,
+    min_span_years: float = 2.0,
     n_bins: int = 10,
     requirement: Optional[Any] = DISP_S1_DISPLACEMENT,
     velocity_requirement: Optional[Requirement] = DISP_S1_VELOCITY,
@@ -620,6 +624,14 @@ def compare(
         Largest gap between a DISP epoch and a GNSS day.
     min_common_dates, min_stations, n_bins
         Passed to geepers (pairs, epochs, profile).
+    min_epochs, min_span_years
+        Least number of epochs with both series, and least time between
+        the first and last of them, for a station's velocities to count.
+        A rate from a few epochs says nothing about the product, yet it
+        would enter the velocity residuals, the outlier flag and the GNSS
+        tie. Below either, the velocities and their sigmas are NaN and
+        ``velocity_usable`` is False; the station's displacement series
+        still enters the pairs and the epoch RMSE.
     requirement : Requirement or callable, optional
         Threshold of the pairwise relative displacement RMSE against
         distance, drawn on the profile with geepers' ``fraction_passing``.
@@ -720,6 +732,15 @@ def compare(
         )
     }
     stations = fit_velocities(tables, method=velocity_method)
+    days = series["time"].where(shared)
+    span = days.max("time", skipna=True) - days.min("time", skipna=True)
+    span_years = span / np.timedelta64(1, "D") / 365.25
+    usable = (shared.sum("time") >= min_epochs) & (span_years >= min_span_years)
+    stations["velocity_usable"] = (
+        usable.to_series().reindex(stations.index).fillna(False).to_numpy(bool)
+    )
+    rates = ["insar_velocity", "gps_velocity", "insar_sigma", "gps_sigma"]
+    stations.loc[~stations["velocity_usable"], rates] = np.nan
     stations["reference_epoch"] = (
         reference_epoch.to_series().reindex(stations.index).to_numpy()
     )
@@ -732,7 +753,8 @@ def compare(
     # DISP is relative to its reference area and GNSS is absolute, so every
     # velocity residual carries the same datum offset; the median over
     # stations estimates it without knowing which station is the reference.
-    datum_offset = float(np.nanmedian(stations["velocity_residual"]))
+    residuals = stations["velocity_residual"].dropna()
+    datum_offset = float(residuals.median()) if len(residuals) else np.nan
     stations["relative_residual"] = stations["velocity_residual"] - datum_offset
     stations["normalized_residual"] = (
         stations["relative_residual"] / stations["velocity_sigma"]
