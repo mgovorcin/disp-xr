@@ -24,7 +24,7 @@ How and when this file is rebuilt: see "Project Index (cyclical indexing)" in `C
 | [studies/gnss_validation.md](studies/gnss_validation.md) | T34 GNSS validation against geepers on the T29 frames: double-differenced agreement, tie checks, discrepancies (scripts in `studies/gnss_validation/` at the root) | — |
 | [check_plan.py](check_plan.py) | Mechanical check of `todo.md` (run in every indexing cycle) | — |
 | [gallery/](gallery/) | 18 executed example pages (`# %%` scripts run by mkdocs-jupyter), one or more per feature | — |
-| [real_data/](real_data/) | Pre-executed notebooks on production granules (saved outputs, not run by the docs build): Houston F08882, production change F11116, San Andreas creep F11116, terrain-following troposphere F39362 | — |
+| [real_data/](real_data/) | Pre-executed notebooks on production granules (saved outputs, not run by the docs build): Houston F08882, production change F11116, San Andreas creep F11116, terrain-following troposphere F39362, product versions 1.0 against 1.1 F08622 | — |
 | [img/](img/) | `architecture.png`, `roadmap.png`, exported from the PRD doc | — |
 | `CLAUDE.md` (repository root) | Coding rules and the indexing cycle | — |
 
@@ -178,6 +178,7 @@ since #30 was checked locally and says so in its description.
 
 | Date | Trigger | Changes |
 | --- | --- | --- |
+| 2026-10-10 | T16.7 finished | `docs/real_data/versions.ipynb` (F08622 v1.0 against v1.1) in the nav and gallery index |
 | 2026-10-09 | T34.2 finished | Rerun on the full fix stack (velocity gate, relocation screen, median LOSO): the tie improves on all three frames; 1 mm epoch-RMSE gap on F08882 explained (DEN4 relocation, gap-filling policy) |
 | 2026-10-09 | T34.2 rerun with the station-reference fix | More stations in every statistic (F08882 tie 92 to 126); epochs now use the same stations as geepers; new open item: minimum record length for station velocities |
 | 2026-10-09 | T34.2 rerun with the GNSS day fixes | Report results from disp-xr `feature/gnss-daily-day` and geepers `feature/gps-start-date`; `validate.py` keys epochs by UTC day; new open item: stations without GNSS on the reference date are dropped |
