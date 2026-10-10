@@ -156,11 +156,12 @@ def test_align_takes_the_epochs_own_utc_day():
         coords={"station": ["A"], "time": days},
     )
     epochs = pd.DatetimeIndex(
-        ["2020-01-02 00:26", "2020-01-03 14:07", "2020-01-04 19:16"]
+        ["2020-01-02 00:26", "2020-01-03 14:07", "2020-01-04 19:16", "2020-01-05"]
     )
     aligned = gnss.align(daily, epochs)
     # Day index of each epoch's own day, relative to the first epoch's day.
-    np.testing.assert_array_equal(aligned.values[0], [0.0, 1.0, 2.0])
+    # Midnight is 12 h from both neighbouring noons; it belongs to its own day.
+    np.testing.assert_array_equal(aligned.values[0], [0.0, 1.0, 2.0, 3.0])
     linear = gnss.align(daily, epochs, method="linear")
     # The value is the day index at noon, so linear in days since 2020-01-01 12:00.
     days_since_noon = (epochs - pd.Timestamp("2020-01-01 12:00")) / pd.Timedelta("1D")
