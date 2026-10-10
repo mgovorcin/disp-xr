@@ -163,6 +163,7 @@ nav:
       - Requirements (PRD): specs.md
       - Plan: todo.md
       - "Trade study: split metric (T29)": studies/split_metric.md
+      - "GNSS validation (T34)": studies/gnss_validation.md
       - Code review: code_review.md
       - Porting from opera-utils: porting.md
       - References: references.md

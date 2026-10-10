@@ -1,6 +1,6 @@
 # disp-xr project index
 
-**Last indexed:** 2026-10-09 · `main` at `90e34e1` on `origin` = `mgovorcin/disp-xr` (through PR #63), plus the T29 study merged on branch `study/t29-split-metric`
+**Last indexed:** 2026-10-09 · `main` at `90e34e1` on `origin` = `mgovorcin/disp-xr` (through PR #63), plus the T29 study merged on branch `study/t29-split-metric`; T34 validation on branch `study/t34-gnss-validation`
 
 How and when this file is rebuilt: see "Project Index (cyclical indexing)" in `CLAUDE.md` at the repository root.
 
@@ -21,6 +21,7 @@ How and when this file is rebuilt: see "Project Index (cyclical indexing)" in `C
 | [performance.md](performance.md) | Running full frames: processes against threads, disp-xr settings, environment for batch jobs, memory stalls on shared nodes | — |
 | [docs_plan.md](docs_plan.md) | Documentation coverage per feature, stale notebooks, GitHub Pages gaps, tutorial order before going public | — |
 | [studies/split_metric.md](studies/split_metric.md) | T29 trade study report: frames, criteria, decision (scripts in `studies/split_metric/` at the root) | — |
+| [studies/gnss_validation.md](studies/gnss_validation.md) | T34 GNSS validation against geepers on the T29 frames: double-differenced agreement, tie checks, discrepancies (scripts in `studies/gnss_validation/` at the root) | — |
 | [check_plan.py](check_plan.py) | Mechanical check of `todo.md` (run in every indexing cycle) | — |
 | [gallery/](gallery/) | 18 executed example pages (`# %%` scripts run by mkdocs-jupyter), one or more per feature | — |
 | [real_data/](real_data/) | Pre-executed notebooks on production granules (saved outputs, not run by the docs build): Houston F08882, production change F11116, San Andreas creep F11116, terrain-following troposphere F39362 | — |
@@ -35,7 +36,7 @@ The PRD also lives as a shared doc; `specs.md` is its copy in the repo and must 
 | --- | --- | --- |
 | M0 Foundation (v0.1) | T1–T8 | 5 / 8 (T2, T4, T5, T6, T7). Open: T1.4b (name maintainers), T3.4–T3.5 (coverage badge, branch protection: need CI), T8 (tag `v0.1.0`, milestone dates) |
 | M1 Core API (v0.2) | T9–T18 | 7 / 10 (T9, T10, T11, T13, T14, T15, T17). Open: T12.5 (needs DISP-NI-STATIC), T16.6 (GitHub Pages, waits for the repository to go public), T18 (tag and API review with Cal/Val users) |
-| M2 Analysis (v0.3) | T19–T34 | 14 / 16. Open: T28.5 (benchmark numbers, need a quiet node), T28.6 (noise-normalized split metric, from T29), T34 (validation gate; T34.0 done) |
+| M2 Analysis (v0.3) | T19–T34 | 14 / 16. Open: T28.5 (benchmark numbers, need a quiet node), T28.6 (noise-normalized split metric, from T29), T34 (validation gate; T34.0 and T34.1 done, T34.2 report written with value-changing fixes pending) |
 | M3 Release (v1.0) | T35–T40 | 0 / 6. T37 5 of 6 subtasks done (T37.1 budget decided 2026-10-06, T37.3a, T37.4, T37.5 and most of T37.3; T37.3b S3 half needs AWS); T35 waits for beta DISP-NISAR products; T36 parked (decision of 2026-10-04); T38–T39 not started |
 
 Subtasks: 197 done, 43 open. All work is merged in `main`. CI is off (Actions minutes on a private repository); every PR
@@ -157,6 +158,7 @@ since #30 was checked locally and says so in its description.
 
 - GitHub Actions is off on `mgovorcin/disp-xr`: the private repository used up its Actions minutes (2026-10-04). The `test` workflow is disabled; the `docs` workflow (GitHub Pages, PR #43) fails at start for the same reason until it is disabled or the repository goes public. Local hooks stand in: pre-commit on commit, pytest (py312) and `mkdocs --strict` on push.
 - Local checkouts `01_OPERA/STAKEHOLDER/disp-xr` and `01_OPERA/VLM/disp-xr` are on the old `timeseries_fitting` branch, and the conda envs `disp_xr` and `disp_xr_py311` hold non-editable installs of old commits.
+- `gnss.align` matches GNSS to DISP epochs by nearest timestamp, so for acquisitions after 12:00 UTC it takes the next day's daily solution (T34.2; 0.4 mm/yr p95 on F11116 and F39362). Not fixed: value-changing, awaits a decision.
 - The OPERA requirement values drawn by default (3 (1 + sqrt(L)) mm, 2 mm/yr) are to be confirmed against the requirements document before v0.3.
 ## Not verified
 
@@ -176,6 +178,7 @@ since #30 was checked locally and says so in its description.
 
 | Date | Trigger | Changes |
 | --- | --- | --- |
+| 2026-10-09 | T34.1 finished, T34.2 report | `docs/studies/gnss_validation.md`, `studies/gnss_validation/` (`extract.py`, `validate.py`, result tables); double-differenced agreement with geepers on F08882, F11116, F39362; `gnss.align` next-day matching listed under "Out of sync" |
 | 2026-10-09 | T27.10 finished | `downsample` and `downsample_hex` take `spread=` (`<layer>_std`, `_rmse`, `_mad`, weighted); gallery section |
 | 2026-10-09 | T29 finished, study branch merged | Report results and decision; `studies/split_metric/` (scripts, station lists, result tables, `figure.py`); quadtree default metric `structure`; PRD S2 questions closed; new T28.6; `docs/docs_plan.md` (audit of 2026-10-04) came with the branch |
 | 2026-10-06 | Decisions on codec, memory budget, notebooks, home | Blosc (zstd, bit shuffle) default for float layers (T37.3b local half); memory budget 8 GB per worker, 4 GB coordinator (T37.1 done, PRD NFR Memory); `notebooks/` deleted, version comparison moved to new T16.7; the repository stays on `mgovorcin/disp-xr` (PRD decision), so ownership is no longer out of sync |

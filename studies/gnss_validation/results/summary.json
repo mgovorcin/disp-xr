@@ -1,0 +1,50 @@
+[
+ {
+  "frame": "F08882",
+  "stations_matched": 133,
+  "pairs_matched": 4184,
+  "epochs_matched": 91,
+  "reference": "UHEB",
+  "dd_stations_usable": 86,
+  "dd_insar_vel_max_diff_mm_yr": 1.5987211554602254e-14,
+  "dd_insar_series_p95_diff_mm": 1.3704315460216776e-13,
+  "dd_gps_vel_max_diff_mm_yr": 0.15473904576845943,
+  "dd_gps_series_p95_diff_mm": 0.08393523000024054,
+  "tie_stations": 92,
+  "tie_max_diff_mm_yr": 5.551115123125783e-14,
+  "loso_rmse_before_mm_yr": 12.627423119044032,
+  "loso_rmse_after_mm_yr": 11.854192156078408
+ },
+ {
+  "frame": "F11116",
+  "stations_matched": 124,
+  "pairs_matched": 5563,
+  "epochs_matched": 131,
+  "reference": "P180",
+  "dd_stations_usable": 103,
+  "dd_insar_vel_max_diff_mm_yr": 2.042810365310288e-14,
+  "dd_insar_series_p95_diff_mm": 1.0408340855860843e-13,
+  "dd_gps_vel_max_diff_mm_yr": 0.05561695134668554,
+  "dd_gps_series_p95_diff_mm": 0.06682281392105761,
+  "tie_stations": 106,
+  "tie_max_diff_mm_yr": 4.5102810375396984e-14,
+  "loso_rmse_before_mm_yr": 27.919511876948043,
+  "loso_rmse_after_mm_yr": 4.209476580623582
+ },
+ {
+  "frame": "F39362",
+  "stations_matched": 26,
+  "pairs_matched": 136,
+  "epochs_matched": 84,
+  "reference": "TURO",
+  "dd_stations_usable": 15,
+  "dd_insar_vel_max_diff_mm_yr": 1.687538997430238e-14,
+  "dd_insar_series_p95_diff_mm": 1.249000902703301e-13,
+  "dd_gps_vel_max_diff_mm_yr": 0.10263657275861071,
+  "dd_gps_series_p95_diff_mm": 0.18442596393960287,
+  "tie_stations": 17,
+  "tie_max_diff_mm_yr": 1.682681771697503e-13,
+  "loso_rmse_before_mm_yr": 5.087752180264971,
+  "loso_rmse_after_mm_yr": 5.682879061569723
+ }
+]
