@@ -6,6 +6,22 @@ All notable changes to disp-xr. The format follows
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-10-10
+
+Science features (milestone M2), released with the core API of milestone M1.
+There is no 0.2.0: the M1 API review with Cal/Val users has not taken place,
+so the core API is **not frozen yet**. Renames that come out of that review
+will land in a later 0.x release with deprecation shims (see
+`docs/api_policy.md`).
+
+This release passes the M2 gate, "GNSS tie validated"
+(`docs/studies/gnss_validation.md`). On three DISP-S1 frames, disp-xr's GNSS
+comparison matches the geepers workflow to rounding once both are
+double-differenced to a common GNSS station. The GNSS tie improves the
+leave-one-station-out score on every frame: the median after the tie is about
+1 mm/yr. Several fixes from that validation change values; they are marked
+**changes values** or **changes results** below.
+
 ### Added
 
 - `cross_validate_tie` reports `median_before` and `median_after` in
@@ -204,7 +220,7 @@ All notable changes to disp-xr. The format follows
   chunks failed on a stack read back from Zarr, whose per-epoch coordinate
   `reference_time` is one chunk while the data have one chunk per epoch.
 
-## [0.1.0] - Unreleased
+## [0.1.0] - 2026-10-02
 
 First tagged release: a tested, installable foundation for opening and chaining
 OPERA DISP frames.
