@@ -113,46 +113,34 @@ def pair_table(geepers_dir: Path, result) -> pd.DataFrame:
 
 
 def epoch_table(geepers_dir: Path, result) -> pd.DataFrame:
-    """Epoch RMSE of both tools, matched by date.
+    """Epoch RMSE of both tools, matched by the acquisition's UTC day.
 
-    geepers labels an epoch by its calendar date and disp-xr by its
-    acquisition time, which can fall on the day before, so the dates are
-    matched to the nearest within a day.
+    geepers labels an epoch by the date of the daily GPS solution it is
+    attached to, disp-xr by its acquisition time.
     """
     theirs = pd.read_csv(geepers_dir / "epoch_rmse.csv", parse_dates=["date"])
     theirs["date"] = theirs["date"].astype("datetime64[ns]")
     ours = result.epochs.reset_index()
-    ours["date"] = pd.to_datetime(ours["date"]).astype("datetime64[ns]")
-    return pd.merge_asof(
-        ours.sort_values("date"),
-        theirs.sort_values("date"),
-        on="date",
-        tolerance=pd.Timedelta("1D"),
-        direction="nearest",
-        suffixes=("", "_geepers"),
-    ).dropna(subset=["rmse_geepers"])
+    ours["date"] = pd.to_datetime(ours["date"]).astype("datetime64[ns]").dt.floor("D")
+    return ours.merge(theirs, on="date", suffixes=("", "_geepers"))
 
 
 def _series(geepers_dir: Path, result) -> dict[str, pd.DataFrame]:
-    """Each tool's (station, date) InSAR and GPS series, in meters."""
+    """Each tool's (station, date) InSAR and GPS series, in meters.
+
+    Both are keyed by the acquisition's UTC day, which geepers uses for
+    daily GPS solutions.
+    """
     theirs = pd.read_csv(geepers_dir / "combined_data.csv", parse_dates=["date"])
     theirs["date"] = theirs["date"].astype("datetime64[ns]")
     theirs = theirs.pivot_table(index=["id", "date"], columns="measurement")["value"]
     theirs = theirs.rename(columns={"los_insar": "insar", "los_gps": "gps"})
     ours = result.series[["insar", "gnss"]].to_dataframe()[["insar", "gnss"]]
     ours = ours.rename(columns={"gnss": "gps"})
-    ours.index = ours.index.set_names(["id", "date"])
-    # Snap disp-xr acquisition times onto geepers' calendar dates.
-    dates = theirs.index.get_level_values("date").unique().sort_values()
-    snapped = pd.merge_asof(
-        pd.DataFrame({"t": ours.index.get_level_values("date").unique().sort_values()}),
-        pd.DataFrame({"date": dates, "d": dates}),
-        left_on="t",
-        right_on="d",
-        tolerance=pd.Timedelta("1D"),
-        direction="nearest",
-    ).set_index("t")["date"]
-    ours = ours.rename(index=snapped.to_dict(), level="date")
+    days = pd.DatetimeIndex(ours.index.get_level_values("time")).floor("D")
+    ours.index = pd.MultiIndex.from_arrays(
+        [ours.index.get_level_values("station"), days], names=["id", "date"]
+    )
     return {"geepers": theirs[["insar", "gps"]], "disp_xr": ours}
 
 
@@ -199,8 +187,8 @@ def dd_tables(
     }
     common = tools["geepers"].index.intersection(tools["disp_xr"].index)
     # Remove each station's mean over the shared epochs rather than zeroing
-    # at the first: geepers matches the first acquisition (00:26 UTC) to
-    # the next day's GPS solution, which would offset the whole series.
+    # at the first, so that one mismatched epoch cannot offset a whole series
+    # (geepers before 6ff4264 matched the first acquisition to the next day).
     tools = {
         k: v.loc[common] - v.loc[common].groupby(level="id").transform("mean")
         for k, v in tools.items()

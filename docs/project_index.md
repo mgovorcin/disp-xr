@@ -158,7 +158,7 @@ since #30 was checked locally and says so in its description.
 
 - GitHub Actions is off on `mgovorcin/disp-xr`: the private repository used up its Actions minutes (2026-10-04). The `test` workflow is disabled; the `docs` workflow (GitHub Pages, PR #43) fails at start for the same reason until it is disabled or the repository goes public. Local hooks stand in: pre-commit on commit, pytest (py312) and `mkdocs --strict` on push.
 - Local checkouts `01_OPERA/STAKEHOLDER/disp-xr` and `01_OPERA/VLM/disp-xr` are on the old `timeseries_fitting` branch, and the conda envs `disp_xr` and `disp_xr_py311` hold non-editable installs of old commits.
-- `gnss.align` matches GNSS to DISP epochs by nearest timestamp, so for acquisitions after 12:00 UTC it takes the next day's daily solution (T34.2; 0.4 mm/yr p95 on F11116 and F39362). Not fixed: value-changing, awaits a decision.
+- `gnss.align` matched GNSS to DISP epochs by nearest timestamp, so afternoon acquisitions took the next day's daily solution. Fixed on branch `feature/gnss-daily-day`, not yet merged. Still open (T34.2): `compare` drops stations without a GNSS solution on the DISP reference date (12-23 % of usable stations on the T29 frames).
 - The OPERA requirement values drawn by default (3 (1 + sqrt(L)) mm, 2 mm/yr) are to be confirmed against the requirements document before v0.3.
 ## Not verified
 
@@ -178,6 +178,7 @@ since #30 was checked locally and says so in its description.
 
 | Date | Trigger | Changes |
 | --- | --- | --- |
+| 2026-10-09 | T34.2 rerun with the GNSS day fixes | Report results from disp-xr `feature/gnss-daily-day` and geepers `feature/gps-start-date`; `validate.py` keys epochs by UTC day; new open item: stations without GNSS on the reference date are dropped |
 | 2026-10-09 | T34.1 finished, T34.2 report | `docs/studies/gnss_validation.md`, `studies/gnss_validation/` (`extract.py`, `validate.py`, result tables); double-differenced agreement with geepers on F08882, F11116, F39362; `gnss.align` next-day matching listed under "Out of sync" |
 | 2026-10-09 | T27.10 finished | `downsample` and `downsample_hex` take `spread=` (`<layer>_std`, `_rmse`, `_mad`, weighted); gallery section |
 | 2026-10-09 | T29 finished, study branch merged | Report results and decision; `studies/split_metric/` (scripts, station lists, result tables, `figure.py`); quadtree default metric `structure`; PRD S2 questions closed; new T28.6; `docs/docs_plan.md` (audit of 2026-10-04) came with the branch |
