@@ -117,6 +117,18 @@ All notable changes to disp-xr. The format follows
 
 ### Fixed
 
+- `residuals.compare` dropped every station without a GNSS solution on the
+  DISP reference date (installed later, or a gap that day): `gnss.align`
+  zeroes GNSS there, so the whole series was NaN. On the T29 frames this
+  was 12–23 % of the stations with 10 or more GNSS epochs. `compare` now
+  references both InSAR and GNSS per station to the first epoch they share
+  (new `reference_epoch` column in `stations`). This leaves stations with
+  GNSS on the reference date unchanged, and gives the others a double
+  difference in time with no offset. `gnss.align` on its own references
+  such a station to its first GNSS epoch (new `gnss_reference`
+  coordinate). **This changes results:** stations are added to the
+  velocities, pairs and epoch statistics.
+
 - `gnss.align` and `residuals.compare` matched each DISP epoch to the GNSS
   solution with the nearest timestamp. Daily solutions are stamped at
   midnight, so every acquisition after 12:00 UTC took the next day's

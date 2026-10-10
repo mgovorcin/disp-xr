@@ -169,6 +169,26 @@ def test_align_takes_the_epochs_own_utc_day():
     np.testing.assert_allclose(linear.values[0], expected, atol=1e-3)
 
 
+def test_align_references_late_stations_to_their_first_epoch():
+    """Regression: a station without GNSS on the reference date was all NaN."""
+    days = pd.date_range("2020-01-01", periods=10, freq="D")
+    values = np.vstack([np.arange(10.0), np.arange(10.0) * 2])
+    values[1, :4] = np.nan  # station B starts on day 4
+    daily = xr.DataArray(
+        values, dims=("station", "time"), coords={"station": ["A", "B"], "time": days}
+    )
+    epochs = days[::3] + pd.Timedelta(hours=14)  # days 0, 3, 6, 9
+
+    aligned = gnss.align(daily, epochs)
+
+    np.testing.assert_array_equal(aligned.sel(station="A").values, [0, 3, 6, 9])
+    np.testing.assert_array_equal(
+        aligned.sel(station="B").values, [np.nan, np.nan, 0, 6]
+    )
+    assert aligned["gnss_reference"].sel(station="A").values == epochs[0]
+    assert aligned["gnss_reference"].sel(station="B").values == epochs[2]
+
+
 def test_centred_leaves_sub_daily_series():
     times = pd.date_range("2020-01-01 03:00", periods=4, freq="6h")
     series = xr.DataArray(np.arange(4.0), dims="time", coords={"time": times})

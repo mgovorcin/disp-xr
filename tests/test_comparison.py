@@ -43,6 +43,25 @@ def test_compare_at_stations(frame, gps):
     assert set(result.summary) >= {"bias", "mad", "rmse", "r2", "n"}
 
 
+def test_station_without_gnss_on_the_reference_date(frame, gps):
+    # S001 has no GNSS before the fourth epoch (installed later): it was lost.
+    start = frame.time.values[3]
+    late = gps.copy()
+    for name in ("east", "north", "up"):
+        late[name] = gps[name].where(
+            (gps.station != "S001") | (gps.time >= start - np.timedelta64(12, "h"))
+        )
+    result = compare(frame, late, vertical_los(frame))
+    stations = result.stations
+    assert stations.loc["S001", "reference_epoch"] == pd.Timestamp(start)
+    assert stations.loc["S000", "reference_epoch"] == pd.Timestamp(frame.time.values[0])
+    residual = result.series.residual.sel(station="S001").dropna("time")
+    assert residual.sizes["time"] == frame.sizes["time"] - 3
+    # InSAR is re-referenced at the same epoch, so no offset is left.
+    assert float(np.abs(residual).max()) < 0.005
+    assert np.isfinite(stations.loc["S001", "gps_velocity"])
+
+
 def test_datum_offset_is_removed(frame, tmp_path):
     # GNSS 1 cm/yr off DISP everywhere (DISP relative, GNSS absolute), S003
     # another 5 cm/yr off.
