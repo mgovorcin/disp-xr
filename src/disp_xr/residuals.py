@@ -498,7 +498,9 @@ class Comparison:
     ``relative_residual`` (less the datum offset), ``velocity_sigma``
     (combined), ``normalized_residual`` (relative residual over its sigma),
     ``chi2`` (reduced, of the displacement residual against the GNSS and
-    DISP sigmas in quadrature), ``n_dates`` and ``outlier``."""
+    DISP sigmas in quadrature), ``n_dates``, ``outlier`` and
+    ``reference_epoch`` (the first epoch with both series, where both are
+    zero: the DISP reference date unless the station has no GNSS that day)."""
     pairs: Any
     """geepers ``pairwise_differential_rmse``: RMSE of the relative misfit of
     every station pair against distance."""
@@ -692,6 +694,19 @@ def compare(
         series["sigma_gnss"] = sigma.drop_vars(
             [c for c in sigma.coords if c not in ("station", "time")]
         )
+    # DISP is zero at its reference date and GNSS is aligned to it, but a
+    # station without GNSS that day (installed later, or a gap) would be
+    # lost. Reference both series per station to the first epoch they share:
+    # unchanged where that is the reference date, and a double difference in
+    # time, free of offset, where it is not.
+    shared = series["insar"].notnull() & series["gnss"].notnull()
+    first = shared.argmax("time").compute()
+    for name in ("insar", "gnss"):
+        at_first = series[name].isel(time=first).where(shared.any("time"))
+        series[name] = series[name] - at_first.drop_vars("time")
+    reference_epoch = (
+        series["time"].isel(time=first).where(shared.any("time")).drop_vars("time")
+    )
     series["residual"] = series["insar"] - series["gnss"]
     series = series.assign_coords(
         {c: gnss[c] for c in ("lon", "lat", "x", "y") if c in gnss.coords}
@@ -705,6 +720,9 @@ def compare(
         )
     }
     stations = fit_velocities(tables, method=velocity_method)
+    stations["reference_epoch"] = (
+        reference_epoch.to_series().reindex(stations.index).to_numpy()
+    )
     stations["velocity_residual"] = (
         stations["insar_velocity"] - stations["gps_velocity"]
     )

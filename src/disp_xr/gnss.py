@@ -452,7 +452,12 @@ def align(
     -------
     xr.DataArray
         GNSS at ``times`` minus its value at ``reference``; NaN where the
-        GNSS series does not reach an epoch or the reference.
+        GNSS series does not reach an epoch. A station with no solution at
+        ``reference`` (installed later, or a gap that day) is referenced to
+        its first epoch instead, so its residual against DISP carries a
+        constant offset, which rates and mean-removed statistics ignore.
+        The ``gnss_reference`` coordinate gives each station's reference
+        epoch.
 
     Examples
     --------
@@ -476,6 +481,16 @@ def align(
         )
     else:
         raise ValueError(f"method must be 'nearest' or 'linear', not {method!r}")
-    out = on - at_ref
+    first = np.isfinite(on).argmax("time").compute()
+    at_first = on.isel(time=first)
+    missing = at_ref.isnull()
+    out = on - at_ref.where(~missing, at_first)
+    reference_epoch = (
+        on["time"]
+        .isel(time=first)
+        .where(missing, np.datetime64(reference, "ns"))
+        .drop_vars("time")
+    )
+    out = out.assign_coords(gnss_reference=reference_epoch)
     out.attrs = {**gnss.attrs, "reference_time": str(reference.date())}
     return out
