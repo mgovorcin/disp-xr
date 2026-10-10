@@ -44,7 +44,7 @@ def case(stack_dir, tmp_path):
 
 def test_epoch_tie_removes_the_ramp(case):
     truth, observed, gps, static, error = case
-    comparison = dxr.residuals.compare(observed, gps, static)
+    comparison = dxr.residuals.compare(observed, gps, static, min_span_years=0)
     tie = fit_tie(comparison, mode="epoch")
     corrected = apply_tie(observed, tie)
     before = float(
@@ -61,7 +61,7 @@ def test_epoch_tie_removes_the_ramp(case):
 
 def test_velocity_tie(case):
     truth, observed, gps, static, _ = case
-    comparison = dxr.residuals.compare(observed, gps, static)
+    comparison = dxr.residuals.compare(observed, gps, static, min_span_years=0)
     tie = fit_tie(comparison, mode="velocity")
     corrected = apply_tie(observed, tie)
 
@@ -76,7 +76,7 @@ def test_velocity_tie(case):
 
 def test_loso_reports_the_improvement(case):
     _, observed, gps, static, _ = case
-    comparison = dxr.residuals.compare(observed, gps, static)
+    comparison = dxr.residuals.compare(observed, gps, static, min_span_years=0)
     cv = cross_validate_tie(comparison, mode="epoch")
     assert len(cv) == len(PIXELS)
     assert cv.attrs["rmse_after"] < 0.5 * cv.attrs["rmse_before"]
@@ -84,7 +84,7 @@ def test_loso_reports_the_improvement(case):
 
 def test_excluded_station_does_not_tilt_the_tie(case):
     truth, observed, gps, static, error = case
-    comparison = dxr.residuals.compare(observed, gps, static)
+    comparison = dxr.residuals.compare(observed, gps, static, min_span_years=0)
     # A local anomaly at one station (monument motion, local subsidence in
     # DISP only): it must stay out of the long-wavelength field.
     bad = "S004"
@@ -110,6 +110,6 @@ def test_excluded_station_does_not_tilt_the_tie(case):
 
 def test_errors(case):
     _, observed, gps, static, _ = case
-    comparison = dxr.residuals.compare(observed, gps, static)
+    comparison = dxr.residuals.compare(observed, gps, static, min_span_years=0)
     with pytest.raises(ValueError, match="mode"):
         fit_tie(comparison, mode="daily")
