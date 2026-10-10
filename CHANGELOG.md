@@ -117,6 +117,18 @@ All notable changes to disp-xr. The format follows
 
 ### Fixed
 
+- `gnss.align` and `residuals.compare` matched each DISP epoch to the GNSS
+  solution with the nearest timestamp. Daily solutions are stamped at
+  midnight, so every acquisition after 12:00 UTC took the next day's
+  solution. Daily series are now treated as stamped at noon (new
+  `gnss.centred`), so an epoch takes the solution of its own UTC day, for
+  both the `nearest` and `linear` methods and for the GNSS sigma. **This
+  changes values** on afternoon frames: on DISP-S1 F11116 (14:07 UTC) and
+  F39362 (19:16 UTC) the GNSS at an epoch moves by 2–3 mm (median), and
+  velocities by up to 0.4 mm/yr (95th percentile). Frames acquired near
+  00:00 UTC are unchanged. Found in the T34 validation
+  (`docs/studies/gnss_validation.md`).
+
 - `fit_trajectory` and `fit_velocity` (OLS, Whittle) took hours to build their
   graph on a full frame: default weights were a NumPy array broadcast to the
   frame, which dask hashed whole (2 h on a 389-epoch DISP-S1 frame, now 0.1 s

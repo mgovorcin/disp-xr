@@ -15,6 +15,7 @@ adapts them to xarray and to DISP:
 - :func:`sample` reads DISP at the stations (median in a window, geepers
   ``sample_insar``);
 - :func:`align` puts GNSS on the DISP epochs and on the DISP reference date.
+- :func:`centred` stamps daily solutions at the centre of their UTC day.
 
 Typical use::
 
@@ -33,7 +34,7 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 
-__all__ = ["align", "get_source", "load", "sample", "stations", "to_los"]
+__all__ = ["align", "centred", "get_source", "load", "sample", "stations", "to_los"]
 
 SOURCES = {
     "unr": "UnrSource",
@@ -391,6 +392,36 @@ def _interp_linear(gnss: xr.DataArray, times: pd.DatetimeIndex) -> xr.DataArray:
     return out.rename(new_time="time").assign_coords(time=times).transpose(*gnss.dims)
 
 
+def centred(gnss: xr.DataArray) -> xr.DataArray:
+    """Stamp daily solutions at the centre of the UTC day they cover.
+
+    Daily solutions (UNR and most others) are dated at midnight but average
+    the whole UTC day. Matched by nearest timestamp, an acquisition after
+    12:00 UTC would take the next day's solution, so a series whose stamps
+    are all at midnight is moved to noon. Sub-daily series are returned
+    unchanged.
+
+    Parameters
+    ----------
+    gnss : xr.DataArray
+        Series with a ``time`` coordinate.
+
+    Returns
+    -------
+    xr.DataArray
+        ``gnss`` with its ``time`` moved by 12 h when it is daily.
+
+    Examples
+    --------
+    >>> on_noon = dxr.gnss.centred(los["los"])  # doctest: +SKIP
+
+    """
+    stamps = pd.DatetimeIndex(gnss["time"].values)
+    if len(stamps) and (stamps == stamps.normalize()).all():
+        return gnss.assign_coords(time=stamps + pd.Timedelta(hours=12))
+    return gnss
+
+
 def align(
     gnss: xr.DataArray,
     times: Union[xr.DataArray, pd.DatetimeIndex, np.ndarray],
@@ -411,7 +442,9 @@ def align(
         DISP reference date; default the first epoch (a chained stack is
         relative to it).
     method : {"nearest", "linear"}
-        Nearest GNSS day within ``tolerance``, or linear interpolation.
+        Nearest GNSS solution within ``tolerance``, or linear interpolation.
+        Daily solutions count as stamped at noon (:func:`centred`), so an
+        epoch takes the solution of its own UTC day.
     tolerance : str
         Largest distance in time for ``"nearest"`` (pandas offset).
 
@@ -428,6 +461,7 @@ def align(
     """
     times = pd.DatetimeIndex(np.asarray(times))
     reference = times[0] if reference is None else pd.Timestamp(reference)
+    gnss = centred(gnss)
     if method == "nearest":
         on = gnss.reindex(
             time=times, method="nearest", tolerance=pd.Timedelta(tolerance)
