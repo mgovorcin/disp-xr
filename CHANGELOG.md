@@ -8,6 +8,11 @@ All notable changes to disp-xr. The format follows
 
 ### Added
 
+- `cross_validate_tie` reports `median_before` and `median_after` in
+  `attrs`, the median of the per-station leave-one-out scores. The RMSE is
+  driven by single stations (local subsidence, short records). On the T29
+  frames the median improves on every frame, while the RMSE does not.
+
 - `gnss.drop_relocations`, applied by `gnss.load(max_step_m=10.0)`: a 3-D
   step above 10 m between consecutive solutions marks a monument moved under
   the same station id, not ground motion (near-field coseismic steps reach

@@ -80,6 +80,9 @@ def test_loso_reports_the_improvement(case):
     cv = cross_validate_tie(comparison, mode="epoch")
     assert len(cv) == len(PIXELS)
     assert cv.attrs["rmse_after"] < 0.5 * cv.attrs["rmse_before"]
+    assert cv.attrs["median_after"] < 0.5 * cv.attrs["median_before"]
+    used = cv.loc[~cv["excluded"], "rmse_after"]
+    assert cv.attrs["median_after"] == pytest.approx(float(used.median()))
 
 
 def test_excluded_station_does_not_tilt_the_tie(case):

@@ -296,12 +296,16 @@ def cross_validate_tie(
     pandas.DataFrame
         Per station: ``rmse_before`` (of its residual) and ``rmse_after``
         (after subtracting the prediction), ``excluded``; ``attrs`` holds the
-        network RMSE before and after.
+        network RMSE before and after (``rmse_*``), and the median of the
+        per-station values (``median_*``). The RMSE is driven by single
+        stations (local subsidence, a short record); the median describes
+        the typical station.
 
     Examples
     --------
     >>> scores = cross_validate_tie(comparison, mode="epoch")  # doctest: +SKIP
     >>> scores.attrs["rmse_before"], scores.attrs["rmse_after"]  # doctest: +SKIP
+    >>> scores.attrs["median_before"], scores.attrs["median_after"]  # doctest: +SKIP
 
     """
     table = _station_table(comparison)
@@ -352,6 +356,8 @@ def cross_validate_tie(
     out.attrs = {
         "rmse_before": float(np.sqrt(np.mean(out.loc[used, "rmse_before"] ** 2))),
         "rmse_after": float(np.sqrt(np.mean(out.loc[used, "rmse_after"] ** 2))),
+        "median_before": float(out.loc[used, "rmse_before"].median()),
+        "median_after": float(out.loc[used, "rmse_after"].median()),
         "mode": mode,
         "degree": degree,
         "damping": damping,

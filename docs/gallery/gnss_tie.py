@@ -98,6 +98,10 @@ scores = cross_validate_tie(comparison, mode="epoch")
 print((1e3 * scores[["rmse_before", "rmse_after"]]).round(2))
 before, after = (1e3 * scores.attrs[k] for k in ("rmse_before", "rmse_after"))
 print(f"network RMSE, stations left out: {before:.1f} mm before, {after:.1f} mm after")
+# One station on local deformation can dominate the RMSE; the median
+# describes the typical station.
+before, after = (1e3 * scores.attrs[k] for k in ("median_before", "median_after"))
+print(f"median per station: {before:.1f} mm before, {after:.1f} mm after")
 
 # %% [markdown]
 # On a real frame, use `dxr.gnss.load(ds)` and `dxr.open_static(ds)`, and
