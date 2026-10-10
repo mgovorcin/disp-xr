@@ -189,6 +189,33 @@ def test_align_references_late_stations_to_their_first_epoch():
     assert aligned["gnss_reference"].sel(station="B").values == epochs[2]
 
 
+def test_drop_relocations_keeps_the_longest_segment():
+    # Station B is moved about 1 km after day 3 (GINN in UNR, 2019-2020).
+    days = pd.date_range("2020-01-01", periods=10, freq="D")
+    east = np.tile(np.arange(10.0) * 1e-3, (2, 1))
+    east[1, 4:] += -349.0
+    zeros = np.zeros_like(east)
+    cube = xr.Dataset(
+        {
+            "east": (("station", "time"), east),
+            "north": (("station", "time"), zeros),
+            "up": (("station", "time"), zeros),
+            "sigma_east": (("station", "time"), zeros + 1e-3),
+        },
+        coords={"station": ["A", "B"], "time": days},
+    )
+    out = gnss.drop_relocations(cube)
+    assert out["relocated"].values.tolist() == [False, True]
+    np.testing.assert_array_equal(out["east"].sel(station="A"), east[0])
+    b = out["east"].sel(station="B")
+    assert np.isnan(b[:4]).all() and np.isfinite(b[4:]).all()
+    assert np.isnan(out["sigma_east"].sel(station="B")[:4]).all()
+    # A 5 m coseismic step stays.
+    quake = cube.copy(deep=True)
+    quake["east"][0, 5:] += 5.0
+    assert not gnss.drop_relocations(quake)["relocated"].sel(station="A")
+
+
 def test_centred_leaves_sub_daily_series():
     times = pd.date_range("2020-01-01 03:00", periods=4, freq="6h")
     series = xr.DataArray(np.arange(4.0), dims="time", coords={"time": times})

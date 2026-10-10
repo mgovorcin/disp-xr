@@ -8,6 +8,14 @@ All notable changes to disp-xr. The format follows
 
 ### Added
 
+- `gnss.drop_relocations`, applied by `gnss.load(max_step_m=10.0)`: a 3-D
+  step above 10 m between consecutive solutions marks a monument moved under
+  the same station id, not ground motion (near-field coseismic steps reach
+  about 5 m). The record is split there and only the longest segment is
+  kept. The new `relocated` coordinate flags
+  such stations. Found on GINN (UNR, Canberra): a 1 km jump between 2019
+  and 2020 that reached `compare` as a 7e5 mm/yr velocity.
+
 - `downsample(spread=...)` and `downsample_hex(spread=...)`: the spatial
   variation of each layer within a cell, weighted like the cell value:
   `<layer>_std`, `<layer>_rmse` (about the cell mean or median) and

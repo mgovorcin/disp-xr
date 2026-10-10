@@ -16,6 +16,8 @@ adapts them to xarray and to DISP:
   ``sample_insar``);
 - :func:`align` puts GNSS on the DISP epochs and on the DISP reference date.
 - :func:`centred` stamps daily solutions at the centre of their UTC day.
+- :func:`drop_relocations` keeps each station's longest record between
+  monument moves (applied by :func:`load`).
 
 Typical use::
 
@@ -34,7 +36,16 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 
-__all__ = ["align", "centred", "get_source", "load", "sample", "stations", "to_los"]
+__all__ = [
+    "align",
+    "centred",
+    "drop_relocations",
+    "get_source",
+    "load",
+    "sample",
+    "stations",
+    "to_los",
+]
 
 SOURCES = {
     "unr": "UnrSource",
@@ -142,6 +153,7 @@ def load(
     end: Optional[str] = None,
     cache_dir: Optional[str] = None,
     max_workers: int = 8,
+    max_step_m: Optional[float] = 10.0,
 ) -> xr.Dataset:
     """Load GNSS series as a ``(station, time)`` Dataset.
 
@@ -158,13 +170,21 @@ def load(
         geepers cache directory.
     max_workers : int
         Stations downloaded in parallel by geepers.
+    max_step_m : float or None
+        Largest 3-D position change between consecutive solutions that a
+        station can make and keep its record. A larger one is not ground
+        motion (near-field coseismic steps reach about 5 m) but a monument moved
+        under the same id: the record is split there and only the segment
+        with the most solutions is kept (:func:`drop_relocations`). None
+        keeps every record.
 
     Returns
     -------
     xr.Dataset
         ``east``, ``north``, ``up`` (meters, as geepers returns them) and
         ``sigma_*``, ``corr_*``; coordinates ``station``, ``time``, ``lon``,
-        ``lat``, ``alt`` (and ``x``, ``y`` for a dataset target).
+        ``lat``, ``alt`` (and ``x``, ``y`` for a dataset target), and
+        ``relocated`` (True where a segment was dropped).
 
     Examples
     --------
@@ -211,7 +231,62 @@ def load(
     for name in names:
         cube[name].attrs["units"] = "meters" if not name.startswith("corr") else "1"
     cube.attrs["gnss_source"] = type(src).__name__
+    if max_step_m is not None:
+        cube = drop_relocations(cube, max_step_m)
     return cube
+
+
+def drop_relocations(gnss: xr.Dataset, max_step_m: float = 10.0) -> xr.Dataset:
+    """Keep each station's longest record between non-physical steps.
+
+    A 3-D position change above ``max_step_m`` between consecutive
+    solutions marks a monument moved under the same station id (UNR reuses
+    ids). Series before and after it are different points, so the record is
+    split there and only the segment with the most solutions is kept.
+
+    Parameters
+    ----------
+    gnss : xr.Dataset
+        ``(station, time)`` with ``east``, ``north``, ``up`` in meters.
+    max_step_m : float
+        Largest step kept within one record.
+
+    Returns
+    -------
+    xr.Dataset
+        ``gnss`` with the other segments set to NaN in every variable, and a
+        ``relocated`` coordinate per station.
+
+    Examples
+    --------
+    >>> gps = dxr.gnss.drop_relocations(gps, max_step_m=50.0)  # doctest: +SKIP
+
+    """
+    enu = np.stack([gnss[c].transpose("station", "time").values for c in COMPONENTS])
+    keep = np.ones(enu.shape[1:], dtype=bool)
+    relocated = np.zeros(enu.shape[1], dtype=bool)
+    for k in range(enu.shape[1]):
+        idx = np.flatnonzero(np.isfinite(enu[:, k]).all(axis=0))
+        if idx.size < 2:
+            continue
+        step = np.linalg.norm(np.diff(enu[:, k, idx], axis=1), axis=0)
+        breaks = np.flatnonzero(step > max_step_m) + 1
+        if not breaks.size:
+            continue
+        segments = np.split(idx, breaks)
+        longest = max(segments, key=len)
+        keep[k] = False
+        keep[k, longest] = True
+        relocated[k] = True
+    mask = xr.DataArray(
+        keep,
+        dims=("station", "time"),
+        coords={"station": gnss["station"], "time": gnss["time"]},
+    )
+    out = gnss.where(mask)
+    out = out.assign_coords(relocated=("station", relocated))
+    out.attrs = {**gnss.attrs, "max_step_m": max_step_m}
+    return out
 
 
 def to_los(gnss: xr.Dataset, static: xr.Dataset) -> xr.Dataset:
