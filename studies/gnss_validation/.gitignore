@@ -1,0 +1,4 @@
+# Reproducible from validate.py; too large or local to track.
+*.pkl
+*.pid
+results/*_dd_series.csv

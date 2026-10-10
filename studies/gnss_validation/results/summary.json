@@ -1,0 +1,66 @@
+[
+ {
+  "frame": "F08882",
+  "stations_matched": 133,
+  "pairs_matched": 7404,
+  "epochs_matched": 91,
+  "reference": "UHEB",
+  "dd_stations_usable": 108,
+  "dd_insar_vel_max_diff_mm_yr": 5.1514348342607263e-14,
+  "dd_insar_series_p95_diff_mm": 1.3877787807814457e-13,
+  "dd_gps_vel_max_diff_mm_yr": 0.01676727395669153,
+  "dd_gps_series_p95_diff_mm": 1.700029006457271e-13,
+  "tie_stations": 109,
+  "tie_max_diff_mm_yr": 1.8214596497756474e-14,
+  "loso_rmse_before_mm_yr": 11.918854860764306,
+  "loso_rmse_after_mm_yr": 11.146575678216285,
+  "loso_median_before_mm_yr": 4.695822033599754,
+  "loso_median_after_mm_yr": 0.9520707365900877,
+  "velocity_usable": 109,
+  "relocated": [
+   "DEN4"
+  ]
+ },
+ {
+  "frame": "F11116",
+  "stations_matched": 124,
+  "pairs_matched": 7249,
+  "epochs_matched": 131,
+  "reference": "P180",
+  "dd_stations_usable": 115,
+  "dd_insar_vel_max_diff_mm_yr": 2.042810365310288e-14,
+  "dd_insar_series_p95_diff_mm": 1.0408340855860843e-13,
+  "dd_gps_vel_max_diff_mm_yr": 0.03954230840145283,
+  "dd_gps_series_p95_diff_mm": 1.7520707107365752e-13,
+  "tie_stations": 116,
+  "tie_max_diff_mm_yr": 2.0816681711721685e-14,
+  "loso_rmse_before_mm_yr": 28.04654465403764,
+  "loso_rmse_after_mm_yr": 3.8039338591206264,
+  "loso_median_before_mm_yr": 28.671958933876695,
+  "loso_median_after_mm_yr": 1.1238652075897144,
+  "velocity_usable": 116,
+  "relocated": []
+ },
+ {
+  "frame": "F39362",
+  "stations_matched": 26,
+  "pairs_matched": 287,
+  "epochs_matched": 84,
+  "reference": "TURO",
+  "dd_stations_usable": 20,
+  "dd_insar_vel_max_diff_mm_yr": 1.9539925233402755e-14,
+  "dd_insar_series_p95_diff_mm": 1.249000902703301e-13,
+  "dd_gps_vel_max_diff_mm_yr": 1.6209256159527285e-14,
+  "dd_gps_series_p95_diff_mm": 1.3357370765021415e-13,
+  "tie_stations": 21,
+  "tie_max_diff_mm_yr": 9.86623976961809e-14,
+  "loso_rmse_before_mm_yr": 3.993453277614298,
+  "loso_rmse_after_mm_yr": 2.7571714411545654,
+  "loso_median_before_mm_yr": 3.9657518524099507,
+  "loso_median_after_mm_yr": 1.5568092077923295,
+  "velocity_usable": 21,
+  "relocated": [
+   "GINN"
+  ]
+ }
+]
