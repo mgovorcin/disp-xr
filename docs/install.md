@@ -36,6 +36,7 @@ rest; install them with `pip install "disp_xr[extra1,extra2]"`.
 | `hex` | `h3`, `geopandas` | H3 hexagons (`downsample_hex(grid="h3")`) and `to_geodataframe` |
 | `eof` | `xeofs` | EOF analysis (planned) |
 | `interactive` | `hvplot`, `datashader` | interactive full-frame browsing |
+| `serve` | `xpublish`, `xpublish-tiles`, `fastapi`, `uvicorn`, `pydantic` | the read-only REST service (`disp_xr serve`, `disp_xr.serve`) |
 | `docs` | mkdocs and plugins | building this site |
 
 Remote access needs Earthdata Login credentials in `~/.netrc` (or the

@@ -83,6 +83,8 @@ aws = [
 # with the HDF parser API used here.
 cloud = ["virtualizarr[hdf,icechunk]>=2.4"]
 eof = ["xeofs"]
+# Read-only REST service over stores (disp_xr serve, PRD C7).
+serve = ["xpublish>=0.5", "xpublish-tiles>=0.9", "fastapi", "uvicorn", "pydantic>=2"]
 # Optional backend for disp_xr.timeseries.jax_solve_linear_system.
 jax = ["jax"]
 
@@ -169,6 +171,11 @@ geepers = { git = "https://github.com/opera-adt/geepers.git", rev = "d5421787d9c
 [tool.pixi.feature.tiles.pypi-dependencies]
 xpublish-tiles = ">=0.9"
 
+# pixi takes the serve extra's packages as this feature's; httpx2 is the
+# in-process test client of Starlette (FastAPI).
+[tool.pixi.feature.serve.pypi-dependencies]
+httpx2 = "*"
+
 # The GNSS gallery pages run geepers on synthetic stations (gnss extra).
 [tool.pixi.feature.docs.pypi-dependencies]
 geepers = { git = "https://github.com/opera-adt/geepers.git", rev = "d5421787d9c41dbf7e4d0679249bb9d5145bcc40" }
@@ -238,6 +245,8 @@ test = { features = ["test"], solve-group = "default" }
 docs = { features = ["docs", "interactive", "cloud", "tiles"], solve-group = "default" }
 # Icechunk and VirtualiZarr (cloud extra); CI runs its tests in one job.
 test-cloud = { features = ["test", "cloud"], solve-group = "default" }
+# The REST service (serve extra) and its in-process client.
+test-serve = { features = ["test", "serve"], solve-group = "default" }
 # The residual EOF example (xeofs); CI reports its breakage without failing.
 eof = { features = ["test", "eof"], solve-group = "default" }
 dev = { features = ["test", "aws", "cloud", "plot", "mintpy", "notebooks", "interactive"], solve-group = "default" }

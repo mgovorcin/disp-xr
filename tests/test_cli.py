@@ -34,6 +34,7 @@ def run(*args, ok=True):
         ("geometry", "static layers"),
         ("search", "Find DISP granules"),
         ("virtual", "granule references in Icechunk"),
+        ("serve", "Serve stores read-only over HTTP"),
     ],
 )
 def test_help(command, text):

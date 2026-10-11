@@ -6,6 +6,29 @@ All notable changes to disp-xr. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- `disp_xr serve STORE ...` and `disp_xr.serve.make_app`: a read-only REST
+  service over stores (an xpublish plugin, `serve` extra). Under
+  `/datasets/{id}/disp/` it serves:
+  - `timeseries`: displacement at a point, the median over a buffer, with
+    the quality layers and the reference date;
+  - `velocity`: the stored velocity and its sigma;
+  - `cells`: grid or quadtree cells of a bounding box as GeoJSON, computed
+    on request up to 4 M pixels;
+  - `gnss`: the stored station residuals;
+  - `provenance`: the operation history, input granules and versions;
+  - map tiles through xpublish-tiles.
+
+  Every response carries the CRS and the units, and the response schemas are
+  on the OpenAPI page. Nothing heavy runs on request: velocity and GNSS
+  residuals are served only when the store holds them. A point series on a
+  time-series-chunked store answers in about 20 ms, 0.2 s on a process's
+  first request (plan task T40, PRD C7).
+- `Comparison.to_dataset` and `Comparison.to_zarr`: the GNSS station
+  residuals and summary as a `station` Dataset, written as a `gnss` group
+  next to a cube, where `disp_xr serve` finds it.
+
 ## [0.3.0] - 2026-10-10
 
 Science features (milestone M2), released with the core API of milestone M1.

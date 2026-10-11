@@ -19,6 +19,7 @@ disp_xr geometry PATHS... --out static.zarr [--static-dir DIR] [--no-download]
 disp_xr search --frame-id F [--start DATE] [--end DATE] [--product DISP-S1|DISP-NISAR]
     [--version 1.0|any] [--url-type https|s3] [--out granules.csv]
 disp_xr virtual PATHS... --repo DIR [--branch main] [--workers N] [--no-validate]
+disp_xr serve STORES...    [--host 127.0.0.1] [--port 9000] [--no-tiles]
 ```
 
 ## A typical run
@@ -37,4 +38,8 @@ disp_xr export frame.zarr --format geozarr --out view.zarr  # bowser opens it
 - `export` takes a store written by `stack`, or granules, which it chains
   without corrections, masking or re-referencing.
 - An existing output is refused unless `--overwrite` is given.
-- `geometry` and `search` need the `aws` extra; `virtual` needs `cloud`.
+- `geometry` and `search` need the `aws` extra; `virtual` needs `cloud`;
+  `serve` needs `serve`.
+- `serve` names each dataset after its store (`frame.zarr` is `frame`) and
+  serves it read-only under `/datasets/<name>/disp/`: `timeseries`,
+  `velocity`, `cells`, `gnss` and `provenance`. The API page is at `/docs`.

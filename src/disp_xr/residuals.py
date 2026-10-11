@@ -531,11 +531,76 @@ class Comparison:
 
         return plot_velocity_scatter(self.stations, **kwargs)
 
+    def to_dataset(self) -> xr.Dataset:
+        """Return the station table and the summary as a ``station`` Dataset.
+
+        Every column of ``stations`` becomes a variable, with the station
+        coordinates (``lon``, ``lat``, ``x``, ``y``) from ``series``; the
+        summary is stored as JSON in the ``summary`` attribute.
+
+        Examples
+        --------
+        >>> result.to_dataset().velocity_residual.plot()  # doctest: +SKIP
+
+        """
+        import json
+
+        table = self.stations.copy()
+        table.index = table.index.astype(str).rename("station")
+        ds = xr.Dataset.from_dataframe(table)
+        series = self.series.assign_coords(
+            station=self.series["station"].astype(str)
+        ).reindex(station=ds["station"])
+        for name in ("lon", "lat", "x", "y"):
+            if name in series.coords:
+                ds = ds.assign_coords({name: ("station", series[name].values)})
+        units = str(self.series["insar"].attrs.get("units", "meters"))
+        ds.attrs = {
+            "summary": json.dumps(_jsonable(self.summary)),
+            "units": f"{units}/year for velocities",
+        }
+        return ds
+
+    def to_zarr(self, store: Any, group: str = "gnss", **kwargs: Any) -> None:
+        """Write :meth:`to_dataset` as a group of ``store`` (next to a cube).
+
+        ``disp_xr serve`` reads this group for its ``gnss`` route.
+
+        Examples
+        --------
+        >>> result.to_zarr("frame.zarr")  # doctest: +SKIP
+
+        """
+        import warnings
+
+        with warnings.catch_warnings():
+            # As in disp_xr.to_zarr: consolidated metadata is not yet in the
+            # Zarr 3 specification, but readers that know it go faster.
+            warnings.filterwarnings("ignore", message="Consolidated metadata")
+            self.to_dataset().to_zarr(
+                store, group=group, mode="w", zarr_format=3, **kwargs
+            )
+
     def plot_semivariogram(self, **kwargs: Any) -> Any:
         """Plot the misfit semivariogram (geepers ``plot_semivariogram``)."""
         from geepers.validation import plot_semivariogram
 
         return plot_semivariogram(self.pairs, self.semivariogram, **kwargs)
+
+
+def _jsonable(value: Any) -> Any:
+    """Return ``value`` with numpy scalars and arrays as plain Python."""
+    if isinstance(value, dict):
+        return {str(k): _jsonable(v) for k, v in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_jsonable(v) for v in value]
+    if isinstance(value, np.ndarray):
+        return _jsonable(value.tolist())
+    if isinstance(value, np.generic):
+        value = value.item()
+    if isinstance(value, float) and not np.isfinite(value):
+        return None
+    return value
 
 
 def _merged_tables(series: xr.Dataset) -> dict:
