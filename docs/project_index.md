@@ -36,10 +36,10 @@ The PRD also lives as a shared doc; `specs.md` is its copy in the repo and must 
 | --- | --- | --- |
 | M0 Foundation (v0.1) | T1–T8 | 5 / 8 (T2, T4, T5, T6, T7). Released as `v0.1.0` (2026-10-02). Open: T1.4b (name maintainers), T3.4–T3.5 (coverage badge, branch protection: need CI), T8.4 (milestone dates, needs the maintainers) |
 | M1 Core API (v0.2) | T9–T18 | 7 / 10 (T9, T10, T11, T13, T14, T15, T17). No `v0.2.0`: released with M2 as `v0.3.0` (decision of 2026-10-10). Open: T12.5 (needs DISP-NI-STATIC), T16.6 (GitHub Pages, waits for the repository to go public), T18 (API review with Cal/Val users, then the freeze) |
-| M2 Analysis (v0.3) | T19–T34 | 15 / 16. Released as `v0.3.0` (2026-10-10); gate T34 passed (`studies/gnss_validation.md`). Open: T28 (T28.5 benchmark numbers, need a quiet node; T28.6 noise-normalized split metric, from T29) |
+| M2 Analysis (v0.3) | T19–T34 | 15 / 16. Released as `v0.3.0` (2026-10-10); gate T34 passed (`studies/gnss_validation.md`). Open: T28.5 (benchmark numbers, need a quiet node); T28.6 closed 2026-10-11 (noise-normalized metric rejected) |
 | M3 Release (v1.0) | T35–T40 | 0 / 6. T37 5 of 6 subtasks done (T37.1 budget decided 2026-10-06, T37.3a, T37.4, T37.5 and most of T37.3; T37.3b S3 half needs AWS); T35 waits for beta DISP-NISAR products; T36 parked (decision of 2026-10-04); T38–T39 not started |
 
-Subtasks: 203 done, 38 open. All work is merged in `main`. CI is off (Actions minutes on a private repository); every PR
+Subtasks: 204 done, 37 open. All work is merged in `main`. CI is off (Actions minutes on a private repository); every PR
 since #30 was checked locally and says so in its description.
 
 | Requirement | Tasks | Status |
@@ -134,6 +134,7 @@ since #30 was checked locally and says so in its description.
 
 | Date | Decision |
 | --- | --- |
+| 2026-10-11 | The noise-normalized split metric (T28.6) is dropped: it does not beat the grid and splits like `displacement`; the quadtree default stays `structure` |
 | 2026-10-10 | No `v0.2.0`: M1 and M2 are released together as `v0.3.0`; the core API is not frozen until the T18 review with Cal/Val users |
 | 2026-10-09 | GNSS against DISP (T34.2): daily GNSS solutions match the acquisition's UTC day; `compare` references InSAR and GNSS per station to the first shared epoch; station velocities need 10 shared epochs over 2 years; a GNSS step above 10 m is a monument relocation |
 | 2026-10-05 | A read-only REST service becomes requirement C7 (task T40, M3): an xpublish plugin over existing stores, no processing on request |
@@ -179,6 +180,7 @@ since #30 was checked locally and says so in its description.
 
 | Date | Trigger | Changes |
 | --- | --- | --- |
+| 2026-10-11 | T28.6 finished (rejected) | `studies/split_metric.md` follow-up section and `results/*_unmasked_normalized.csv`; M2 status; one decision |
 | 2026-10-10 | Release `v0.3.0` (milestone M2), T34 branches merged (#68 to #73) | Full cycle: status per milestone recounted (203 / 38 subtasks), `gnss.py` and `residuals.py` rows, two decisions (no `v0.2.0`; GNSS rules from T34.2), unmerged-branch line removed from "Out of sync"; T8.2 and T34 ticked |
 | 2026-10-10 | T16.7 finished | `docs/real_data/versions.ipynb` (F08622 v1.0 against v1.1) in the nav and gallery index |
 | 2026-10-09 | T34.2 finished | Rerun on the full fix stack (velocity gate, relocation screen, median LOSO): the tie improves on all three frames; 1 mm epoch-RMSE gap on F08882 explained (DEN4 relocation, gap-filling policy) |

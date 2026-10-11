@@ -1,7 +1,10 @@
 # Split metric and weight defaults (T29)
 
-Status (2026-10-09): done. Runs finished on 2026-10-06; decision taken
-with the maintainer on 2026-10-09 (see "Decision").
+Status (2026-10-10): done. Runs finished on 2026-10-06; decision taken
+with the maintainer on 2026-10-09 (see "Decision"). The follow-up on a
+noise-normalized split metric (T28.6) ran on 2026-10-10; it does not
+change the decision, and the metric was dropped (see "Follow-up:
+noise-normalized metric").
 
 This study picks the default quadtree split metric (`displacement`,
 `velocity` or `structure`, T28) and the T26 weight parameters (`penalty`,
@@ -299,6 +302,74 @@ threshold).
 The similarity-floor and `min_residual` variants were cut when the sweep was
 trimmed for run time and are untested.
 
+## Follow-up: noise-normalized metric (T28.6)
+
+The `displacement` and `velocity` metrics are variances in data units, so
+noisy cells score high and, at a fixed point budget, the leaves go to noise.
+On F08882 at 1 km, 94% of the leaves sit at the finest level (240 m).
+A prototype split metric, `normalized`, divided each cell's weighted spread
+by the spread its pixels' noise alone would give, a reduced chi-square per
+cell:
+
+- pixel noise variance was `sigma0**2 / w`, with `w` the quality weight;
+- `sigma0` per epoch was the median spread of the finest cells.
+
+It ran against the regular grid at 1 and 2 km on the unmasked arm. The
+results are in `results/<frame>_unmasked_normalized.csv`. The prototype,
+its tests and `run.py --normalized` are in commit `1ad71bd` (plan task
+T28.6's pull request). The rerun of the grid reproduces the T29 numbers
+exactly.
+
+Errors, lower is better; mm for displacement (RMS over epochs), mm/yr for
+the rest:
+
+| Frame | Size | Method | Displacement | Velocity | GNSS | Profile | Leaves at 240 m |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| F08882 | 1 km | grid | **26.6** | **4.01** | **1.52** | **2.43** | |
+| | | normalized | 39.4 | 6.30 | 2.94 | 3.60 | 94% |
+| | | displacement | 39.4 | 6.30 | 2.94 | 3.59 | 94% |
+| | | structure | 39.3 | 6.30 | 2.94 | 3.59 | 94% |
+| F08882 | 2 km | grid | **30.5** | **4.50** | **1.51** | **2.67** | |
+| | | normalized | 39.3 | 6.32 | 2.95 | 3.66 | 63% |
+| | | structure | 39.3 | 6.32 | 2.92 | 3.61 | 36% |
+| F11116 | 1 km | grid | **31.2** | **4.81** | 2.76 | 1.31 | |
+| | | normalized | 36.7 | 5.91 | **2.46** | 2.05 | 84% |
+| | | structure | 35.6 | 5.65 | 2.59 | **1.20** | 17% |
+| F11116 | 2 km | grid | **33.5** | **5.27** | 2.71 | 1.95 | |
+| | | normalized | 39.4 | 6.43 | 2.97 | 4.13 | 65% |
+| | | structure | 36.9 | 5.91 | **2.47** | **1.75** | 1% |
+| F39362 | 1 km | grid | **19.3** | **3.40** | 1.15 | **1.11** | |
+| | | normalized | 23.2 | 3.74 | 0.87 | 1.66 | 81% |
+| | | velocity | 23.1 | 3.68 | **0.75** | 1.73 | 94% |
+| F39362 | 2 km | grid | **20.5** | **3.51** | 1.40 | **1.26** | |
+| | | normalized | 23.5 | 3.78 | 0.83 | 1.72 | 73% |
+| | | velocity | 23.4 | 3.75 | **0.61** | 1.76 | 92% |
+
+**`normalized` does not fix what it was meant to fix.**
+
+- It still puts 63 to 94% of its leaves at the finest level, close to
+  `displacement`. On F08882 at 1 km its leaves are identical to
+  `displacement`'s.
+- The pixel noise it divides by is spatially white. What drives the
+  splits is spatially correlated (atmosphere, unwrapping errors), so it
+  grows with cell size and is not in that model.
+- Dividing by `sigma0` per epoch and by the weights barely changes how
+  cells rank against each other, and at a fixed point budget only the
+  ranking matters.
+- `structure` behaves differently because it compares child means against
+  the children's own noise. That is a scale-aware test, and it is the only
+  metric that moves leaves off the finest level, on F11116 and F39362.
+
+**Against the grid,** `normalized` loses on displacement, velocity and
+profile reconstruction on every frame and size. It wins only on GNSS
+agreement on F11116 at 1 km and on F39362, where the `velocity` metric
+already did better in T29. T28.6's rule was to make it the default only if
+it beat the regular grid somewhere other than the creeping fault. It does
+not, so the decision below stands. Because it adds nothing over
+`displacement`, the metric was dropped rather than shipped as an opt-in
+(maintainer, 2026-10-11). A metric that fixes the noise problem would need a
+noise model that grows with cell size, such as a variogram (`residuals`).
+
 ## Decision
 
 Taken on 2026-10-09:
@@ -311,9 +382,11 @@ Taken on 2026-10-09:
    documented opt-in.
 2. **The regular grid (`downsample`) is the recommended default.** The
    quadtree's default metric becomes `structure`, the best of the three and
-   the only one that beats the grid (on the creeping fault). A
-   noise-normalized split metric, which would stop the budget going to
-   noisy cells, is a follow-up task (T28.6).
+   the only one that beats the grid (on the creeping fault). The follow-up
+   noise-normalized metric (T28.6, 2026-10-10) does not beat the grid
+   anywhere on reconstruction and does not stop the budget going to noisy
+   cells, so the default stays `structure` and the metric was dropped
+   (2026-10-11; see the follow-up above).
 3. **Weight parameters keep their current defaults.** `penalty` and `f0`
    do not matter at these scales; floors stay at the product's own
    thresholds; the residual layer stays (PRD S2). Equal weights are
