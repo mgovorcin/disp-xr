@@ -24,9 +24,9 @@ disp_xr search --frame-id 11116 --start 2024-01-01 --out granules.csv
 ```
 
 ```python
-from disp_xr.search import search
+import disp_xr as dxr
 
-table = search(frame_id=11116)           # one row per granule, latest version 1.0
+table = dxr.search_granules(frame_id=11116)  # one row per granule, version 1.0
 table[["reference_datetime", "secondary_datetime", "generation_datetime", "filename"]]
 ```
 

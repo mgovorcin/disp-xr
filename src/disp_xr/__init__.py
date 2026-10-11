@@ -106,3 +106,16 @@ __all__ = [
     "validate_disp",
     "validate_virtual",
 ]
+
+
+def __getattr__(name: str) -> object:
+    """Resolve ``search_granules`` on first use: it needs the aws extra.
+
+    It is not in ``__all__``, so ``from disp_xr import *`` never imports the
+    aws dependencies.
+    """
+    if name == "search_granules":
+        from .search import search_granules
+
+        return search_granules
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
