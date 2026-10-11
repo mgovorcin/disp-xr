@@ -36,11 +36,11 @@ The PRD also lives as a shared doc; `specs.md` is its copy in the repo and must 
 | Milestone | Tasks | Done |
 | --- | --- | --- |
 | M0 Foundation (v0.1) | T1–T8 | 5 / 8 (T2, T4, T5, T6, T7). Released as `v0.1.0` (2026-10-02). Open: T1.4b (name maintainers), T3.4–T3.5 (coverage badge, branch protection: need CI), T8.4 (milestone dates, needs the maintainers) |
-| M1 Core API (v0.2) | T9–T18 | 7 / 10 (T9, T10, T11, T13, T14, T15, T17). No `v0.2.0`: released with M2 as `v0.3.0` (decision of 2026-10-10). Open: T12.5 (needs DISP-NI-STATIC), T16.6 (GitHub Pages, waits for the repository to go public), T18 (API review with Cal/Val users, then the freeze) |
+| M1 Core API (v0.2) | T9–T18 | 8 / 10 (T9, T10, T11, T13, T14, T15, T17, T18). No `v0.2.0`: released with M2 as `v0.3.0` (decision of 2026-10-10); API review closed by the maintainer and the core API frozen for 0.4.0 (T18, 2026-10-11). Open: T12.5 (needs DISP-NI-STATIC), T16.6 (GitHub Pages, waits for the repository to go public) |
 | M2 Analysis (v0.3) | T19–T34 | 16 / 16. Released as `v0.3.0` (2026-10-10); gate T34 passed (`studies/gnss_validation.md`). T28 finished 2026-10-11 (T28.5 benchmark on AWS Batch; T28.6 rejected) |
 | M3 Release (v1.0) | T35–T40 | 1 / 5 (T40). T37 5 of 6 subtasks done (T37.1 budget decided 2026-10-06, T37.3a, T37.4, T37.5 and most of T37.3; T37.3b S3 half needs AWS); T35 waits for beta DISP-NISAR products; T36 dropped (2026-10-11); T40 done (REST service); T38–T39 not started |
 
-Subtasks: 212 done, 23 open. All work is merged in `main`. CI is off (Actions minutes on a private repository); every PR
+Subtasks: 214 done, 21 open. All work is merged in `main`. CI is off (Actions minutes on a private repository); every PR
 since #30 was checked locally and says so in its description.
 
 | Requirement | Tasks | Status |
@@ -88,7 +88,7 @@ since #30 was checked locally and says so in its description.
 | Module | Requirement | State | Next task |
 | --- | --- | --- | --- |
 | `product.py` | F1 | `ProductSpec`, `DispGranule`, `find_products`, `group_ministacks`, `check_granules`; `get_disp_info` kept for the stack | T7 (deprecate `get_disp_info`) |
-| `stack.py` | F3 | `stack_disp`, `NaNPolicy`, `MissingCrossoverError`; deprecated wrappers | T38 (remove wrappers) |
+| `stack.py` | F3 | `chain`, `NaNPolicy`, `MissingCrossoverError`; deprecated wrappers (`stack_disp` and older) | T18.3, T38 (remove wrappers) |
 | `quality.py` (was `quality_metrics.py`) | F4 | Masks, presets, quality summary, lazy statistics | T10 |
 | `reference.py` (from `utils.py`) | F5 | `rereference`, `get_reference_values`, `find_stable_point`; bug 7 fixed | T11 |
 | `geometry/__init__.py` (from `utils.py`) | F7 | Coordinate helpers, `get_burst_ids` | T12 |
@@ -96,7 +96,7 @@ since #30 was checked locally and says so in its description.
 | `corrections.py` | F6, F15 | `correct`, `remove_plate_motion`, ITRF2014-PMM poles | T13 |
 | `geometry/los.py` | F7 | `enu_to_los`, incidence/azimuth, slant range | T12.2, T12.5 |
 | `export/raster.py` (was `io.py`) | F12 | `to_geotiff` (COG), legacy rasterio helpers | T14.1 |
-| `export/zarr.py` | F12, C1 | `to_zarr`, `to_netcdf`, chunk/shard scheme (presets `timeseries`, `maps`, `ministack`), `round_mantissa` | T14.2, T14.2b |
+| `export/zarr.py`, `export/_overwrite.py` | F12, C1 | `to_zarr`, `to_netcdf` (with `overwrite`), chunk/shard scheme (presets `timeseries`, `maps`, `ministack`), `round_mantissa` | T14.2, T14.2b |
 | `export/icechunk.py` | F12, C2 | `to_icechunk`, `open_icechunk` (`cloud` extra, imported lazily) | T14.2b |
 | `batch.py` | C6 | `init_store`, `plan_jobs`, `RegionJob`, `run_region`, `failed_jobs`, manifest | T37.4 |
 | `virtual.py` | C3 | `build_virtual_frame`, `open_virtual`, `validate_virtual` (`cloud` extra) | T14.2c |
@@ -183,6 +183,7 @@ since #30 was checked locally and says so in its description.
 
 | Date | Trigger | Changes |
 | --- | --- | --- |
+| 2026-10-11 | T18 finished (T18.1 resolved, T18.3 done) | Seven API decisions implemented; `api_policy.md` frozen list; M1 8 / 10; `stack.py` and `export/zarr.py` rows; a misfiled 0.3.0 changelog entry (the `open_virtual` time fix) moved to Unreleased |
 | 2026-10-11 | T28.5 finished, T28 done, M2 complete | Quadtree benchmark on a dedicated AWS Batch instance (`benchmarks/README.md`); M2 16 / 16 |
 | 2026-10-11 | Owner decisions: T36 dropped, T1.4b and T18.2 done | T36 out of the plan (graph, table, T38), F11 and X rows, M3 1 / 5, one decision line; `CODEOWNERS`, `maintainers` |
 | 2026-10-11 | Virtual-frame times fixed | `open_virtual` floors times to whole seconds like `open_disp`; the `test_virtual` item leaves "Out of sync" |

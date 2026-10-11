@@ -1,10 +1,10 @@
 # API policy
 
 What disp-xr promises about its interface, its outputs and the products it
-reads, and how changes are made. The list of frozen names is filled in after
-the [API review](api_review.md) (plan task T18.3); everything else here
-applies now. The freeze was planned for v0.2; no v0.2.0 was tagged, and
-v0.3.0 shipped before the review, so the core API is not frozen yet.
+reads, and how changes are made. The core API is frozen from 0.4.0, after
+the [API review](api_review.md) of 2026-10-11 (plan task T18): see "Frozen
+names" at the end. The freeze was planned for v0.2; no v0.2.0 was tagged,
+and v0.3.0 shipped before the review.
 
 ## Versions
 
@@ -49,7 +49,7 @@ any release. So are the deprecated module aliases (`disp_xr.io`,
 | Level | Meaning | Currently |
 | --- | --- | --- |
 | Stable | Covered by everything above. | Everything public not listed below |
-| Provisional | May change in a minor release, with a changelog entry but without a deprecation cycle. | DISP-NISAR support (product spec not yet validated, plan task T35); `disp_xr.batch` (region jobs); the REST service once added (plan task T40) |
+| Provisional | May change in a minor release, with a changelog entry but without a deprecation cycle. | DISP-NISAR support (product spec not yet validated, plan task T35); `disp_xr.batch` (region jobs); the REST service (`disp_xr.serve`, `disp_xr serve`; plan task T40) |
 
 ## Deprecation
 
@@ -87,12 +87,53 @@ its granules pass the test suite; the product notes record what changed.
   least two years after its release.
 - Optional features live in extras (`aws`, `cloud`, `gnss`, `plot`,
   `interactive`, `hex`, `eof`,
-  `mintpy`, `jax`, and `serve` when added); a missing extra raises an
+  `mintpy`, `jax`, `serve`); a missing extra raises an
   `ImportError` that names it.
 
 ## Frozen names
 
-To be filled in after the review (planned for v0.2, now the first release
-after it): the function names, parameter names and
-defaults that are frozen, and the outcome of each open question in the
-[API review](api_review.md).
+Frozen from 0.4.0. Renaming or removing any of these, or changing a default
+that changes results, follows the deprecation process above.
+
+**Functions and classes** (`disp_xr.__all__`):
+
+- Find and open: `find_products`, `open_disp`, `open_disp_tree`,
+  `open_static`, `open_icechunk`, `open_virtual`, `open_pyramid`,
+  `build_virtual_frame`, `validate_virtual`, and `search_granules` (resolved
+  on first use; needs the aws extra).
+- Prepare: `correct`, `remove_plate_motion`, `mask`, `valid_mask`,
+  `quality_summary`, `quality_weights`, `chain`, `NaNPolicy`, `rereference`,
+  `rechunk`, `to_units`, `validate_disp`, `enu_to_los`.
+- Analyse: `fit_velocity`, `fit_trajectory`, `predict_trajectory`,
+  `Trajectory`, `fit_noise`, `NoiseResult`, `denoise`, `downsample`,
+  `downsample_hex`, `quadtree`, `Quadtree`, `to_points`, `to_geodataframe`,
+  `empirical_variogram`, `fit_variogram`, `VariogramModel`, and the
+  submodules `gnss`, `models`, `diagnostics`.
+- Write: `to_zarr`, `to_netcdf`, `to_geotiff`, `to_mintpy`, `to_geozarr`,
+  `to_pyramid`, `build_overviews`, `to_icechunk`.
+- `config`, `__version__`.
+
+**Accessor** (`ds.disp`): `chain`, `correct`, `mask`, `remove_plate_motion`,
+`rereference`, `rechunk`, `denoise`, `deramp`, `quality_summary`,
+`to_units`, `plot_map`, `plot_point`, `validate`, and the properties
+`history` and `grid`.
+
+**Command line**: `disp_xr info`, `stack`, `export`, `geometry`, `search`,
+`virtual` and `serve` (provisional, with the REST service).
+
+**Conventions decided in the review:**
+
+| Convention | Rule |
+| --- | --- |
+| Chaining | `chain` / `.disp.chain()` |
+| Default corrections | `correct(ds)` subtracts what the product has not applied (`which="product"`) |
+| Existing outputs | Every writer takes `overwrite: bool = False` and refuses an existing output unless it is set; `to_icechunk` keeps `mode` for appends |
+| NaN at a crossover | `nan_policy="omit"` carries the offset accumulated before the gap |
+| Chunk layouts | `rechunk` names its layout; there is no default |
+| Order of steps | `.disp.mask()` and `.disp.correct()` refuse chained data |
+
+**Deprecated, removed in 1.0:** `stack_disp` and `.disp.stack()` (use
+`chain`); `rechunk` without a layout; `mode=` on `to_zarr`, `to_geozarr` and
+`to_pyramid` (use `overwrite`); `combine_disp_product`, `rebase_disp`,
+`create_rebased_displacement`, `get_disp_info`; the module aliases listed
+under "What is public".
