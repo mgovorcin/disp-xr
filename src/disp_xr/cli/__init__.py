@@ -533,3 +533,35 @@ def virtual(
     if validate:
         report = dxr.validate_virtual(repo, df, branch=branch)
         click.echo(f"Validated {report['n_granules']} granules against h5py")
+
+
+# --- serve ---------------------------------------------------------------------
+
+
+@cli_app.command()
+@click.argument(
+    "stores", nargs=-1, required=True, type=click.Path(exists=True, path_type=Path)
+)
+@click.option("--host", default="127.0.0.1", show_default=True)
+@click.option("--port", type=int, default=9000, show_default=True)
+@click.option(
+    "--tiles/--no-tiles",
+    default=True,
+    show_default=True,
+    help="Add web map tiles (xpublish-tiles) when installed.",
+)
+@_user_errors
+def serve(stores: tuple[Path, ...], host: str, port: int, tiles: bool) -> None:
+    """Serve stores read-only over HTTP (serve extra).
+
+    Routes for time series, velocity, cells, GNSS residuals and provenance;
+    each dataset is named after its store.
+    """
+    from disp_xr.serve import make_app
+
+    names = [p.name.removesuffix(".zarr") for p in stores]
+    if len(set(names)) != len(names):
+        raise click.UsageError(f"store names must differ: {', '.join(names)}")
+    rest = make_app(dict(zip(names, stores)), tiles=tiles)
+    click.echo(f"Serving {', '.join(names)} at http://{host}:{port} (API at /docs)")
+    rest.serve(host=host, port=port)
