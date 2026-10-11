@@ -72,10 +72,8 @@ graph LR
   T32 --> T34
   T33 --> T34
   T34 --> T35
-  T34 --> T36
   T34 --> T37
   T35 --> T38
-  T36 --> T38
   T37 --> T38
   T34 --> T40
   T40 --> T38
@@ -97,7 +95,7 @@ Goal: make the existing code safe to change. That means installable, tested, in 
   - [x] T1.2 Add optional extras: `test` (pytest, pytest-cov, pytest-xdist, cf_xarray), `docs` (mkdocs, mkdocs-material, mkdocstrings, mkdocs-jupyter), `gnss` (xvec, geopandas), `mintpy` (MintPy reader for round-trip tests only), `plot` (matplotlib), `interactive` (hvplot, datashader), `aws` (s3fs, asf_search, dem_stitcher, tile_mate), `cloud` (`virtualizarr[hdf,icechunk]>=2.4`, which brings icechunk and obstore), `eof` (xeofs). Comment each version floor. Move the heavy imports behind those extras.
   - [x] T1.3 Align Python versions: `requires-python >=3.12`, `environment.yml` `python >=3.12`, mypy `python_version = "3.12"`.
   - [x] T1.4 Fix `license = { file = "LICENSE" }` and add `license-files` so `LICENSES/opera-utils-BSD-3-Clause.txt` (added in T4.7) ships in the sdist and wheel. Point `project.urls` at the canonical repository (OPERA Cal/Val, per the PRD decision). Partly done: license and URLs fixed (URLs point to `opera-adt/disp-xr`, the live repo; the old `OPERA-Cal-Val/disp_xr_tools` URL redirects to a personal repo). `license-files` waits for T4.7. `license-files` added in T4.7 (`5ec30ea`).
-  - [ ] T1.4b Name the maintainers and reviewers with the Cal/Val leads; add `CODEOWNERS` and the `maintainers` field in `pyproject.toml`; record them in the PRD open question.
+  - [x] T1.4b Name the maintainers and reviewers with the Cal/Val leads; add `CODEOWNERS` and the `maintainers` field in `pyproject.toml`; record them in the PRD open question. Done 2026-10-11: the owner is the sole maintainer and reviewer (`@mgovorcin`); `.github/CODEOWNERS` and `maintainers` in `pyproject.toml`.
   - [x] T1.5 Remove `opera_utils` from `environment.yml` (PRD decision: no opera_utils dependency). Remove `folium` and `mapclassify` unless an import needs them (grep first). Split dev tools into an `environment-dev.yml` if the list grows. Add `numbagg` to `environment.yml` (xarray uses it for faster NaN-aware reductions when present; disp-xr never imports it).
   - [x] T1.6 Smoke test: create the env from scratch, install, import, and run `pre-commit run -a`. Fix any lint failures in the existing code.
   - [x] T1.7 pixi: `[tool.pixi]` in `pyproject.toml` with environments `default`, `test`, `docs` and `dev`, tasks `test` and `check`, a committed `pixi.lock`, `.pixi` in `.gitignore`; README install section shows pixi first.
@@ -309,7 +307,7 @@ Goal: the everyday DISP workflow (open, mask, re-reference, correct, export, plo
   - Context: gate "API reviewed by users". Names change cheaply now and expensively after M2.
   - Done when: tag `v0.2.0` exists, at least 3 Cal/Val users have run the getting-started flow on their own frames, their feedback is triaged into issues, and the core names are frozen.
   - [ ] T18.1 Tag `v0.2.0`, update the changelog and publish the docs. Decision (maintainer, 2026-10-10): no `v0.2.0`; M1 and M2 were released together as `v0.3.0` because the review below had not taken place. The review and the API freeze (T18.2, T18.3) stay open and land in a later 0.x release.
-  - [ ] T18.2 Run the API review: share the getting-started page and collect feedback in one issue per topic. Prepared: `docs/api_review.md` (public API, settled decisions, seven open questions, each to become an issue) and `docs/try-it.md` (a 30-minute guide for users on their own frames). Already fixed: an internal parameter in `to_geotiff`'s signature; deprecated names out of `__all__`. Waiting: at least 3 Cal/Val users.
+  - [x] T18.2 Run the API review: share the getting-started page and collect feedback in one issue per topic. Prepared: `docs/api_review.md` (public API, settled decisions, seven open questions, each to become an issue) and `docs/try-it.md` (a 30-minute guide for users on their own frames). Already fixed: an internal parameter in `to_geotiff`'s signature; deprecated names out of `__all__`. Waiting: at least 3 Cal/Val users. Done 2026-10-11 without outside reviewers (there are no other users yet): the maintainer answered the seven open questions; decisions in `docs/api_review.md`, implemented in T18.3.
   - [ ] T18.3 Apply the agreed renames (with deprecation shims) and record the frozen core API in `docs/api_policy.md`. Prepared: `docs/api_policy.md` draft (what is public, deprecation rules); the frozen list waits for the review.
 
 ---
@@ -546,18 +544,6 @@ Goal: DISP-NISAR at parity, multi-frame, performance targets met, published on c
   - [ ] T35.4 Add a NISAR gallery example.
   - [ ] T35.5 Re-run the T29 study runner on 3 DISP-NISAR frames; confirm or adjust the default split metric and weight parameters, and append the result to `docs/studies/split_metric.md` (PRD S2 trade study, item 5).
 
-### T36. Multi-frame mosaic
-
-- [ ] **T36. Multi-frame mosaic** — Depends on: T34 · PRD: F11, X (multi-frame DataTree)
-  - Context: adjacent frames have different grids and reference points. A mosaic needs a common grid, a consistent reference, and offsets estimated in the overlaps.
-  - Done when: `dxr.mosaic([ds1, ds2, ...], method="overlap_median")` returns one dataset on a common grid, with overlap offsets removed. Synthetic two-frame tests recover an injected offset. `dxr.open_frames(...)` returns a DataTree with one node per frame.
-  - [ ] T36.1 Build a common grid (PRD F11). The default CRS is the UTM zone that holds the largest share of valid pixels; `crs=` overrides it. Raise when the frames span more than two UTM zones and no CRS is given, and record the chosen CRS in attrs. Use the finest spacing and the union extent. Evaluate odc-geo for lazy, dask-backed reprojection at frame scale before relying on `rio.reproject_match`, which loads data.
-  - [ ] T36.1b `open_frames(paths_or_frame_ids) -> xr.DataTree` with one node per frame, each an `open_disp` dataset in its own CRS; `mosaic` accepts this tree.
-  - [ ] T36.2 Estimate per-frame offsets from the weighted median difference in the overlaps, per epoch or for velocity.
-  - [ ] T36.3 Merge with weights (T26) in overlaps, and record the offsets in attrs.
-  - [ ] T36.3b Regional path: `mosaic` accepts S2 outputs (point tables or coarse levels from T27, each downsampled in its own frame CRS) and merges them on the coarse grid, so 30 m data is not reprojected. Carry `sum_w` and `sum_w2` through the merge so overlap cells combine as weighted means.
-  - [ ] T36.4 Add tests with synthetic overlapping frames and a gallery example.
-
 ### T37. Performance and memory hardening
 
 - [ ] **T37. Performance and memory hardening** — Depends on: T34 · PRD: NFR Performance, Memory, Scale, Benchmarks, C5, C6
@@ -584,7 +570,7 @@ Goal: DISP-NISAR at parity, multi-frame, performance targets met, published on c
 
 ### T38. 1.0 release preparation
 
-- [ ] **T38. 1.0 release preparation** — Depends on: T35, T36, T37, T40 · PRD: NFR Packaging, Docs, Testing
+- [ ] **T38. 1.0 release preparation** — Depends on: T35, T37, T40 · PRD: NFR Packaging, Docs, Testing
   - Context: 1.0 is a stability promise. Remove the deprecated shims, meet the 80% coverage target, finish the docs, and publish on conda-forge and PyPI.
   - Done when: coverage is at least 80%, no deprecated paths remain, the docs are complete (every public function has an example), the PyPI trusted-publishing workflow works on a release candidate, and the conda-forge feedstock PR is merged.
   - [ ] T38.1 Remove the T4.3 and T18.3 shims and update the changelog. Remove the `download.py` shim.
@@ -645,11 +631,10 @@ Each task, what it needs, and what it unlocks. Every task except T39 unlocks at 
 | T31 | T30 | T34 |
 | T32 | T23, T25, T27 | T29, T34 |
 | T33 | T24, T25 | T34 |
-| T34 | T22, T29, T31, T32, T33 | T35, T36, T37, T40 |
+| T34 | T22, T29, T31, T32, T33 | T35, T37, T40 |
 | T35 | T34 | T38 |
-| T36 | T34 | T38 |
 | T37 | T34 | T38 |
-| T38 | T35, T36, T37, T40 | T39 |
+| T38 | T35, T37, T40 | T39 |
 | T39 | T38 | — (final) |
 | T40 | T34 | T38 |
 

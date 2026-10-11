@@ -15,6 +15,7 @@ classifiers = [
   "Operating System :: OS Independent",
 ]
 license = { file = "LICENSE" }
+maintainers = [{ name = "Marin Govorcin", email = "marin.govorcin@jpl.nasa.gov" }]
 
 # The version is written to src/disp_xr/_version.py on install (setuptools_scm).
 dynamic = ["version"]
