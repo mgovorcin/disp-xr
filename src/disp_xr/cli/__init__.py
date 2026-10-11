@@ -232,7 +232,6 @@ def stack(
     quality mask (per granule), chain the ministacks, re-reference, write.
     """
     import disp_xr as dxr
-    from disp_xr.product import PRODUCTS
 
     which = [c.strip() for c in corrections.split(",") if c.strip()]
     ds = dxr.open_disp(
@@ -241,15 +240,8 @@ def stack(
         frame_id=frame_id,
         min_version=min_version,
     )
-    if which == ["product"]:
-        spec = PRODUCTS[ds.attrs["product"]]
-        which = [
-            c
-            for c in spec.applicable_corrections
-            if c not in spec.pre_applied_corrections
-        ]
     if which != ["none"]:
-        ds = dxr.correct(ds, which)
+        ds = dxr.correct(ds, "product" if which == ["product"] else which)
     if mask != "none":
         ds = dxr.mask(ds, mask)
     ds = dxr.chain(ds, start=start, end=end)

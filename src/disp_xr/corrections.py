@@ -106,7 +106,7 @@ def _external_on_ds(
 @recorded
 def correct(
     ds: xr.Dataset,
-    which: Optional[Sequence[str]] = DEFAULT_CORRECTIONS,
+    which: Union[str, Sequence[str], None] = "product",
     *,
     external: Optional[Mapping[str, xr.DataArray]] = None,
     external_kind: Literal["differential", "absolute"] = "differential",
@@ -117,10 +117,13 @@ def correct(
     ----------
     ds : xr.Dataset
         Unchained DISP data opened with ``open_disp(..., corrections=True)``.
-    which : sequence of str, optional
+    which : "product", str or sequence of str, optional
         Product layers to subtract: ``"ionospheric_delay"`` (alias
         ``"ionosphere"``) and ``"solid_earth_tide"`` (alias ``"set"``).
-        ``None`` or empty applies only ``external``.
+        ``"product"`` (default) subtracts every layer the product carries
+        that its processor has not applied already: both for DISP-S1, the
+        solid-earth tide only for DISP-NISAR. ``None`` or empty applies only
+        ``external``.
     external : mapping of str to xr.DataArray, optional
         Extra corrections in meters of LOS displacement, positive toward the
         satellite like ``displacement``, for example a troposphere layer:
@@ -149,8 +152,8 @@ def correct(
     Examples
     --------
     >>> raw = dxr.open_disp("F11116/", corrections=True)  # doctest: +SKIP
-    >>> layers = ["ionospheric_delay", "solid_earth_tide"]
-    >>> ds = dxr.correct(raw, layers)  # doctest: +SKIP
+    >>> ds = dxr.correct(raw)  # doctest: +SKIP
+    >>> ds = dxr.correct(raw, ["solid_earth_tide"])  # doctest: +SKIP
     >>> ds = dxr.correct(raw, None, external={"troposphere": tropo})  # doctest: +SKIP
 
     """
@@ -164,6 +167,11 @@ def correct(
     disp = ds["displacement"]
     spec = PRODUCTS.get(ds.attrs.get("product", ""))
     applicable = spec.applicable_corrections if spec else DEFAULT_CORRECTIONS
+    if which == "product":
+        pre_applied = spec.pre_applied_corrections if spec else frozenset()
+        which = [c for c in applicable if c not in pre_applied]
+    elif isinstance(which, str):
+        which = [which]
 
     for requested in which or ():
         name = ALIASES.get(requested, requested)

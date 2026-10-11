@@ -58,6 +58,22 @@ def test_pre_applied_is_refused(ds):
     dxr.correct(nisar, ["solid_earth_tide"])
 
 
+def test_default_is_what_the_product_has_not_applied(ds):
+    # DISP-NISAR carries the ionosphere already applied: the default subtracts
+    # the solid-earth tide only, where it used to raise.
+    nisar = ds.assign_attrs(product="DISP-NISAR")
+    out = dxr.correct(nisar)
+    assert json.loads(out.attrs["corrections_applied"]) == ["solid_earth_tide"]
+    xr.testing.assert_allclose(
+        out.displacement, (nisar.displacement - nisar.solid_earth_tide)
+    )
+
+
+def test_one_correction_as_a_string(ds):
+    out = dxr.correct(ds, "set")
+    assert json.loads(out.attrs["corrections_applied"]) == ["solid_earth_tide"]
+
+
 def test_missing_and_unknown_layers(stack_dir, ds):
     with pytest.raises(CorrectionError, match=r"corrections=True"):
         dxr.correct(dxr.open_disp(stack_dir))
