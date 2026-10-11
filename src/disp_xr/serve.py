@@ -351,8 +351,11 @@ def _cells(
 def open_store(path: Union[str, Path]) -> tuple[xr.Dataset, Optional[xr.Dataset]]:
     """Open a store lazily, with its GNSS group when it has one.
 
-    Zarr stores (written by ``disp_xr stack`` or ``to_zarr``) and Icechunk
-    repositories are supported.
+    Zarr stores (written by ``disp_xr stack`` or ``to_zarr``), Icechunk
+    repositories (``to_icechunk``) and virtual frames (``disp_xr virtual``)
+    are supported. A virtual frame holds its granules as they are, one
+    reference per ministack, so it is chained on open
+    (:func:`disp_xr.stack_disp`, lazily: nothing is read until a request).
 
     Parameters
     ----------
@@ -382,8 +385,16 @@ def open_store(path: Union[str, Path]) -> tuple[xr.Dataset, Optional[xr.Dataset]
             if (path / "gnss").is_dir():
                 gnss = xr.open_zarr(path, group="gnss")
         return ds, gnss
+    import icechunk
+
     from .export.icechunk import open_icechunk
 
+    repo = icechunk.Repository.open(icechunk.local_filesystem_storage(str(path)))
+    if repo.config.virtual_chunk_containers:
+        from .stack import stack_disp
+        from .virtual import open_virtual
+
+        return stack_disp(open_virtual(path)), None
     return open_icechunk(path), None
 
 

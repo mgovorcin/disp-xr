@@ -246,7 +246,7 @@ docs = { features = ["docs", "interactive", "cloud", "tiles"], solve-group = "de
 # Icechunk and VirtualiZarr (cloud extra); CI runs its tests in one job.
 test-cloud = { features = ["test", "cloud"], solve-group = "default" }
 # The REST service (serve extra) and its in-process client.
-test-serve = { features = ["test", "serve"], solve-group = "default" }
+test-serve = { features = ["test", "serve", "cloud"], solve-group = "default" }
 # The residual EOF example (xeofs); CI reports its breakage without failing.
 eof = { features = ["test", "eof"], solve-group = "default" }
 dev = { features = ["test", "aws", "cloud", "plot", "mintpy", "notebooks", "interactive"], solve-group = "default" }
