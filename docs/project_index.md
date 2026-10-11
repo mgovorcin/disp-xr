@@ -17,6 +17,7 @@ How and when this file is rebuilt: see "Project Index (cyclical indexing)" in `C
 | [api_policy.md](api_policy.md) | What is public, deprecation rules, frozen names (draft until v0.2) | — |
 | [try-it.md](try-it.md) | Guide for Cal/Val users trying disp-xr on their own frame | — |
 | [product_notes.md](product_notes.md) | Differences between DISP productions that affect reading a frame (float32 to float64 displacement in November 2025) | — |
+| [serving.md](serving.md) | Running `disp_xr serve` for others: preparing stores, workers, reverse proxy with caching, limits | — |
 | [remote.md](remote.md) | Finding and reading granules remotely: credentials, search, download, HTTPS and S3, static layers | — |
 | [performance.md](performance.md) | Running full frames: processes against threads, disp-xr settings, environment for batch jobs, memory stalls on shared nodes | — |
 | [docs_plan.md](docs_plan.md) | Documentation coverage per feature, stale notebooks, GitHub Pages gaps, tutorial order before going public | — |
@@ -37,9 +38,9 @@ The PRD also lives as a shared doc; `specs.md` is its copy in the repo and must 
 | M0 Foundation (v0.1) | T1–T8 | 5 / 8 (T2, T4, T5, T6, T7). Released as `v0.1.0` (2026-10-02). Open: T1.4b (name maintainers), T3.4–T3.5 (coverage badge, branch protection: need CI), T8.4 (milestone dates, needs the maintainers) |
 | M1 Core API (v0.2) | T9–T18 | 7 / 10 (T9, T10, T11, T13, T14, T15, T17). No `v0.2.0`: released with M2 as `v0.3.0` (decision of 2026-10-10). Open: T12.5 (needs DISP-NI-STATIC), T16.6 (GitHub Pages, waits for the repository to go public), T18 (API review with Cal/Val users, then the freeze) |
 | M2 Analysis (v0.3) | T19–T34 | 15 / 16. Released as `v0.3.0` (2026-10-10); gate T34 passed (`studies/gnss_validation.md`). Open: T28.5 (benchmark numbers, need a quiet node); T28.6 closed 2026-10-11 (noise-normalized metric rejected) |
-| M3 Release (v1.0) | T35–T40 | 0 / 6. T37 5 of 6 subtasks done (T37.1 budget decided 2026-10-06, T37.3a, T37.4, T37.5 and most of T37.3; T37.3b S3 half needs AWS); T35 waits for beta DISP-NISAR products; T36 parked (decision of 2026-10-04); T40 4 of 5 subtasks done (gallery page open); T38–T39 not started |
+| M3 Release (v1.0) | T35–T40 | 1 / 6 (T40). T37 5 of 6 subtasks done (T37.1 budget decided 2026-10-06, T37.3a, T37.4, T37.5 and most of T37.3; T37.3b S3 half needs AWS); T35 waits for beta DISP-NISAR products; T36 parked (decision of 2026-10-04); T40 done (REST service); T38–T39 not started |
 
-Subtasks: 208 done, 33 open. All work is merged in `main`. CI is off (Actions minutes on a private repository); every PR
+Subtasks: 209 done, 32 open. All work is merged in `main`. CI is off (Actions minutes on a private repository); every PR
 since #30 was checked locally and says so in its description.
 
 | Requirement | Tasks | Status |
@@ -70,7 +71,7 @@ since #30 was checked locally and says so in its description.
 | C4 Multiscale pyramids | T27.7, T27.9 | Done: `to_pyramid`, `open_pyramid`, `build_overviews`, `to_geozarr` (bowser) |
 | C5 Map serving example | T37.5 | Done: gallery `web_tiles` (xpublish-tiles, docs environment only) |
 | C6 Batch builds and benchmarks | T37.3b, T37.4 | Region jobs done (`batch.py`); storage benchmark: local compression part in progress, S3 part needs AWS |
-| C7 Read-only REST service (opt-in) | T40 | In progress: `serve.py` (T40.1 to T40.4, branch `feature/serve`); gallery page (T40.5) open |
+| C7 Read-only REST service (opt-in) | T40 | Done: `serve.py`, `disp_xr serve`, gallery page and guide (`serving.md`); virtual frames not served yet |
 | X DataTree | T6.4b, T36.1b | `open_disp_tree` done |
 | X flox grouped reductions | T10.3, T23.2, T32.1 | Used in `quality_summary(by_ministack=True)`; others not needed so far |
 | X apply_ufunc kernels | T7.2, T20.3, T22.3 | Done: per-pixel fits and filters run through `apply_ufunc` on time-contiguous chunks |
@@ -181,6 +182,7 @@ since #30 was checked locally and says so in its description.
 
 | Date | Trigger | Changes |
 | --- | --- | --- |
+| 2026-10-11 | T40 finished (T40.5) | `docs/gallery/rest_service.py`, `docs/serving.md` (Documents row), C7 done, M3 1 / 6 |
 | 2026-10-11 | T40.1 to T40.4 finished | `serve.py` (module row, C7 in progress), `serve` extra and `test-serve` environment, `docs/api/serve.md`, `cli.md`, `install.md` |
 | 2026-10-11 | T28.6 finished (rejected) | `studies/split_metric.md` follow-up section and `results/*_unmasked_normalized.csv`; M2 status; one decision |
 | 2026-10-10 | Release `v0.3.0` (milestone M2), T34 branches merged (#68 to #73) | Full cycle: status per milestone recounted (203 / 38 subtasks), `gnss.py` and `residuals.py` rows, two decisions (no `v0.2.0`; GNSS rules from T34.2), unmerged-branch line removed from "Out of sync"; T8.2 and T34 ticked |

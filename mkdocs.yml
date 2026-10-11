@@ -136,9 +136,11 @@ nav:
       - Cloud and serving:
           - Virtual frames and versioned stores: gallery/virtual_frames.py
           - Serving results as web map tiles: gallery/web_tiles.py
+          - A REST service for web clients: gallery/rest_service.py
           - Interactive browsing of a full frame: gallery/interactive.py
   - Guides:
       - Finding and reading granules remotely: remote.md
+      - Serving stores over HTTP: serving.md
       - Choosing a velocity method: velocity-methods.md
       - Command line: cli.md
       - Large frames and batch jobs: performance.md

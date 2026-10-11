@@ -136,6 +136,10 @@ not run them again.
 
     xpublish-tiles behind MapLibre or Leaflet.
 
+-   :material-api: **[A REST service for web clients](rest_service.py)**
+
+    `disp_xr serve`: point series, velocity, cells as GeoJSON, GNSS residuals, provenance.
+
 -   :material-cursor-default-click-outline: **[Interactive browsing of a full frame](interactive.py)**
 
     hvplot and datashader on a lazy stack.
