@@ -181,6 +181,12 @@ leave-one-station-out score on every frame: the median after the tie is about
 
 ### Fixed
 
+- `open_virtual` returned `time` and `reference_time` with the sub-second
+  parts of the granules' own time variables (0.44 s on the tutorial
+  granules), while `open_disp` keeps whole seconds as in granule names, so
+  the same frame read both ways did not align on time. Both now give whole
+  seconds.
+
 - `residuals.compare` dropped every station without a GNSS solution on the
   DISP reference date (installed later, or a gap that day): `gnss.align`
   zeroes GNSS there, so the whole series was NaN. On the T29 frames this

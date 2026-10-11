@@ -383,9 +383,16 @@ def open_virtual(
 
     """
     repository = _open_repository(repo, credentials=credentials)
-    return open_icechunk(
+    ds = open_icechunk(
         repository, branch=branch, tag=tag, snapshot_id=snapshot_id, chunks=chunks
     )
+    # The references point at the granules' own time variables, which
+    # productions encode with sub-second parts; open_disp keeps whole
+    # seconds (as in granule names), and a frame must read the same both ways.
+    for name in ("time", "reference_time"):
+        if name in ds.coords:
+            ds = ds.assign_coords({name: ds[name].dt.floor("s")})
+    return ds
 
 
 def _same(a: np.ndarray, b: np.ndarray) -> bool:
