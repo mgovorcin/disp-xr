@@ -11,7 +11,7 @@ from disp_xr.export.multiscales import MULTISCALES_CONVENTION, build_overviews
 
 @pytest.fixture
 def ds(stack_dir):
-    return dxr.stack_disp(dxr.open_disp(stack_dir)).disp.rereference("median")
+    return dxr.chain(dxr.open_disp(stack_dir)).disp.rereference("median")
 
 
 def test_build_overviews_layout(ds):

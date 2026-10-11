@@ -14,7 +14,7 @@ INC, AZ = 40.0, 100.0  # clockwise azimuth of a descending ground-to-satellite L
 
 @pytest.fixture
 def ds(stack_dir):
-    return dxr.stack_disp(dxr.open_disp(stack_dir, corrections=True))
+    return dxr.chain(dxr.open_disp(stack_dir, corrections=True))
 
 
 @pytest.fixture
@@ -98,7 +98,7 @@ def test_quality_files(ds, tmp_path):
 
 
 def test_refuses_unchained_and_existing(stack_dir, ds, tmp_path):
-    with pytest.raises(ValueError, match="chain with stack_disp"):
+    with pytest.raises(ValueError, match=r"chain first \(disp_xr.chain\)"):
         dxr.to_mintpy(dxr.open_disp(stack_dir), tmp_path)
     dxr.to_mintpy(ds, tmp_path)
     with pytest.raises(ValueError, match="overwrite=True"):

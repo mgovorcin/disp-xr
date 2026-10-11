@@ -29,7 +29,7 @@ def _ramp(ds, rate_x=2e-6, rate_y=-1e-6):
 
 @pytest.fixture
 def case(stack_dir, tmp_path):
-    truth = dxr.stack_disp(dxr.open_disp(stack_dir)).disp.rereference("median")
+    truth = dxr.chain(dxr.open_disp(stack_dir)).disp.rereference("median")
     src = stations_from_disp(truth, PIXELS, tmp_path / "cache", noise=0.0005)
     gps = dxr.gnss.load(truth, source=src)
     error = _ramp(truth) * 30  # about a centimeter across the frame

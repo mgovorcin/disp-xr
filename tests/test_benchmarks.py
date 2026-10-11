@@ -36,7 +36,7 @@ def test_storage_benchmark_runs(tmp_path):
     storage = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(storage)
     make_disp_stack(tmp_path / "g", "two_ministacks", shape=(64, 64))
-    stack = dxr.stack_disp(dxr.open_disp(tmp_path / "g"))
+    stack = dxr.chain(dxr.open_disp(tmp_path / "g"))
     dxr.to_zarr(stack, tmp_path / "stack.zarr")
     table = storage.run(tmp_path / "stack.zarr", epochs=3, size=32, trials=1)
     configurations = len(storage.CODECS) * len(storage.LAYOUTS)

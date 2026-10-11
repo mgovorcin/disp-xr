@@ -161,7 +161,7 @@ def build(frame: str, entry: dict) -> None:
         if VARIANT == "masked"
         else dxr.mask(ds, None, water=True)
     )
-    ds = dxr.stack_disp(ds)
+    ds = dxr.chain(ds)
     ds = rereference_box(ds, frame)
     keep = list(range(0, ds.sizes["time"], STRIDE))
     if keep[-1] != ds.sizes["time"] - 1:

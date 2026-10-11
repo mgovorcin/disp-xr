@@ -13,7 +13,7 @@ icechunk = pytest.importorskip("icechunk")
 
 @pytest.fixture
 def ds(stack_dir):
-    return dxr.stack_disp(dxr.open_disp(stack_dir))
+    return dxr.chain(dxr.open_disp(stack_dir))
 
 
 @pytest.fixture
@@ -57,7 +57,7 @@ def test_commit_metadata(ds, repo):
     assert len(meta["input_granules"]) == 10  # granules, not epochs
     assert meta["frame_id"] == ds.attrs["frame_id"]
     assert meta["product"] == "DISP-S1"
-    assert json.loads(meta["history"].splitlines()[-1])["op"] == "stack_disp"
+    assert json.loads(meta["history"].splitlines()[-1])["op"] == "chain"
 
 
 def test_refuses_existing_data(ds, repo):

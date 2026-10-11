@@ -1,7 +1,7 @@
 """The ``.disp`` accessor on xarray objects.
 
-It only delegates to disp-xr functions, so ``ds.disp.stack()`` and
-``dxr.stack_disp(ds)`` are the same operation. Registered when ``disp_xr`` is
+It only delegates to disp-xr functions, so ``ds.disp.chain()`` and
+``dxr.chain(ds)`` are the same operation. Registered when ``disp_xr`` is
 imported.
 
 Examples
@@ -15,6 +15,7 @@ True
 
 from __future__ import annotations
 
+import warnings
 from typing import Any, Optional, Union
 
 import xarray as xr
@@ -26,7 +27,7 @@ from .geometry import Grid, grid
 from .plot import plot_map, plot_point
 from .quality import mask, quality_summary
 from .reference import rereference
-from .stack import stack_disp
+from .stack import chain
 from .units import to_units
 from .validate import validate_disp
 
@@ -81,9 +82,22 @@ class DispDatasetAccessor(_Common):
         """Wrap ``ds``; xarray creates the accessor on first ``ds.disp`` use."""
         self._obj = ds
 
+    def chain(self, **kwargs: Any) -> xr.Dataset:
+        """Chain ministacks (see :func:`disp_xr.chain`)."""
+        return chain(self._obj, **kwargs)
+
     def stack(self, **kwargs: Any) -> xr.Dataset:
-        """Chain ministacks (see :func:`disp_xr.stack_disp`)."""
-        return stack_disp(self._obj, **kwargs)
+        """Chain ministacks: the old name of :meth:`chain`.
+
+        .. deprecated:: 0.4
+            Use ``.disp.chain()``; ``.disp.chain()`` is removed in 1.0.
+        """
+        warnings.warn(
+            ".disp.chain() is deprecated; use .disp.chain() (removed in 1.0)",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return chain(self._obj, **kwargs)
 
     def mask(self, preset: str | None = "recommended", **criteria: Any) -> xr.Dataset:
         """Mask displacement by quality (see :func:`disp_xr.quality.mask`)."""

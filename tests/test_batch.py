@@ -17,7 +17,7 @@ from disp_xr.batch import (
 
 
 def chain(ds, job):  # noqa: ARG001 (process signature)
-    return dxr.stack_disp(ds)[["displacement"]]
+    return dxr.chain(ds)[["displacement"]]
 
 
 @pytest.fixture(scope="module")

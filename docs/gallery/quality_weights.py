@@ -66,7 +66,7 @@ print(
 # drops the epoch, so the excluded corner gets no velocity.
 
 # %%
-stacked = dxr.stack_disp(ds)
+stacked = dxr.chain(ds)
 weighted = dxr.fit_trajectory(
     stacked, weights=dxr.quality_weights(stacked).weight.fillna(0)
 )

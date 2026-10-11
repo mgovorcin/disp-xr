@@ -34,6 +34,7 @@ from .reference import rereference
 from .residuals import VariogramModel, empirical_variogram, fit_variogram
 from .stack import (  # noqa: F401  (combine_disp_product is deprecated)
     NaNPolicy,
+    chain,
     combine_disp_product,
     stack_disp,
 )
@@ -89,6 +90,7 @@ __all__ = [
     "rechunk",
     "remove_plate_motion",
     "rereference",
+    "chain",
     "stack_disp",
     "to_geodataframe",
     "to_geotiff",

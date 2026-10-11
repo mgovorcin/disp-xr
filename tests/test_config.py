@@ -86,7 +86,7 @@ def test_plot_map_checks_before_loading(stack_dir):
     from disp_xr.config import LoadTooLargeError
 
     pytest.importorskip("matplotlib")
-    ds = dxr.stack_disp(dxr.open_disp(stack_dir))
+    ds = dxr.chain(dxr.open_disp(stack_dir))
     with config.set({"max_load_bytes": 1000}):
         with pytest.raises(LoadTooLargeError, match="max_pixels"):
             ds.disp.plot_map()

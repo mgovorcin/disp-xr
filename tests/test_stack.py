@@ -13,7 +13,7 @@ import xarray as xr
 
 from disp_xr import product, stack
 from disp_xr.open import open_disp
-from disp_xr.stack import MissingCrossoverError, NaNPolicy, stack_disp
+from disp_xr.stack import MissingCrossoverError, NaNPolicy, chain, stack_disp
 
 D = pd.Timestamp
 
@@ -35,21 +35,21 @@ def _ds(values, times, refs):
 
 def test_single_reference_is_identity():
     ds = _ds([1, 2, 3], ["2020-01-13", "2020-01-25", "2020-02-06"], ["2020-01-01"] * 3)
-    out = stack_disp(ds, zero_epoch=False)
+    out = chain(ds, zero_epoch=False)
     np.testing.assert_array_equal(out.displacement.values, ds.displacement.values)
 
 
 def test_two_references_add_crossover():
     times = ["2020-01-13", "2020-01-25", "2020-02-06", "2020-02-18"]
     refs = ["2020-01-01", "2020-01-01", "2020-01-25", "2020-01-25"]
-    out = stack_disp(_ds([1, 2, 1, 2], times, refs), zero_epoch=False)
+    out = chain(_ds([1, 2, 1, 2], times, refs), zero_epoch=False)
     np.testing.assert_array_equal(out.displacement.values[:, 0, 0], [1, 2, 3, 4])
 
 
 def test_three_references():
     times = ["2020-01-13", "2020-01-25", "2020-02-06", "2020-02-18", "2020-03-01"]
     refs = ["2020-01-01", "2020-01-01", "2020-01-25", "2020-01-25", "2020-02-18"]
-    out = stack_disp(_ds([1, 2, 1, 2, 5], times, refs), zero_epoch=False)
+    out = chain(_ds([1, 2, 1, 2, 5], times, refs), zero_epoch=False)
     np.testing.assert_array_equal(out.displacement.values[:, 0, 0], [1, 2, 3, 4, 9])
 
 
@@ -59,7 +59,7 @@ def test_nan_at_crossover(nan_policy):
     refs = ["2020-01-01", "2020-01-01", "2020-01-25"]
     ds = _ds([1, 2, 1], times, refs)
     ds.displacement[1, 0, 0] = np.nan
-    out = stack_disp(ds, nan_policy=nan_policy, zero_epoch=False).displacement
+    out = chain(ds, nan_policy=nan_policy, zero_epoch=False).displacement
     if nan_policy == "propagate":
         assert np.isnan(out.values[2, 0, 0])
     else:
@@ -75,7 +75,7 @@ def test_omit_carries_the_offset_across_a_nan_crossover():
     refs = ["2020-01-01", "2020-01-01", "2020-01-25", "2020-01-25", "2020-02-18"]
     ds = _ds([1, 2, 1, 2, 5], times, refs)
     ds.displacement[3, 0, 0] = np.nan  # 2020-02-18, the second crossover
-    out = stack_disp(ds, nan_policy="omit", zero_epoch=False).displacement
+    out = chain(ds, nan_policy="omit", zero_epoch=False).displacement
     assert out.values[4, 0, 0] == 2 + 5  # offset 2 carried, not reset to 0
     assert out.values[4, 1, 1] == 9  # other pixels: 2 + 2 + 5
 
@@ -85,7 +85,7 @@ def test_offset_comes_from_crossover_date_not_previous_epoch():
     # 2020-02-06 secondary of ministack 1 comes after the new reference date.
     times = ["2020-01-13", "2020-01-25", "2020-02-06", "2020-02-18"]
     refs = ["2020-01-01", "2020-01-01", "2020-01-01", "2020-01-25"]
-    out = stack_disp(_ds([1, 2, 7, 3], times, refs), zero_epoch=False)
+    out = chain(_ds([1, 2, 7, 3], times, refs), zero_epoch=False)
     np.testing.assert_array_equal(out.displacement.values[:, 0, 0], [1, 2, 7, 5])
 
 
@@ -93,19 +93,19 @@ def test_missing_crossover_raises():
     times = ["2020-01-13", "2020-02-18"]
     refs = ["2020-01-01", "2020-01-25"]
     with pytest.raises(MissingCrossoverError, match=r"\['2020-01-25'\]"):
-        stack_disp(_ds([1, 2], times, refs))
+        chain(_ds([1, 2], times, refs))
 
 
 def test_keeps_input_dtype():
     ds = _ds([1, 2], ["2020-01-13", "2020-01-25"], ["2020-01-01"] * 2)
     ds["displacement"] = ds.displacement.astype("float64")
-    assert stack_disp(ds).displacement.dtype == np.float64
+    assert chain(ds).displacement.dtype == np.float64
 
 
 def test_nan_policy_enum_values():
     assert NaNPolicy("omit") is NaNPolicy.omit
     with pytest.raises(ValueError, match="'drop' is not a valid NaNPolicy"):
-        stack_disp(_ds([1], ["2020-01-13"], ["2020-01-01"]), nan_policy="drop")
+        chain(_ds([1], ["2020-01-13"], ["2020-01-01"]), nan_policy="drop")
 
 
 # --- stack_disp on synthetic granules ----------------------------------------
@@ -119,12 +119,12 @@ def opened(stack_dir):
 @pytest.mark.parametrize("variant", ["two_ministacks", "three_ministacks"])
 def test_chained_matches_truth(disp_stacks, variant):
     truth = disp_stacks[variant]
-    out = stack_disp(open_disp(truth.paths[0].parent))
+    out = chain(open_disp(truth.paths[0].parent))
     np.testing.assert_allclose(out.displacement.values, truth.cumulative, atol=1e-6)
 
 
 def test_zero_epoch(two_ministacks, opened):
-    out = stack_disp(opened)
+    out = chain(opened)
     first = two_ministacks.times[0]
     assert out.time.values[0] == np.datetime64(first)
     assert out.time.to_index().is_unique
@@ -137,24 +137,24 @@ def test_zero_epoch(two_ministacks, opened):
 
 
 def test_without_zero_epoch(two_ministacks, opened):
-    out = stack_disp(opened, zero_epoch=False)
+    out = chain(opened, zero_epoch=False)
     assert out.sizes["time"] == len(two_ministacks.paths)
 
 
 def test_dims_and_chunks(stack_dir):
-    out = stack_disp(open_disp(stack_dir, chunks="timeseries"))
+    out = chain(open_disp(stack_dir, chunks="timeseries"))
     assert out.displacement.dims == ("time", "y", "x")
     assert len(out.displacement.chunks[0]) == 1
 
 
 def test_quality_layers_unchanged(opened):
-    out = stack_disp(opened, zero_epoch=False)
+    out = chain(opened, zero_epoch=False)
     xr.testing.assert_identical(out.temporal_coherence, opened.temporal_coherence)
 
 
 def test_start_at_second_ministack(two_ministacks, opened):
     second = two_ministacks.reference_times.unique()[1]
-    out = stack_disp(opened, start=second)
+    out = chain(opened, start=second)
     assert out.time.values[0] == np.datetime64(second)
     expected = two_ministacks.cumulative[6:] - two_ministacks.cumulative[5]
     np.testing.assert_allclose(out.displacement.values[1:], expected, atol=1e-6)
@@ -163,17 +163,17 @@ def test_start_at_second_ministack(two_ministacks, opened):
 def test_start_as_calendar_date(two_ministacks, opened):
     # Reference times carry the time of day; the date alone is enough.
     second = pd.Timestamp(two_ministacks.reference_times.unique()[1])
-    out = stack_disp(opened, start=f"{second:%Y-%m-%d}")
-    xr.testing.assert_equal(out, stack_disp(opened, start=second))  # history differs
+    out = chain(opened, start=f"{second:%Y-%m-%d}")
+    xr.testing.assert_equal(out, chain(opened, start=second))  # history differs
 
 
 def test_start_must_be_a_reference_date(opened):
     with pytest.raises(ValueError, match="start must be a ministack reference date"):
-        stack_disp(opened, start="2020-02-06")
+        chain(opened, start="2020-02-06")
 
 
 def test_end_drops_later_epochs(opened):
-    out = stack_disp(opened, end="2020-02-06")
+    out = chain(opened, end="2020-02-06")
     assert pd.Timestamp(out.time.values[-1]) <= D("2020-02-06")
 
 
@@ -186,7 +186,7 @@ def test_missing_crossover_in_real_layout(disp_stacks, tmp_path):
         if crossover.strftime("%Y%m%dT%H%M%SZ_v") not in p.name:
             shutil.copy(p, tmp_path / p.name)
     with pytest.raises(MissingCrossoverError):
-        stack_disp(open_disp(tmp_path))
+        chain(open_disp(tmp_path))
 
 
 def test_is_lazy(opened):
@@ -194,7 +194,7 @@ def test_is_lazy(opened):
         raise AssertionError("stack_disp computed")
 
     with dask.config.set(scheduler=fail):
-        out = stack_disp(opened)
+        out = chain(opened)
     assert isinstance(out.displacement.data, dask.array.Array)
 
 
@@ -234,7 +234,7 @@ def test_combine_zero_epoch_has_no_fake_quality_values(chained):
 
 
 def test_combine_is_deprecated(stack_dir):
-    with pytest.warns(DeprecationWarning, match="stack_disp"):
+    with pytest.warns(DeprecationWarning, match="use chain"):
         stack.combine_disp_product(product.get_disp_info(stack_dir))
 
 
@@ -244,7 +244,7 @@ def test_create_rebased_displacement_alias():
         ["2020-01-13", "2020-01-25", "2020-02-06", "2020-02-18"],
         ["2020-01-01", "2020-01-01", "2020-01-25", "2020-01-25"],
     )
-    with pytest.warns(DeprecationWarning, match="stack_disp"):
+    with pytest.warns(DeprecationWarning, match="use chain"):
         out = stack.create_rebased_displacement(
             ds.displacement, ds.reference_time.values
         )
@@ -252,7 +252,7 @@ def test_create_rebased_displacement_alias():
 
 
 def test_zero_epoch_keeps_single_time_chunk(stack_dir):
-    out = stack_disp(open_disp(stack_dir, chunks="timeseries"))
+    out = chain(open_disp(stack_dir, chunks="timeseries"))
     assert all(len(v.chunks[0]) == 1 for v in out.data_vars.values())
 
 
@@ -279,7 +279,7 @@ def test_one_epoch_reads_only_its_crossovers(stack_dir):
     from dask.core import flatten
 
     opened = open_disp(stack_dir, chunks="maps")
-    out = stack_disp(opened)
+    out = chain(opened)
     assert len(out.displacement.chunks[0]) == out.sizes["time"]  # chunks kept
     source = opened.displacement.data.name
     sel = out.displacement.isel(time=-1).data
@@ -293,7 +293,16 @@ def test_fit_gives_the_same_result_for_any_chunks(stack_dir):
     # block's epochs separately.
     from disp_xr.timeseries import fit_timeseries_block
 
-    ds = stack_disp(open_disp(stack_dir, chunks="timeseries"))
+    ds = chain(open_disp(stack_dir, chunks="timeseries"))
     whole = fit_timeseries_block(ds.displacement).compute()
     split = fit_timeseries_block(ds.disp.rechunk("maps").displacement).compute()
     xr.testing.assert_allclose(whole, split)
+
+
+def test_stack_disp_is_a_deprecated_alias():
+    ds = _ds([1, 2, 3], ["2020-01-13", "2020-01-25", "2020-02-06"], ["2020-01-01"] * 3)
+    with pytest.warns(DeprecationWarning, match="use disp_xr.chain"):
+        old = stack_disp(ds, zero_epoch=False)
+    xr.testing.assert_identical(old, chain(ds, zero_epoch=False))
+    with pytest.warns(DeprecationWarning, match=r"use \.disp\.chain\(\)"):
+        ds.disp.stack(zero_epoch=False)

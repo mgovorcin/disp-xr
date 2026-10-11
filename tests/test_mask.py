@@ -88,14 +88,14 @@ def test_nodata_fails_connected_components(ds):
 
 
 def test_mask_after_chaining_and_history(ds):
-    out = ds.disp.stack().disp.mask("strict")
+    out = ds.disp.chain().disp.mask("strict")
     assert np.isnan(out.displacement.isel(time=1, y=0, x=0))
     assert [h["op"] for h in out.disp.history][-1] == "mask"
     assert "connected_components" in out.attrs["mask_criteria"]
 
 
 def test_mask_keeps_stacked_zero_epoch(ds):
-    out = dxr.mask(dxr.stack_disp(ds), "strict")
+    out = dxr.mask(dxr.chain(ds), "strict")
     assert float(out.displacement[0, GOOD[0], GOOD[1]]) == 0
     assert not np.isnan(out.displacement[1:, GOOD[0], GOOD[1]]).any()
 
@@ -111,7 +111,7 @@ def test_quality_summary_values(ds):
 
 
 def test_quality_summary_ignores_stacked_zero_epoch(ds):
-    q = dxr.quality_summary(dxr.stack_disp(ds)).compute()
+    q = dxr.quality_summary(dxr.chain(ds)).compute()
     assert float(q.pct_masked[40, 40]) == 0 and float(q.reliability[40, 40]) == 1
 
 

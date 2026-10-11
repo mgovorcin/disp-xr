@@ -78,7 +78,7 @@ for name, files in versions.items():
     to_grid = Transformer.from_crs("EPSG:4326", raw.rio.crs, always_xy=True)
     (x0, x1), (y0, y1) = to_grid.transform([west, east], [south, north])
     window = raw.sel(x=slice(x0, x1), y=slice(y1, y0))
-    stacks[name] = dxr.stack_disp(dxr.mask(window, "recommended"))
+    stacks[name] = dxr.chain(dxr.mask(window, "recommended"))
 common = np.intersect1d(stacks["v1.0"].time.values, stacks["v1.1"].time.values)
 box = (ref_lon - 0.005, ref_lat - 0.005, ref_lon + 0.005, ref_lat + 0.005)
 for name in stacks:

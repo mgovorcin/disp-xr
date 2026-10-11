@@ -15,7 +15,7 @@ from disp_xr import gnss  # noqa: E402
 
 @pytest.fixture
 def frame(stack_dir):
-    return dxr.stack_disp(dxr.open_disp(stack_dir))
+    return dxr.chain(dxr.open_disp(stack_dir))
 
 
 def _station_lonlat(ds, rows_cols):

@@ -30,7 +30,7 @@ folder = Path(tempfile.mkdtemp())
 make_disp_stack(
     folder / "granules", "three_ministacks", shape=(96, 96), epochs_per_ministack=20
 )
-truth = dxr.open_disp(folder / "granules").disp.stack().disp.rereference("median")
+truth = dxr.open_disp(folder / "granules").disp.chain().disp.rereference("median")
 
 # A plane growing with time: about 1.5 cm across the frame after two years.
 years = (truth.time - truth.time[0]) / np.timedelta64(1, "D") / 365.25

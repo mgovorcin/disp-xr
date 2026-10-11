@@ -37,7 +37,7 @@ def epochs_read(result, source):
 # reads itself and two crossovers, not the whole stack.
 
 # %%
-chained = dxr.stack_disp(raw)
+chained = dxr.chain(raw)
 print("source epochs:", raw.sizes["time"])
 print(
     "read for the last chained epoch:",

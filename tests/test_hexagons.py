@@ -194,7 +194,7 @@ def test_variogram_sigma_on_hexagons():
 
 
 def test_quality_weights_on_fixture(stack_dir):
-    ds = dxr.stack_disp(dxr.open_disp(stack_dir))
+    ds = dxr.chain(dxr.open_disp(stack_dir))
     out = downsample_hex(ds, spacing=300).compute()
     assert np.isfinite(out.displacement.isel(time=-1)).any()
     assert "temporal_coherence" not in out
@@ -222,7 +222,7 @@ def test_plot_hex(stack_dir):
     import matplotlib
 
     matplotlib.use("Agg")
-    ds = dxr.stack_disp(dxr.open_disp(stack_dir))
+    ds = dxr.chain(dxr.open_disp(stack_dir))
     hexes = downsample_hex(ds, spacing=300)
     ax = dxr.plot.plot_hex(hexes)
     assert len(ax.collections) == 1

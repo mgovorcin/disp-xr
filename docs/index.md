@@ -23,7 +23,7 @@ and export, from a laptop to an AWS Batch cluster.
 import disp_xr as dxr
 
 ds = dxr.open_disp("F11116/")                      # lazy (time, y, x), CRS attached
-ds = dxr.stack_disp(dxr.mask(ds, "recommended"))   # displacement from the first date
+ds = dxr.chain(dxr.mask(ds, "recommended"))   # displacement from the first date
 ds = dxr.rereference(ds, "median")
 velocity = dxr.fit_velocity(ds, method="midas")    # robust, with a sigma per pixel
 ```

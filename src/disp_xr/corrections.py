@@ -2,7 +2,7 @@
 
 DISP correction layers (``/corrections``) are relative to each granule's
 reference date, like ``displacement``, and the product says to subtract them.
-They are therefore applied before :func:`disp_xr.stack_disp` (the PRD
+They are therefore applied before :func:`disp_xr.chain` (the PRD
 processing order). Plate motion depends only on time differences, so it can be
 removed before or after chaining.
 
@@ -157,7 +157,7 @@ def correct(
     if "reference_date" in ds.attrs:
         raise CorrectionError(
             "Correction layers are relative to each granule's reference date; "
-            "apply them before stack_disp"
+            "apply them before chaining (disp_xr.chain)"
         )
     applied = _applied(ds)
     out = ds.copy()
@@ -347,7 +347,7 @@ def remove_plate_motion(ds: xr.Dataset, static: xr.Dataset, plate: str) -> xr.Da
     """Subtract rigid plate motion from ``displacement``.
 
     Each epoch loses ``v_los * (time - reference)``, where the reference is the
-    granule's ``reference_time`` before :func:`disp_xr.stack_disp` and
+    granule's ``reference_time`` before :func:`disp_xr.chain` and
     ``attrs["reference_date"]`` after it, so it works on either. The result is in a
     plate-fixed frame, comparable with plate-fixed GNSS.
 
@@ -366,7 +366,7 @@ def remove_plate_motion(ds: xr.Dataset, static: xr.Dataset, plate: str) -> xr.Da
     applied = _applied(ds)
     _check_new(ds, name, applied)
     velocity = match_grid(plate_motion_los(static, plate), ds).reset_coords(drop=True)
-    # After stack_disp every epoch is relative to attrs["reference_date"]; the
+    # After chain every epoch is relative to attrs["reference_date"]; the
     # reference_time coordinate still holds each granule's own reference.
     if "reference_date" in ds.attrs:
         reference = np.datetime64(pd.Timestamp(ds.attrs["reference_date"]), "ns")

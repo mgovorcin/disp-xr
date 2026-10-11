@@ -16,14 +16,14 @@ at zero at each new ministack.
 
 The next ministack's reference date is the last secondary date of the
 previous one. That shared epoch, the crossover, links them:
-[`stack_disp`](api/process.md#disp_xr.stack_disp) adds to each ministack the
+[`chain`](api/process.md#disp_xr.chain) adds to each ministack the
 displacement accumulated at its crossover, so the whole series becomes
 relative to the first reference date. A missing crossover granule breaks the
-chain, and `stack_disp` raises `MissingCrossoverError`. A NaN at a crossover
+chain, and `chain` raises `MissingCrossoverError`. A NaN at a crossover
 makes later epochs of that pixel NaN (`nan_policy="propagate"`, the default).
 
 `open_disp` returns the series as stored, relative to each ministack
-reference; `reference_time` says which one. `stack_disp` returns it chained,
+reference; `reference_time` says which one. `chain` returns it chained,
 with `attrs["reference_date"]` set and a zero epoch prepended at the first
 reference date.
 

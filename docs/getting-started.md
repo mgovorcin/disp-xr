@@ -46,12 +46,12 @@ before the ministacks are chained.
 ```python
 ds = dxr.correct(ds)                  # ionosphere and solid-earth tide
 ds = dxr.mask(ds, "recommended")      # NaN where recommended_mask is bad
-ds = dxr.stack_disp(ds)               # one series from the first date
+ds = dxr.chain(ds)               # one series from the first date
 ds.attrs["reference_date"]
 ```
 
 The accessor gives the same operations as methods, so a chain reads in order:
-`ds.disp.correct().disp.mask("recommended").disp.stack()`.
+`ds.disp.correct().disp.mask("recommended").disp.chain()`.
 
 ## Re-reference
 

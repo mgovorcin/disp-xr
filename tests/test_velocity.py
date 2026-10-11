@@ -115,7 +115,7 @@ def frame(tmp_path_factory):
     truth = make_disp_stack(
         root / "g", "three_ministacks", shape=(64, 64), epochs_per_ministack=30
     )
-    return truth, dxr.stack_disp(dxr.open_disp(root / "g"))
+    return truth, dxr.chain(dxr.open_disp(root / "g"))
 
 
 @pytest.mark.parametrize("method", ["ols", "whittle", "midas"])

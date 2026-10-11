@@ -118,7 +118,7 @@ import disp_xr as dxr
 from disp_xr.batch import init_store, plan_jobs
 
 granules = list(search_table["filename"])           # resolved once, here
-template = dxr.stack_disp(dxr.open_disp(granules))  # lazy: reads no pixel
+template = dxr.chain(dxr.open_disp(granules))  # lazy: reads no pixel
 shards = init_store(template, "s3://bucket/F11116.zarr")
 jobs = plan_jobs(template, "s3://bucket/F11116.zarr", granules, shards)
 with open("jobs.jsonl", "w") as f:
@@ -133,7 +133,7 @@ from disp_xr.batch import RegionJob, run_region, write_manifest
 
 line = open("jobs.jsonl").readlines()[int(os.environ["AWS_BATCH_JOB_ARRAY_INDEX"])]
 job = RegionJob.from_json(line)
-result = run_region(job, lambda ds, job: dxr.stack_disp(dxr.mask(ds, "recommended")))
+result = run_region(job, lambda ds, job: dxr.chain(dxr.mask(ds, "recommended")))
 write_manifest([result], f"manifest-{job.job_id}.jsonl")
 ```
 

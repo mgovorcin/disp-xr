@@ -83,13 +83,13 @@ def environment() -> dict[str, object]:
 def operations(folder: Path) -> dict[str, Callable[[], object]]:
     """Return the timed operations; each computes its result."""
     ds = dxr.open_disp(folder)
-    chained = dxr.stack_disp(dxr.mask(ds, "recommended")).disp.rereference("median")
+    chained = dxr.chain(dxr.mask(ds, "recommended")).disp.rereference("median")
     return {
         "open": lambda: dxr.open_disp(folder).displacement.isel(time=-1).compute(),
-        "chain": lambda: dxr.stack_disp(ds).displacement.isel(time=-1).compute(),
+        "chain": lambda: dxr.chain(ds).displacement.isel(time=-1).compute(),
         "mask": lambda: dxr.mask(ds, "recommended").displacement.compute(),
         "rereference median": (
-            lambda: dxr.rereference(dxr.stack_disp(ds), "median").displacement.compute()
+            lambda: dxr.rereference(dxr.chain(ds), "median").displacement.compute()
         ),
         "fit_velocity ols": lambda: dxr.fit_velocity(chained, "ols").velocity.compute(),
         "fit_velocity midas": (

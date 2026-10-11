@@ -82,7 +82,7 @@ def _open_input(
     if len(paths) == 1 and _is_zarr(paths[0]):
         return xr.open_zarr(paths[0], mask_and_scale=False, decode_coords="all")
     ds = dxr.open_disp(_granules(paths), frame_id=frame_id, min_version=min_version)
-    return dxr.stack_disp(ds)
+    return dxr.chain(ds)
 
 
 def _write(ds: xr.Dataset, out: Path, preset: str, overwrite: bool) -> None:
@@ -252,7 +252,7 @@ def stack(
         ds = dxr.correct(ds, which)
     if mask != "none":
         ds = dxr.mask(ds, mask)
-    ds = dxr.stack_disp(ds, start=start, end=end)
+    ds = dxr.chain(ds, start=start, end=end)
     if reference != "none":
         ds = dxr.rereference(ds, reference, row=row, col=col, lon=lon, lat=lat)
     _write(ds, out, preset, overwrite)

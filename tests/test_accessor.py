@@ -18,23 +18,23 @@ def ds(stack_dir):
 
 
 def test_chain_matches_functions(ds):
-    via_accessor = ds.disp.stack().disp.to_units("mm")
-    via_functions = dxr.to_units(dxr.stack_disp(ds), "mm")
+    via_accessor = ds.disp.chain().disp.to_units("mm")
+    via_functions = dxr.to_units(dxr.chain(ds), "mm")
     xr.testing.assert_identical(via_accessor, via_functions)
 
 
 def test_input_is_not_mutated(ds):
     before = ds.copy(deep=True)
-    ds.disp.stack().disp.to_units("mm")
+    ds.disp.chain().disp.to_units("mm")
     xr.testing.assert_identical(ds, before)
     assert ds.attrs == before.attrs
 
 
 def test_history_and_crs_survive_the_chain(ds):
-    out = ds.disp.stack().disp.to_units("cm")
+    out = ds.disp.chain().disp.to_units("cm")
     assert [h["op"] for h in out.disp.history] == [
         "open_disp",
-        "stack_disp",
+        "chain",
         "to_units",
     ]
     assert out.disp.grid.crs.to_epsg() == 32610
@@ -47,7 +47,7 @@ def test_chain_is_lazy(ds):
 
     with dask.config.set(scheduler=fail):
         out = (
-            ds.disp.stack()
+            ds.disp.chain()
             .disp.to_units("mm")
             .disp.rechunk("timeseries")
             .disp.validate(per_pixel=True)

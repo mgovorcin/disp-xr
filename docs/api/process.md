@@ -29,7 +29,7 @@ after. See [Concepts](../concepts.md).
 
 ## Chaining
 
-::: disp_xr.stack_disp
+::: disp_xr.chain
 
 ::: disp_xr.NaNPolicy
 

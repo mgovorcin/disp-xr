@@ -385,7 +385,7 @@ def get_disp_info(
     versions at or above it.
 
     .. deprecated::
-        Use :func:`find_products`, then ``stack_disp(open_disp(df))``.
+        Use :func:`find_products`, then ``chain(open_disp(df))``.
 
     Parameters
     ----------

@@ -25,7 +25,7 @@ table = dxr.find_products("/path/to/your/granules")
 print(table.groupby("reference_time").size())   # ministacks as you expect?
 
 ds = dxr.open_disp(table, corrections=True)
-ds = ds.disp.correct().disp.mask("recommended").disp.stack()
+ds = ds.disp.correct().disp.mask("recommended").disp.chain()
 ds = ds.disp.rereference("point", lon=..., lat=...)   # a point you trust
 
 ds.disp.plot_map()

@@ -68,14 +68,14 @@ def test_missing_and_unknown_layers(stack_dir, ds):
 
 
 def test_refuses_chained_data(ds):
-    with pytest.raises(CorrectionError, match="before stack_disp"):
-        dxr.correct(dxr.stack_disp(ds))
+    with pytest.raises(CorrectionError, match="before chain"):
+        dxr.correct(dxr.chain(ds))
 
 
 def test_correct_then_stack_matches_stacked_correction(ds):
     """Corrections chain like displacement: each epoch loses one per ministack."""
-    out = dxr.stack_disp(dxr.correct(ds))
-    raw = dxr.stack_disp(ds)
+    out = dxr.chain(dxr.correct(ds))
+    raw = dxr.chain(ds)
     n_refs = xr.DataArray(
         pd.Series(ds.reference_time.values).rank(method="dense").to_numpy(),
         dims="time",
@@ -217,7 +217,7 @@ def test_plate_motion_los_matches_point_projection(ds, static):
 
 @pytest.mark.parametrize("chained", [False, True])
 def test_remove_plate_motion(ds, static, chained):
-    data = dxr.stack_disp(ds) if chained else ds
+    data = dxr.chain(ds) if chained else ds
     out = dxr.remove_plate_motion(data, static, "NOAM")
     v = float(dxr.corrections.plate_motion_los(static, "NOAM")[10, 10])
     reference = (

@@ -104,7 +104,7 @@ def test_times_link_across_time_encodings(disp_stacks):
     assert (ds.time.dt.microsecond == 0).all()
     later_refs = set(ds.reference_time.values) - {ds.reference_time.values.min()}
     assert later_refs <= set(ds.time.values)  # the first is the stack's start
-    stacked = dxr.stack_disp(ds)
+    stacked = dxr.chain(ds)
     assert stacked.sizes["time"] == ds.sizes["time"] + 1
 
 

@@ -75,7 +75,7 @@ nanoseconds off: `2024-10-03 14:08:37.435763008`.
 **Why it matters.** Ministacks are chained through exact dates: each
 ministack's reference date must be an epoch of the previous one. In F11116
 the November 2025 ministack references 2024-10-03, but that date read from
-the April 2025 granule differs by 8 ns, so `stack_disp` raised
+the April 2025 granule differs by 8 ns, so `chain` raised
 `MissingCrossoverError`.
 
 **What disp-xr does.** `open_disp` reads `time` and `reference_time` to the

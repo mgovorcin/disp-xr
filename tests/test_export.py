@@ -14,7 +14,7 @@ from disp_xr.export.zarr import chunk_scheme, round_mantissa, zarr_encoding
 
 @pytest.fixture
 def ds(stack_dir):
-    return dxr.stack_disp(dxr.open_disp(stack_dir))
+    return dxr.chain(dxr.open_disp(stack_dir))
 
 
 def _equal_values(a, b):
@@ -117,7 +117,7 @@ def test_zarr_provenance(ds, tmp_path):
     assert set(json.loads(attrs["software_versions"])) >= {"xarray", "zarr", "dask"}
     assert len(json.loads(attrs["input_granules"])) == 10
     ops = [json.loads(line)["op"] for line in attrs["history"].splitlines()]
-    assert ops[-2:] == ["stack_disp", "rereference"]
+    assert ops[-2:] == ["chain", "rereference"]
 
 
 def test_zarr_refuses_existing_store(ds, tmp_path):
@@ -228,7 +228,7 @@ def test_geotiff_from_dataset_is_a_cog_with_provenance(tmp_path):
     from disp_xr.tutorial import make_disp_stack
 
     make_disp_stack(tmp_path / "g", shape=(600, 600), epochs_per_ministack=2)
-    ds = dxr.stack_disp(dxr.open_disp(tmp_path / "g"))
+    ds = dxr.chain(dxr.open_disp(tmp_path / "g"))
     (path,) = dxr.to_geotiff(ds.isel(time=-1), tmp_path / "a.tif", layer="displacement")
     with rasterio.open(path) as src:
         tags = src.tags()
@@ -237,7 +237,7 @@ def test_geotiff_from_dataset_is_a_cog_with_provenance(tmp_path):
         assert src.tags(ns="IMAGE_STRUCTURE").get("LAYOUT") == "COG"
     assert tags["DISP_XR_VERSION"] == dxr.__version__
     assert len(json.loads(tags["INPUT_GRANULES"])) == 4
-    assert json.loads(tags["HISTORY"].splitlines()[-1])["op"] == "stack_disp"
+    assert json.loads(tags["HISTORY"].splitlines()[-1])["op"] == "chain"
     assert set(json.loads(tags["SOFTWARE_VERSIONS"])) >= {"xarray", "zarr"}
     with pytest.raises(ValueError, match="No layer"):
         dxr.to_geotiff(ds, tmp_path / "b.tif", layer="nope")

@@ -23,7 +23,7 @@ import warnings
 from collections.abc import Sequence
 from datetime import datetime
 from enum import Enum
-from typing import Optional, Union
+from typing import Any, Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -35,7 +35,7 @@ from .log.logging import log_runtime
 
 logger = logging.getLogger(__name__)
 
-__all__ = ["MissingCrossoverError", "NaNPolicy", "stack_disp"]
+__all__ = ["MissingCrossoverError", "NaNPolicy", "chain", "stack_disp"]
 
 DISPLACEMENT_LAYERS = ("displacement", "short_wavelength_displacement")
 
@@ -129,7 +129,7 @@ def _chain(
 
 @log_runtime
 @recorded
-def stack_disp(
+def chain(
     ds: xr.Dataset,
     *,
     start: Optional[Union[str, datetime, pd.Timestamp]] = None,
@@ -172,8 +172,8 @@ def stack_disp(
 
     Examples
     --------
-    >>> ds = dxr.stack_disp(dxr.open_disp("F11116/"))  # doctest: +SKIP
-    >>> ds = dxr.stack_disp(raw, start="2020-01-01")  # doctest: +SKIP
+    >>> ds = dxr.chain(dxr.open_disp("F11116/"))  # doctest: +SKIP
+    >>> ds = dxr.chain(raw, start="2020-01-01")  # doctest: +SKIP
 
     """
     nan_policy = NaNPolicy(nan_policy)
@@ -212,6 +212,20 @@ def stack_disp(
         chained = _prepend_zero_epoch(chained, first)
     chained.attrs["reference_date"] = str(pd.Timestamp(first))
     return chained
+
+
+def stack_disp(ds: xr.Dataset, **kwargs: Any) -> xr.Dataset:
+    """Chain ministacks: the old name of :func:`chain`.
+
+    .. deprecated:: 0.4
+        Use :func:`chain`; ``stack_disp`` is removed in 1.0.
+    """
+    warnings.warn(
+        "stack_disp is deprecated; use disp_xr.chain (removed in 1.0)",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+    return chain(ds, **kwargs)
 
 
 def _one_time_chunk(var: xr.DataArray) -> bool:
@@ -259,13 +273,13 @@ def combine_disp_product(
     """Open and chain the granules listed by :func:`disp_xr.product.get_disp_info`.
 
     .. deprecated::
-        Use ``stack_disp(open_disp(paths))``.
+        Use ``chain(open_disp(paths))``.
 
     ``start_date`` keeps ministacks whose reference date is on or after it,
     ``end_date`` those whose reference date is on or before it.
     """
     warnings.warn(
-        "combine_disp_product is deprecated; use stack_disp(open_disp(paths))",
+        "combine_disp_product is deprecated; use chain(open_disp(paths))",
         DeprecationWarning,
         stacklevel=2,
     )
@@ -291,7 +305,7 @@ def rebase_disp(
         Use ``stack_disp(open_disp(paths), zero_epoch=...)``.
     """
     warnings.warn(
-        "rebase_disp is deprecated; use stack_disp(open_disp(paths))",
+        "rebase_disp is deprecated; use chain(open_disp(paths))",
         DeprecationWarning,
         stacklevel=2,
     )
@@ -315,7 +329,7 @@ def create_rebased_displacement(
         ``process_chunk_size`` is ignored.
     """
     warnings.warn(
-        "create_rebased_displacement is deprecated; use stack_disp",
+        "create_rebased_displacement is deprecated; use chain",
         DeprecationWarning,
         stacklevel=2,
     )
@@ -323,5 +337,5 @@ def create_rebased_displacement(
     ds = da_displacement.to_dataset(name="displacement").assign_coords(
         reference_time=("time", refs.astype("datetime64[ns]"))
     )
-    out = stack_disp(ds, nan_policy=nan_policy, zero_epoch=add_reference_time)
+    out = chain(ds, nan_policy=nan_policy, zero_epoch=add_reference_time)
     return out["displacement"].rename(da_displacement.name)

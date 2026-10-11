@@ -20,7 +20,7 @@ folder = Path(tempfile.mkdtemp()) / "granules"
 truth = make_disp_stack(
     folder, "three_ministacks", shape=(64, 64), epochs_per_ministack=70
 )
-ds = dxr.open_disp(folder).disp.mask("recommended").disp.stack()
+ds = dxr.open_disp(folder).disp.mask("recommended").disp.chain()
 print(
     f"{ds.sizes['time']} epochs over "
     f"{(ds.time[-1] - ds.time[0]).values.astype('timedelta64[D]')}"
