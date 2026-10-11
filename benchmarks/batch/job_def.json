@@ -1,0 +1,15 @@
+{
+  "jobDefinitionName": "disp-xr-bench",
+  "type": "container",
+  "platformCapabilities": ["EC2"],
+  "timeout": {"attemptDurationSeconds": 7200},
+  "retryStrategy": {"attempts": 1},
+  "containerProperties": {
+    "image": "700525151086.dkr.ecr.us-west-2.amazonaws.com/disp-xr-bench:t28.5",
+    "jobRoleArn": "arn:aws:iam::700525151086:role/am-batch-job-govorcin-role",
+    "executionRoleArn": "arn:aws:iam::700525151086:role/am-batch-job-execution-govorcin-role",
+    "resourceRequirements": [{"type": "VCPU", "value": "32"}, {"type": "MEMORY", "value": "240000"}]
+  },
+  "tags": {"Project": "disp-xr", "Component": "bench-t28.5", "Owner": "govorcin"},
+  "propagateTags": true
+}

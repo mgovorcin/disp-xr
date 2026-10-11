@@ -162,6 +162,33 @@ generation of the random data. Run on 2026-10-03, load 151:
 | wmean | 16.3 s |
 | wmedian | 28.8 s |
 
+### On a dedicated instance, with the quadtree (plan task T28.5)
+
+The shared node stayed too busy to time anything (touching 256 MB took 3 to
+14 s for days), so the benchmark ran once as an AWS Batch job on a whole
+`r7i.8xlarge` (32 vCPUs, Intel Xeon Platinum 8488C, 248 GB) on 2026-10-11:
+disp-xr `6d6935f`, Python 3.12, packages pinned to the `test-py312`
+environment. Touching 256 MB took 0.037 s before and after the run (load
+about 2), so the timings stand. Best of two alternated runs after a warm-up,
+100 x 1000 x 1000, dask limited to 32 threads:
+
+| method | time |
+|---|---:|
+| squares, factor 33, wmean | 0.7 s |
+| squares, factor 33, wmedian | 1.2 s |
+| hexagons, 1,064 m, wmean | 1.3 s |
+| hexagons, 1,064 m, wmedian | 3.0 s |
+| quadtree, 240 m to 7.7 km (with the score pass) | 3.4 s |
+
+- The quadtree costs about five weighted-mean grids. It reads the data
+  twice (once for the per-cell sums from which every level and score
+  follow, once for the leaf values) and adds the leaf selection.
+- The hexagon median, 51 s on the busy node on 2026-10-03, is 3.0 s here:
+  that number was mostly the node.
+- The image recipe, the wrapper that recorded the instance and the job
+  definition are in `batch/`; the output is in the job's CloudWatch log
+  (`disp-xr-bench/default/28afe73cb5094dc493c84d6f27baae46`).
+
 ### Hexagons and a correction (plan task T27.8)
 
 Wall-clock timings on the shared node were unreliable on 2026-10-03
