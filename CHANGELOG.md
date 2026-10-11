@@ -25,6 +25,8 @@ All notable changes to disp-xr. The format follows
   residuals are served only when the store holds them. A point series on a
   time-series-chunked store answers in about 20 ms, 0.2 s on a process's
   first request (plan task T40, PRD C7).
+- `disp_xr serve` serves virtual frames (`disp_xr virtual`) as well as Zarr
+  stores and Icechunk repositories, chaining them lazily on open.
 - `Comparison.to_dataset` and `Comparison.to_zarr`: the GNSS station
   residuals and summary as a `station` Dataset, written as a `gnss` group
   next to a cube, where `disp_xr serve` finds it.

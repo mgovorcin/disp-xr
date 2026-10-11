@@ -188,3 +188,18 @@ def test_point_series_latency(store, frame):
     first = time.perf_counter() - t0
     assert r.status_code == 200
     assert first < 1.0  # including the first request of the process
+
+
+def test_virtual_frame(disp_stacks, tmp_path):
+    """A virtual frame is chained on open and served like a store."""
+    pytest.importorskip("virtualizarr")
+    granules = sorted(disp_stacks["two_ministacks"].paths)
+    repo = tmp_path / "virtual"
+    dxr.build_virtual_frame(dxr.find_products(granules), repo, max_workers=1)
+    expected = dxr.stack_disp(dxr.open_disp(granules))
+    client = TestClient(serve.make_app({"virtual": repo}, tiles=False).app)
+    lon, lat = lonlat(expected, 30, 20)
+    r = client.get("/datasets/virtual/disp/timeseries", params={"lon": lon, "lat": lat})
+    assert r.status_code == 200
+    got = np.array(r.json()["displacement"], float)
+    np.testing.assert_allclose(got, expected.displacement[:, 30, 20], rtol=1e-6)

@@ -30,8 +30,10 @@ disp_xr serve /data/F08882.zarr /data/F11116.zarr --host 127.0.0.1 --port 9000
 Each store becomes a dataset named after it (`F08882`, `F11116`), served
 under `/datasets/<name>/`. The API page is at `/docs`, the OpenAPI schema
 at `/openapi.json`. Stores open lazily: the service reads only the chunks a
-request needs. Zarr stores and Icechunk repositories are supported; virtual
-frames are not yet.
+request needs. Zarr stores, Icechunk repositories and virtual frames
+(`disp_xr virtual`) are supported. A virtual frame is chained on open, still
+lazily, and its reads go to the granules it references, so those must stay
+where they were when the frame was built.
 
 For more than one worker process, run the application with uvicorn
 directly, with a small launcher module:
