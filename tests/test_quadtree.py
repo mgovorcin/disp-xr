@@ -39,7 +39,6 @@ class _Reference:
         self.reliable = (self.static > 0) & np.isfinite(self.v).any(axis=0)
         self.args = threshold, metric, min_level, max_level, min_reliable
         self.leaves = {}
-        self._noise = None
 
     def block(self, k, i, j):
         s = 2**k
@@ -61,41 +60,10 @@ class _Reference:
             sigma2.append(var / (w.sum() ** 2 / np.sum(w**2)))
         return np.array(means), np.array(variances), np.array(sigma2)
 
-    def scatter(self, k, i, j):
-        """Weighted scatter per degree of freedom at each epoch."""
-        rs, cs = self.block(k, i, j)
-        out = []
-        for t in range(self.v.shape[0]):
-            v, w = self.v[t, rs, cs].ravel(), self.w[t, rs, cs].ravel()
-            ok = np.isfinite(v)
-            v, w = v[ok], w[ok]
-            if v.size < 2 or w.sum() <= 0:
-                out.append(np.nan)
-                continue
-            m = np.sum(w * v) / w.sum()
-            out.append(np.sum(w * (v - m) ** 2) / (v.size - 1))
-        return np.array(out)
-
-    def noise(self):
-        """Median scatter of the finest cells, per epoch."""
-        if self._noise is None:
-            _, _, min_level, *_ = self.args
-            s = 2**min_level
-            ny, nx = self.reliable.shape
-            cells = [
-                self.scatter(min_level, i, j)
-                for i in range(-(-ny // s))
-                for j in range(-(-nx // s))
-            ]
-            self._noise = np.nanmedian(np.array(cells), axis=0)
-        return self._noise
-
     def score(self, k, i, j):
         threshold, metric, min_level, *_ = self.args
         if metric == "displacement":
             return np.sqrt(np.nanmean(self.moments(k, i, j)[1]))
-        if metric == "normalized":
-            return np.sqrt(np.nanmean(self.scatter(k, i, j) / self.noise()))
         if k == min_level:
             return np.nan
         kids = [
@@ -144,8 +112,7 @@ class _Reference:
 
 
 @pytest.mark.parametrize(
-    ("metric", "threshold"),
-    [("displacement", 0.004), ("normalized", 3.0), ("structure", 2.0)],
+    ("metric", "threshold"), [("displacement", 0.004), ("structure", 2.0)]
 )
 def test_matches_recursive_reference(metric, threshold):
     ds, w = _dataset(chunks={"y": 16, "x": 24})
@@ -172,40 +139,6 @@ def test_matches_recursive_reference(metric, threshold):
         block = tree.leaf_id.values[i * s : (i + 1) * s, j * s : (j + 1) * s]
         assert (block == n).all()
     assert tree.leaf_id.shape == (45, 70)
-
-
-def test_normalized_does_not_chase_noise():
-    # No signal anywhere; the east half is low-coherence: 4x the noise, 1/16
-    # the weight. Variance splits go to the noise, normalized ones do not.
-    rng = np.random.default_rng(3)
-    nt, ny, nx = 4, 64, 128
-    sigma = np.where(np.arange(nx) < nx // 2, 1.0, 4.0) * 1e-3
-    values = sigma * rng.standard_normal((nt, ny, nx))
-    weights = np.broadcast_to(np.where(sigma > 1e-3, 1 / 16, 1.0), (nt, ny, nx))
-    ds = xr.Dataset(
-        {"displacement": (("time", "y", "x"), values, {"units": "meters"})},
-        coords={
-            "time": np.arange(nt),
-            "y": 4100000.0 - 30.0 * np.arange(ny),
-            "x": 500000.0 + 30.0 * np.arange(nx),
-        },
-    ).rio.write_crs("EPSG:32610")
-    w = xr.DataArray(weights.copy(), dims=("time", "y", "x"), coords=ds.coords)
-
-    def leaves(metric, threshold):
-        tree = quadtree(
-            ds, threshold=threshold, metric=metric, min_level=2, max_level=5, weights=w
-        )
-        east = tree.points.col.values * 2**tree.points.level.values >= nx // 2
-        return tree.points.level.values, east
-
-    # Displacement: a threshold between the two noise levels splits every
-    # east cell down to min_level and no west cell.
-    level, east = leaves("displacement", 2e-3)
-    assert (level[east] == 2).all() and (level[~east] == 5).all()
-    # Normalized: noise scores about 1 everywhere, so nothing splits.
-    level, _ = leaves("normalized", 2.0)
-    assert (level == 5).all() and level.size == 8
 
 
 def test_hole_and_counts():

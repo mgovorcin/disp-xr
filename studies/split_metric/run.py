@@ -20,8 +20,6 @@ gradient preservation (T29.4: RMSE between the binned velocity profiles,
 
 Writes ``results/<frame>.csv``, one row per size and method. Run with
 ``pixi run -e test-py312 python studies/split_metric/run.py [FRAME ...]``.
-``--normalized`` (T28.6) scores the grid and the noise-normalized metric
-at 1 and 2 km into ``results/<frame>_normalized.csv``.
 """
 
 from __future__ import annotations
@@ -459,8 +457,7 @@ def main(argv: list[str]) -> None:
     from distributed import Client, LocalCluster
 
     sweep = "--sweep" in argv
-    normalized = "--normalized" in argv
-    names = [a for a in argv if not a.startswith("--")]
+    names = [a for a in argv if a != "--sweep"]
     out = HERE / "results"
     out.mkdir(exist_ok=True)
     frames = yaml.safe_load((HERE / "frames.yaml").read_text())["disp_s1"]
@@ -471,28 +468,14 @@ def main(argv: list[str]) -> None:
         ) as cluster,
         Client(cluster),
     ):
-        run_frames(names or list(frames), frames, sweep, out, normalized)
+        run_frames(names or list(frames), frames, sweep, out)
 
 
-NORMALIZED_SIZES = {1: 33, 2: 67}
-
-
-def run_frames(
-    names: list[str], frames: dict, sweep: bool, out: Path, normalized: bool = False
-) -> None:
+def run_frames(names: list[str], frames: dict, sweep: bool, out: Path) -> None:
     """Write the results (or the sweep) of each named frame."""
     for frame in names:
         profiles = frames[frame]["profiles"]
-        if normalized:
-            name = f"{result_name(frame)}_normalized"
-            run_frame(
-                frame,
-                profiles,
-                sizes=NORMALIZED_SIZES,
-                methods=("normalized",),
-                checkpoint=out / f"{name}.partial.csv",
-            ).to_csv(out / f"{name}.csv", index=False)
-        elif sweep:
+        if sweep:
             sweep_frame(frame, profiles).to_csv(
                 out / f"{result_name(frame)}_sweep.csv", index=False
             )

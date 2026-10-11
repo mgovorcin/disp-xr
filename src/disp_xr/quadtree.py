@@ -21,13 +21,6 @@ Split metrics (``metric``):
   where pixels in a cell differ by more than 5 mm";
 - ``"velocity"``: weighted spread of a per-pixel velocity (pass
   ``velocity``, for example from :func:`disp_xr.fit_velocity`), in its unit;
-- ``"normalized"``: the weighted spread of the pixels in the cell against
-  the spread their noise alone would give, RMS over epochs: a reduced
-  chi-square per cell, about 1 where the cell holds only noise, so noisy
-  (low-coherence) cells no longer split for being noisy. Pixel noise is
-  taken as ``sigma0**2 / w`` (``w`` the quality weight); ``sigma0`` per
-  epoch is the median of that spread over the cells of ``min_level``, where
-  the scatter is mostly noise. Unitless; split above about 2;
 - ``"structure"``: the spread of the four children's means divided by
   their noise (the mean of their sigmas), both RMS over epochs: signal
   structure at the cell scale against noise, after the structure function
@@ -43,7 +36,6 @@ Plan task T29 compares the three and sets defaults.
 from __future__ import annotations
 
 from collections.abc import Callable
-from functools import partial
 from typing import Literal, NamedTuple, Optional, Union
 
 import numpy as np
@@ -57,7 +49,7 @@ from .downsample import SUMS, _block_cell_sums, _block_sum, _resolve_weights
 
 __all__ = ["Quadtree", "quadtree"]
 
-MetricName = Literal["displacement", "velocity", "normalized", "structure"]
+MetricName = Literal["displacement", "velocity", "structure"]
 Metric = Union[MetricName, Callable[[xr.Dataset, Optional[xr.Dataset]], xr.DataArray]]
 
 
@@ -130,40 +122,6 @@ def _displacement_score(
     return _rms_over_time(variance)
 
 
-def _scatter(level: xr.Dataset) -> xr.DataArray:
-    """Return the weighted scatter per degree of freedom of each cell.
-
-    ``sum(w (v - m)**2) / (n - 1)``, whose expectation is ``sigma0**2`` when
-    each pixel's noise variance is ``sigma0**2 / w``; NaN for cells with
-    fewer than two valid pixels.
-    """
-    sum_w = level["sum_w"].where(level["sum_w"] > 0)
-    scatter = level["sum_wvv"] - level["sum_wv"] ** 2 / sum_w
-    scatter = scatter.where(scatter > 1e-12 * level["sum_wvv"], 0.0)
-    return scatter / (level["n_valid"] - 1).where(level["n_valid"] > 1)
-
-
-def _noise_floor(finest: xr.DataArray) -> xr.DataArray:
-    """Return ``sigma0**2``: the median scatter of the finest cells per epoch."""
-    finest = finest.chunk({"y": -1, "x": -1}) if finest.chunks is not None else finest
-    return xr.apply_ufunc(
-        lambda a: np.nanmedian(a, axis=(-2, -1)),
-        finest,
-        input_core_dims=[["y", "x"]],
-        dask="parallelized",
-        output_dtypes=[np.float64],
-    )
-
-
-def _normalized_score(
-    level: xr.Dataset,
-    children: Optional[xr.Dataset],  # noqa: ARG001 (metric interface)
-    *,
-    noise: xr.DataArray,
-) -> xr.DataArray:
-    return _rms_over_time(_scatter(level) / noise.where(noise > 0))
-
-
 def _structure_score(level: xr.Dataset, children: Optional[xr.Dataset]) -> xr.DataArray:
     if children is None:
         return xr.full_like(
@@ -217,7 +175,6 @@ METRICS: dict[str, Callable] = {
     "displacement": _displacement_score,
     "velocity": _velocity_score,
     "structure": _structure_score,
-    "normalized": _normalized_score,  # bound to the noise floor in quadtree
 }
 
 
@@ -319,13 +276,11 @@ def quadtree(
         leaf count is closest is chosen (recorded as ``quadtree_threshold``).
         Counts outside what ``min_level`` and ``max_level`` allow give the
         nearest extreme. Pass ``threshold`` or ``n_points``, not both.
-    metric : {"displacement", "velocity", "normalized", "structure"} or callable
+    metric : {"displacement", "velocity", "structure"} or callable
         Split metric. Default ``"structure"``, the best of the three in the
         T29 trade study (``docs/studies/split_metric.md``); at the same
         number of points the regular grid of :func:`downsample` still
-        reconstructs smooth signals better. ``"normalized"`` scores
-        ``"displacement"`` against the pixels' expected noise (plan task
-        T28.6).
+        reconstructs smooth signals better.
     min_level, max_level : int
         Finest and coarsest levels: cells of ``2**min_level`` to
         ``2**max_level`` pixels on a side (3 and 8 are 240 m and 7.7 km at
@@ -402,8 +357,6 @@ def quadtree(
     levels = {min_level: finest}
     for k in range(min_level + 1, max_level + 1):
         levels[k] = _coarsen2(levels[k - 1])
-    if score_fn is _normalized_score:
-        score_fn = partial(_normalized_score, noise=_noise_floor(_scatter(finest)))
 
     lazy_scores = {
         k: score_fn(levels[k], levels.get(k - 1) if k > min_level else None)
