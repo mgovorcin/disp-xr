@@ -67,8 +67,8 @@ print(report)
 # and the granules.
 
 # %%
-from_virtual = dxr.stack_disp(virtual).displacement.isel(time=-1).values
-from_files = dxr.stack_disp(dxr.open_disp(work / "F11116")).displacement.isel(time=-1)
+from_virtual = dxr.chain(virtual).displacement.isel(time=-1).values
+from_files = dxr.chain(dxr.open_disp(work / "F11116")).displacement.isel(time=-1)
 print("identical:", np.allclose(from_virtual, from_files.values, equal_nan=True))
 
 # %% [markdown]
@@ -89,7 +89,7 @@ print(f"now {virtual.sizes['time']} epochs, at commit 2: {before.sizes['time']}"
 # marks a release.
 
 # %%
-chained = dxr.stack_disp(dxr.open_disp(work / "F11116")).disp.rereference("median")
+chained = dxr.chain(dxr.open_disp(work / "F11116")).disp.rereference("median")
 cut = chained.sizes["time"] - 5
 dxr.to_icechunk(
     chained.isel(time=slice(0, cut)), work / "results", message="first epochs"

@@ -2,7 +2,7 @@
 
 DISP correction layers (``/corrections``) are relative to each granule's
 reference date, like ``displacement``, and the product says to subtract them.
-They are therefore applied before :func:`disp_xr.stack_disp` (the PRD
+They are therefore applied before :func:`disp_xr.chain` (the PRD
 processing order). Plate motion depends only on time differences, so it can be
 removed before or after chaining.
 
@@ -106,7 +106,7 @@ def _external_on_ds(
 @recorded
 def correct(
     ds: xr.Dataset,
-    which: Optional[Sequence[str]] = DEFAULT_CORRECTIONS,
+    which: Union[str, Sequence[str], None] = "product",
     *,
     external: Optional[Mapping[str, xr.DataArray]] = None,
     external_kind: Literal["differential", "absolute"] = "differential",
@@ -117,10 +117,13 @@ def correct(
     ----------
     ds : xr.Dataset
         Unchained DISP data opened with ``open_disp(..., corrections=True)``.
-    which : sequence of str, optional
+    which : "product", str or sequence of str, optional
         Product layers to subtract: ``"ionospheric_delay"`` (alias
         ``"ionosphere"``) and ``"solid_earth_tide"`` (alias ``"set"``).
-        ``None`` or empty applies only ``external``.
+        ``"product"`` (default) subtracts every layer the product carries
+        that its processor has not applied already: both for DISP-S1, the
+        solid-earth tide only for DISP-NISAR. ``None`` or empty applies only
+        ``external``.
     external : mapping of str to xr.DataArray, optional
         Extra corrections in meters of LOS displacement, positive toward the
         satellite like ``displacement``, for example a troposphere layer:
@@ -149,21 +152,26 @@ def correct(
     Examples
     --------
     >>> raw = dxr.open_disp("F11116/", corrections=True)  # doctest: +SKIP
-    >>> layers = ["ionospheric_delay", "solid_earth_tide"]
-    >>> ds = dxr.correct(raw, layers)  # doctest: +SKIP
+    >>> ds = dxr.correct(raw)  # doctest: +SKIP
+    >>> ds = dxr.correct(raw, ["solid_earth_tide"])  # doctest: +SKIP
     >>> ds = dxr.correct(raw, None, external={"troposphere": tropo})  # doctest: +SKIP
 
     """
     if "reference_date" in ds.attrs:
         raise CorrectionError(
             "Correction layers are relative to each granule's reference date; "
-            "apply them before stack_disp"
+            "apply them before chaining (disp_xr.chain)"
         )
     applied = _applied(ds)
     out = ds.copy()
     disp = ds["displacement"]
     spec = PRODUCTS.get(ds.attrs.get("product", ""))
     applicable = spec.applicable_corrections if spec else DEFAULT_CORRECTIONS
+    if which == "product":
+        pre_applied = spec.pre_applied_corrections if spec else frozenset()
+        which = [c for c in applicable if c not in pre_applied]
+    elif isinstance(which, str):
+        which = [which]
 
     for requested in which or ():
         name = ALIASES.get(requested, requested)
@@ -347,7 +355,7 @@ def remove_plate_motion(ds: xr.Dataset, static: xr.Dataset, plate: str) -> xr.Da
     """Subtract rigid plate motion from ``displacement``.
 
     Each epoch loses ``v_los * (time - reference)``, where the reference is the
-    granule's ``reference_time`` before :func:`disp_xr.stack_disp` and
+    granule's ``reference_time`` before :func:`disp_xr.chain` and
     ``attrs["reference_date"]`` after it, so it works on either. The result is in a
     plate-fixed frame, comparable with plate-fixed GNSS.
 
@@ -366,7 +374,7 @@ def remove_plate_motion(ds: xr.Dataset, static: xr.Dataset, plate: str) -> xr.Da
     applied = _applied(ds)
     _check_new(ds, name, applied)
     velocity = match_grid(plate_motion_los(static, plate), ds).reset_coords(drop=True)
-    # After stack_disp every epoch is relative to attrs["reference_date"]; the
+    # After chain every epoch is relative to attrs["reference_date"]; the
     # reference_time coordinate still holds each granule's own reference.
     if "reference_date" in ds.attrs:
         reference = np.datetime64(pd.Timestamp(ds.attrs["reference_date"]), "ns")

@@ -27,7 +27,7 @@ folder = Path(tempfile.mkdtemp())
 make_disp_stack(
     folder / "granules", "three_ministacks", shape=(96, 96), epochs_per_ministack=20
 )
-ds = dxr.open_disp(folder / "granules").disp.stack().disp.rereference("median")
+ds = dxr.open_disp(folder / "granules").disp.chain().disp.rereference("median")
 
 pixels = [(10, 10), (10, 85), (85, 10), (85, 85), (48, 48), (25, 60), (70, 35)]
 source = make_gnss_source(ds, pixels, folder / "gnss", extra_rate={3: 0.03})

@@ -20,7 +20,7 @@ from disp_xr.tutorial import make_disp_stack
 
 work = Path(tempfile.mkdtemp())
 make_disp_stack(work / "granules", "two_ministacks", shape=(96, 96))
-ds = dxr.open_disp(work / "granules").disp.mask("recommended").disp.stack()
+ds = dxr.open_disp(work / "granules").disp.mask("recommended").disp.chain()
 ds = ds.disp.rereference("median")
 
 # %% [markdown]

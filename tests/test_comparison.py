@@ -26,7 +26,7 @@ PIXELS = [(8, 10), (20, 40), (35, 15), (50, 50), (12, 55)]
 
 @pytest.fixture
 def frame(stack_dir):
-    return dxr.stack_disp(dxr.open_disp(stack_dir)).disp.rereference("median")
+    return dxr.chain(dxr.open_disp(stack_dir)).disp.rereference("median")
 
 
 @pytest.fixture

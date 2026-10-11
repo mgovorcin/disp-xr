@@ -8,6 +8,10 @@ All notable changes to disp-xr. The format follows
 
 ### Added
 
+- `dxr.search_granules(...)`: the CMR search (`disp_xr.search.search`) at the
+  top level, imported on first use since it needs the aws extra (API review
+  question 4).
+
 - `disp_xr serve STORE ...` and `disp_xr.serve.make_app`: a read-only REST
   service over stores (an xpublish plugin, `serve` extra). Under
   `/datasets/{id}/disp/` it serves:
@@ -30,6 +34,49 @@ All notable changes to disp-xr. The format follows
 - `Comparison.to_dataset` and `Comparison.to_zarr`: the GNSS station
   residuals and summary as a `station` Dataset, written as a `gnss` group
   next to a cube, where `disp_xr serve` finds it.
+
+### Changed
+
+The API review of 2026-10-11 (`docs/api_review.md`) settled seven
+questions; the core API is frozen from this release (`docs/api_policy.md`).
+
+- `dxr.chain` and `.disp.chain()` are the names of chaining; the history
+  records the operation as `chain` (question 1).
+- `correct(ds)` subtracts what the product has not applied
+  (`which="product"`), as the command line does: unchanged for DISP-S1,
+  the solid-earth tide only for DISP-NISAR, where it used to raise. A single
+  correction can be passed as a string (question 2).
+- Every writer takes `overwrite: bool = False` and refuses an existing
+  output unless it is set: `to_zarr`, `to_geozarr`, `to_pyramid`, and
+  `to_netcdf` and `to_geotiff`, which used to overwrite silently; a
+  per-epoch `to_geotiff` checks every file before writing any
+  (question 3).
+- `.disp.mask()` refuses chained data, as `.disp.correct()` does: the order
+  is mask, then chain. `dxr.mask` still masks chained data (question 7).
+
+### Deprecated
+
+Each warns with a `DeprecationWarning` and is removed in 1.0:
+
+- `stack_disp` and `.disp.stack()`: use `chain` (question 1).
+- `mode=` on `to_zarr`, `to_geozarr` and `to_pyramid`: use `overwrite`
+  (question 3).
+- `rechunk` and `.disp.rechunk()` without a layout (still `"timeseries"`
+  for now) (question 6).
+
+### Fixed
+
+- `nan_policy="omit"`: a NaN at a crossover set the offset of later
+  ministacks to zero, discarding what earlier ministacks had accumulated.
+  Later epochs now carry the previous offset (no motion over the gap).
+  **Changes chained values** for pixels with a NaN at a crossover after
+  the first (question 5).
+- `open_virtual` returned `time` and `reference_time` with the sub-second
+  parts of the granules' own time variables (0.44 s on the tutorial
+  granules), while `open_disp` keeps whole seconds as in granule names, so
+  the same frame read both ways did not align on time. Both now give whole
+  seconds.
+
 
 ## [0.3.0] - 2026-10-10
 
@@ -180,12 +227,6 @@ leave-one-station-out score on every frame: the median after the tie is about
   in `disp_xr.__all__`; they stay importable until T38.
 
 ### Fixed
-
-- `open_virtual` returned `time` and `reference_time` with the sub-second
-  parts of the granules' own time variables (0.44 s on the tutorial
-  granules), while `open_disp` keeps whole seconds as in granule names, so
-  the same frame read both ways did not align on time. Both now give whole
-  seconds.
 
 - `residuals.compare` dropped every station without a GNSS solution on the
   DISP reference date (installed later, or a gap that day): `gnss.align`

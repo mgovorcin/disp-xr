@@ -355,7 +355,7 @@ def open_store(path: Union[str, Path]) -> tuple[xr.Dataset, Optional[xr.Dataset]
     repositories (``to_icechunk``) and virtual frames (``disp_xr virtual``)
     are supported. A virtual frame holds its granules as they are, one
     reference per ministack, so it is chained on open
-    (:func:`disp_xr.stack_disp`, lazily: nothing is read until a request).
+    (:func:`disp_xr.chain`, lazily: nothing is read until a request).
 
     Parameters
     ----------
@@ -391,10 +391,10 @@ def open_store(path: Union[str, Path]) -> tuple[xr.Dataset, Optional[xr.Dataset]
 
     repo = icechunk.Repository.open(icechunk.local_filesystem_storage(str(path)))
     if repo.config.virtual_chunk_containers:
-        from .stack import stack_disp
+        from .stack import chain
         from .virtual import open_virtual
 
-        return stack_disp(open_virtual(path)), None
+        return chain(open_virtual(path)), None
     return open_icechunk(path), None
 
 

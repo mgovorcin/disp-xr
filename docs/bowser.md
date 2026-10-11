@@ -7,7 +7,7 @@ directly, without its `tifs-to-geozarr` converter:
 ```python
 import disp_xr as dxr
 
-ds = dxr.stack_disp(dxr.open_disp("granules/")).disp.rereference("auto")
+ds = dxr.chain(dxr.open_disp("granules/")).disp.rereference("auto")
 dxr.to_geozarr(ds, "frame.zarr", static=dxr.open_static(ds), factors=(33, 67))
 ```
 

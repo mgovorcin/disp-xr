@@ -50,7 +50,7 @@ def test_recorded_decorator_skips_the_data_argument():
 
 
 def test_open_and_stack_are_recorded(stack_dir):
-    ds = dxr.stack_disp(dxr.open_disp(stack_dir), nan_policy="omit")
+    ds = dxr.chain(dxr.open_disp(stack_dir), nan_policy="omit")
     ops = history(ds)
-    assert [h["op"] for h in ops] == ["open_disp", "stack_disp"]
+    assert [h["op"] for h in ops] == ["open_disp", "chain"]
     assert ops[1]["params"]["nan_policy"] == "omit"

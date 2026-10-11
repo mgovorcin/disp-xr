@@ -30,7 +30,7 @@ from disp_xr.tutorial import make_disp_stack
 
 folder = Path(tempfile.mkdtemp())
 make_disp_stack(folder / "granules", "three_ministacks", shape=(64, 64))
-ds = dxr.stack_disp(dxr.open_disp(folder / "granules")).disp.rereference("median")
+ds = dxr.chain(dxr.open_disp(folder / "granules")).disp.rereference("median")
 
 # An ascending pass: the LOS points west-ish and up, and the incidence angle
 # grows from 30 to 46 degrees across the frame.

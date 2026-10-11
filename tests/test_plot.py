@@ -25,7 +25,7 @@ def raw(stack_dir):
 
 @pytest.fixture
 def chained(raw):
-    return dxr.stack_disp(raw)
+    return dxr.chain(raw)
 
 
 def test_map_last_epoch_in_mm(chained):

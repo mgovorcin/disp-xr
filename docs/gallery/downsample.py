@@ -18,7 +18,7 @@ from disp_xr.tutorial import make_disp_stack
 
 folder = Path(tempfile.mkdtemp()) / "granules"
 make_disp_stack(folder, "two_ministacks", shape=(128, 128))
-ds = dxr.stack_disp(dxr.open_disp(folder)).disp.rereference("median")
+ds = dxr.chain(dxr.open_disp(folder)).disp.rereference("median")
 
 # %% [markdown]
 # ## Aggregate

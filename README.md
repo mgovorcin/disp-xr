@@ -10,7 +10,7 @@ import disp_xr as dxr
 
 df = dxr.find_products("path/to/granules/")   # or "s3://bucket/prefix/"
 ds = dxr.open_disp(df, corrections=True)       # lazy (time, y, x), CRS attached
-ds = dxr.stack_disp(ds)                        # displacement from the first date
+ds = dxr.chain(ds)                        # displacement from the first date
 
 ds.displacement.isel(x=4000, y=3000).plot()    # one pixel's time series
 ```

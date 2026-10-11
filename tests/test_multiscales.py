@@ -11,7 +11,7 @@ from disp_xr.export.multiscales import MULTISCALES_CONVENTION, build_overviews
 
 @pytest.fixture
 def ds(stack_dir):
-    return dxr.stack_disp(dxr.open_disp(stack_dir)).disp.rereference("median")
+    return dxr.chain(dxr.open_disp(stack_dir)).disp.rereference("median")
 
 
 def test_build_overviews_layout(ds):
@@ -93,7 +93,7 @@ def test_open_reads_the_layout_not_group_names(ds, tmp_path):
     assert list(tree.children) == ["0", "2"]  # group "1" exists, not listed
     with pytest.raises(FileExistsError):
         dxr.to_pyramid(ds, store, factors=(2,))
-    dxr.to_pyramid(ds, store, factors=(3,), mode="w")
+    dxr.to_pyramid(ds, store, factors=(3,), overwrite=True)
     assert list(dxr.open_pyramid(store).children) == ["0", "1"]
 
 

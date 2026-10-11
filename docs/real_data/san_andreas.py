@@ -79,7 +79,7 @@ ref_x, ref_y = np.array([fx1, fy1]) + (middle * strike + 8 * normal) * 1e3
 to_lonlat = Transformer.from_crs(raw.rio.crs, "EPSG:4326", always_xy=True)
 ref_lon, ref_lat = to_lonlat.transform(ref_x, ref_y)
 
-ds = dxr.stack_disp(dxr.mask(window, "recommended"))
+ds = dxr.chain(dxr.mask(window, "recommended"))
 ds = dxr.rereference(
     ds,
     "area",

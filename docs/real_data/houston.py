@@ -93,7 +93,7 @@ station = str(gps.station.values[nearest])
 lon, lat = float(gps.lon[nearest]), float(gps.lat[nearest])
 print(f"{gps.sizes['station']} UNR stations in the window; reference: {station}")
 
-ds = dxr.stack_disp(dxr.mask(window, "recommended"))
+ds = dxr.chain(dxr.mask(window, "recommended"))
 ds = dxr.rereference(
     ds, "area", bbox=(lon - 0.005, lat - 0.005, lon + 0.005, lat + 0.005)
 )

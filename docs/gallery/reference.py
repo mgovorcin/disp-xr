@@ -2,14 +2,14 @@
 # # Corrections and reference methods
 #
 # DISP displacement is relative in space and in time. In time, each granule
-# is relative to its ministack's reference date, until `stack_disp` chains
+# is relative to its ministack's reference date, until `chain` chains
 # them. In space, values are relative to an arbitrary point, so a map means
 # something only after re-referencing. The order follows the product:
 #
 # 1. `correct`: subtract correction layers, per granule (they are relative
 #    to each granule's reference date, so this comes before chaining);
 # 2. `mask` (optional);
-# 3. `stack_disp`: chain the ministacks;
+# 3. `chain`: chain the ministacks;
 # 4. `rereference`: choose what is zero in each epoch.
 #
 # The synthetic frame has a low-coherence corner, a patch where unwrapping
@@ -42,7 +42,7 @@ raw = dxr.open_disp(folder, corrections=True)
 corrected = dxr.correct(raw, ["ionospheric_delay", "solid_earth_tide"])
 change = (corrected.displacement - raw.displacement).isel(time=-1).mean().values
 print(f"correction at the last epoch: {1e3 * float(change):+.1f} mm")
-ds = dxr.stack_disp(dxr.mask(corrected, "recommended"))
+ds = dxr.chain(dxr.mask(corrected, "recommended"))
 
 # %% [markdown]
 # ## Reference methods

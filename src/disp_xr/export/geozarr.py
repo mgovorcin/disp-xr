@@ -41,6 +41,7 @@ import numpy as np
 import xarray as xr
 
 from ..config import bounded_threads, config
+from ._overwrite import zarr_mode
 from .multiscales import build_overviews, to_pyramid
 from .zarr import to_zarr
 
@@ -205,7 +206,8 @@ def to_geozarr(
     look_side: Literal["right", "left"] = "right",
     histogram: bool = True,
     min_size: int = 256,
-    mode: Literal["w-", "w"] = "w-",
+    overwrite: bool = False,
+    mode: Optional[Literal["w-", "w"]] = None,
     storage_options: Optional[Mapping[str, Any]] = None,
     **downsample_kwargs: Any,
 ) -> Optional[xr.DataTree]:
@@ -238,8 +240,10 @@ def to_geozarr(
         profile).
     min_size : int
         Smallest side, in cells, of a display level (bowser uses 256).
-    mode : {"w-", "w"}
-        Fail if the store exists (default), or overwrite it.
+    overwrite : bool
+        Replace an existing store; by default it is refused.
+    mode : {"w-", "w"}, optional
+        Deprecated: use ``overwrite``.
     storage_options : mapping, optional
         fsspec options for a URL store.
     **downsample_kwargs
@@ -257,6 +261,7 @@ def to_geozarr(
     Then ``bowser run --stack-file frame.zarr``.
 
     """
+    overwrite = zarr_mode(mode, overwrite, "to_geozarr") == "w"
     if profile not in ("bowser", "standard"):
         raise ValueError(f"profile must be 'bowser' or 'standard', not {profile!r}")
     if profile == "standard":
@@ -265,11 +270,11 @@ def to_geozarr(
                 ds,
                 store,
                 factors=tuple(factors) or (33, 67, 333),
-                mode=mode,
+                overwrite=overwrite,
                 storage_options=storage_options,
                 **downsample_kwargs,
             )
-        to_zarr(ds, store, mode=mode, storage_options=storage_options)
+        to_zarr(ds, store, overwrite=overwrite, storage_options=storage_options)
         return None
 
     base = bowser_attrs(ds)
@@ -284,7 +289,13 @@ def to_geozarr(
                 base[name].attrs["bowser_histogram"] = histogram_stats(var)
     base.attrs |= extra
     if not pyramid:
-        to_zarr(base, store, preset="tiles", mode=mode, storage_options=storage_options)
+        to_zarr(
+            base,
+            store,
+            preset="tiles",
+            overwrite=overwrite,
+            storage_options=storage_options,
+        )
         return None
     levels = sorted(
         set(display_factors((ds.sizes["y"], ds.sizes["x"]), min_size))
@@ -306,7 +317,7 @@ def to_geozarr(
     return to_pyramid(
         xr.DataTree.from_dict(nodes),
         store,
-        mode=mode,
+        overwrite=overwrite,
         preset="tiles",
         storage_options=storage_options,
     )

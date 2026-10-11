@@ -85,7 +85,7 @@ def test_stack_matches_library(stack_dir, tmp_path):
         "stack", stack_dir, "--out", out, "--reference", "point", "--row", 5, "--col", 7
     )
     expected = dxr.rereference(
-        dxr.stack_disp(
+        dxr.chain(
             dxr.mask(
                 dxr.correct(
                     dxr.open_disp(stack_dir, corrections=True),
@@ -103,7 +103,7 @@ def test_stack_matches_library(stack_dir, tmp_path):
         back.displacement.values, expected.displacement.values, equal_nan=True
     )
     ops = [json.loads(line)["op"] for line in back.attrs["history"].splitlines()]
-    assert ops == ["open_disp", "correct", "mask", "stack_disp", "rereference"]
+    assert ops == ["open_disp", "correct", "mask", "chain", "rereference"]
 
 
 def test_stack_options(stack_dir, tmp_path):
@@ -124,7 +124,7 @@ def test_stack_options(stack_dir, tmp_path):
     )
     back = xr.open_dataset(out)
     ops = [json.loads(line)["op"] for line in back.attrs["history"].splitlines()]
-    assert ops == ["open_disp", "stack_disp"]
+    assert ops == ["open_disp", "chain"]
     assert back.time.values.min() >= np.datetime64("2020-03-01")
     assert "ionospheric_delay" not in back
 
@@ -187,7 +187,7 @@ def test_export_geotiff(stored, tmp_path):
     run("export", stored, "--format", "cog", "--out", cog)
     with rasterio.open(cog) as src:
         assert src.tags()["INPUT_GRANULES"].startswith('["OPERA_L3_DISP')
-        assert "stack_disp" in src.tags()["HISTORY"]
+        assert "chain" in src.tags()["HISTORY"]
 
 
 def test_export_geotiff_unknown_layer(stored, tmp_path):
@@ -206,7 +206,7 @@ def test_export_geotiff_unknown_layer(stored, tmp_path):
 
 
 def test_export_zarr_and_netcdf_from_granules(stack_dir, tmp_path):
-    expected = dxr.stack_disp(dxr.open_disp(stack_dir))
+    expected = dxr.chain(dxr.open_disp(stack_dir))
     run("export", stack_dir, "--format", "zarr", "--out", tmp_path / "a.zarr")
     run("export", stack_dir, "--format", "netcdf", "--out", tmp_path / "a.nc")
     for back in (

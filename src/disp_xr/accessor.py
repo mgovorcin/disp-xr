@@ -1,7 +1,7 @@
 """The ``.disp`` accessor on xarray objects.
 
-It only delegates to disp-xr functions, so ``ds.disp.stack()`` and
-``dxr.stack_disp(ds)`` are the same operation. Registered when ``disp_xr`` is
+It only delegates to disp-xr functions, so ``ds.disp.chain()`` and
+``dxr.chain(ds)`` are the same operation. Registered when ``disp_xr`` is
 imported.
 
 Examples
@@ -15,6 +15,7 @@ True
 
 from __future__ import annotations
 
+import warnings
 from typing import Any, Optional, Union
 
 import xarray as xr
@@ -26,7 +27,7 @@ from .geometry import Grid, grid
 from .plot import plot_map, plot_point
 from .quality import mask, quality_summary
 from .reference import rereference
-from .stack import stack_disp
+from .stack import chain
 from .units import to_units
 from .validate import validate_disp
 
@@ -50,8 +51,16 @@ class _Common:
         """Convert length variables to ``unit`` (see :func:`disp_xr.units.to_units`)."""
         return to_units(self._obj, unit)
 
-    def rechunk(self, chunks: ChunkSpec = "timeseries") -> Any:
+    def rechunk(self, chunks: Optional[ChunkSpec] = None) -> Any:
         """Rechunk for one kind of work (see :func:`disp_xr.rechunk`)."""
+        if chunks is None:
+            warnings.warn(
+                "rechunk without a layout is deprecated; pass one, for example "
+                '.disp.rechunk("timeseries") (an error from 1.0)',
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            chunks = "timeseries"
         return rechunk(self._obj, chunks)
 
     def plot_map(self, time: Any = None, **kwargs: Any) -> Any:
@@ -81,12 +90,36 @@ class DispDatasetAccessor(_Common):
         """Wrap ``ds``; xarray creates the accessor on first ``ds.disp`` use."""
         self._obj = ds
 
+    def chain(self, **kwargs: Any) -> xr.Dataset:
+        """Chain ministacks (see :func:`disp_xr.chain`)."""
+        return chain(self._obj, **kwargs)
+
     def stack(self, **kwargs: Any) -> xr.Dataset:
-        """Chain ministacks (see :func:`disp_xr.stack_disp`)."""
-        return stack_disp(self._obj, **kwargs)
+        """Chain ministacks: the old name of :meth:`chain`.
+
+        .. deprecated:: 0.4
+            Use ``.disp.chain()``; ``.disp.chain()`` is removed in 1.0.
+        """
+        warnings.warn(
+            ".disp.chain() is deprecated; use .disp.chain() (removed in 1.0)",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return chain(self._obj, **kwargs)
 
     def mask(self, preset: str | None = "recommended", **criteria: Any) -> xr.Dataset:
-        """Mask displacement by quality (see :func:`disp_xr.quality.mask`)."""
+        """Mask displacement by quality (see :func:`disp_xr.quality.mask`).
+
+        Refuses chained data: the PRD order is mask, then chain, and a chain
+        of accessor calls should read in that order. ``disp_xr.mask`` still
+        masks chained data for whoever means it.
+        """
+        if "reference_date" in self._obj.attrs:
+            raise ValueError(
+                ".disp.mask() refuses chained data: mask before chaining "
+                "(ds.disp.mask(...).disp.chain()), or call disp_xr.mask(ds, ...) "
+                "to mask chained data on purpose"
+            )
         return mask(self._obj, preset, **criteria)
 
     def correct(self, *args: Any, **kwargs: Any) -> xr.Dataset:

@@ -303,12 +303,12 @@ Goal: the everyday DISP workflow (open, mask, re-reference, correct, export, plo
 
 ### T18. Release v0.2 and API review
 
-- [ ] **T18. Release v0.2 and API review** — Depends on: T10, T11, T12, T13, T15, T16, T17 · PRD: Milestones (M1 gate)
+- [x] **T18. Release v0.2 and API review** — Depends on: T10, T11, T12, T13, T15, T16, T17 · PRD: Milestones (M1 gate)
   - Context: gate "API reviewed by users". Names change cheaply now and expensively after M2.
   - Done when: tag `v0.2.0` exists, at least 3 Cal/Val users have run the getting-started flow on their own frames, their feedback is triaged into issues, and the core names are frozen.
-  - [ ] T18.1 Tag `v0.2.0`, update the changelog and publish the docs. Decision (maintainer, 2026-10-10): no `v0.2.0`; M1 and M2 were released together as `v0.3.0` because the review below had not taken place. The review and the API freeze (T18.2, T18.3) stay open and land in a later 0.x release.
+  - [x] T18.1 Tag `v0.2.0`, update the changelog and publish the docs. Decision (maintainer, 2026-10-10): no `v0.2.0`; M1 and M2 were released together as `v0.3.0` because the review below had not taken place. The review and the API freeze (T18.2, T18.3) stay open and land in a later 0.x release. Resolved by that decision.
   - [x] T18.2 Run the API review: share the getting-started page and collect feedback in one issue per topic. Prepared: `docs/api_review.md` (public API, settled decisions, seven open questions, each to become an issue) and `docs/try-it.md` (a 30-minute guide for users on their own frames). Already fixed: an internal parameter in `to_geotiff`'s signature; deprecated names out of `__all__`. Waiting: at least 3 Cal/Val users. Done 2026-10-11 without outside reviewers (there are no other users yet): the maintainer answered the seven open questions; decisions in `docs/api_review.md`, implemented in T18.3.
-  - [ ] T18.3 Apply the agreed renames (with deprecation shims) and record the frozen core API in `docs/api_policy.md`. Prepared: `docs/api_policy.md` draft (what is public, deprecation rules); the frozen list waits for the review.
+  - [x] T18.3 Apply the agreed renames (with deprecation shims) and record the frozen core API in `docs/api_policy.md`. Prepared: `docs/api_policy.md` draft (what is public, deprecation rules); the frozen list waits for the review. Done 2026-10-11 (`feature/api-freeze`): the seven decisions, each with tests and a changelog entry (`chain`, `correct` default, `overwrite`, `search_granules`, NaN crossover, `rechunk` layout, `.disp.mask` order); deprecated aliases warn until 1.0; the frozen list is in `docs/api_policy.md`.
 
 ---
 

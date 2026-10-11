@@ -13,6 +13,7 @@ from rasterio.transform import Affine, from_bounds
 from rasterio.warp import Resampling, reproject
 
 from ..config import bounded_threads
+from ._overwrite import refuse_existing
 from ._provenance import provenance_attrs
 
 
@@ -218,6 +219,7 @@ def to_geotiff(
     layer: str = "displacement",
     per_epoch: bool = False,
     compress: str = "DEFLATE",
+    overwrite: bool = False,
 ) -> list[Path]:
     """Write a layer as a Cloud Optimized GeoTIFF (COG) with overviews.
 
@@ -241,6 +243,9 @@ def to_geotiff(
         Write each epoch of a ``(time, y, x)`` layer to its own file.
     compress : str
         GDAL compression.
+    overwrite : bool
+        Replace existing files; by default any existing output is refused
+        before anything is written.
 
     Returns
     -------
@@ -252,6 +257,8 @@ def to_geotiff(
     ValueError
         If the layer has no CRS, has the wrong dims, or one epoch is larger
         than ``config["max_load_bytes"]``.
+    FileExistsError
+        If an output file exists and ``overwrite`` is not set.
 
     Examples
     --------
@@ -277,18 +284,18 @@ def to_geotiff(
     if per_epoch:
         if da.dims != ("time", "y", "x"):
             raise ValueError(f"per_epoch needs (time, y, x), not {da.dims}")
-        written: list[Path] = []
-        for t in da["time"].values:
-            name = f"{path.stem}_{pd.Timestamp(t):%Y%m%d}{path.suffix or '.tif'}"
-            written.append(
-                _write_cog(
-                    da.sel(time=t, drop=True),
-                    path.with_name(name),
-                    compress,
-                    provenance,
-                )
+        targets = {
+            t: path.with_name(
+                f"{path.stem}_{pd.Timestamp(t):%Y%m%d}{path.suffix or '.tif'}"
             )
-        return written
+            for t in da["time"].values
+        }
+        refuse_existing(targets.values(), overwrite)
+        return [
+            _write_cog(da.sel(time=t, drop=True), target, compress, provenance)
+            for t, target in targets.items()
+        ]
+    refuse_existing([path], overwrite)
     return [_write_cog(da, path, compress, provenance)]
 
 

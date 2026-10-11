@@ -107,7 +107,7 @@ def test_cycle_histogram(ds):
 
 
 def test_weights_feed_fit_trajectory(ds):
-    stacked = dxr.stack_disp(ds)
+    stacked = dxr.chain(ds)
     w = dxr.quality_weights(stacked).weight.fillna(0)
     fit = dxr.fit_trajectory(stacked, weights=w)
     excluded = fit.velocity.values[LOW_COHERENCE]

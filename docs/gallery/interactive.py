@@ -29,7 +29,7 @@ from disp_xr.tutorial import make_disp_stack
 folder = Path(tempfile.mkdtemp()) / "granules"
 make_disp_stack(folder, "three_ministacks", shape=(1024, 1024), epochs_per_ministack=3)
 ds = dxr.open_disp(folder, layers=["displacement", "recommended_mask"])
-ds = ds.disp.mask("recommended").disp.stack().disp.rereference("median")
+ds = ds.disp.mask("recommended").disp.chain().disp.rereference("median")
 mm = dxr.to_units(ds.displacement, "mm")
 print(mm.sizes)
 

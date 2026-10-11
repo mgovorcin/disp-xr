@@ -25,12 +25,12 @@ print(len(truth.paths), "granules in", folder)
 # ## Open, correct, mask, chain
 #
 # `open_disp` reads metadata only. Corrections and the mask apply per
-# granule, before `stack_disp` chains the three ministacks into one series
+# granule, before `chain` chains the three ministacks into one series
 # from the first reference date.
 
 # %%
 ds = dxr.open_disp(folder, corrections=True)
-ds = ds.disp.correct().disp.mask("recommended").disp.stack()
+ds = ds.disp.correct().disp.mask("recommended").disp.chain()
 ds = ds.disp.rereference("auto")
 print("relative to", ds.attrs["reference_date"], "| epochs:", ds.sizes["time"])
 
@@ -67,6 +67,6 @@ plt.show()
 
 # %%
 print("reference:", ds.attrs["reference"])
-chained = dxr.stack_disp(dxr.open_disp(folder))
+chained = dxr.chain(dxr.open_disp(folder))
 error = chained.displacement.values - truth.cumulative
 print(f"largest difference from the truth: {np.nanmax(np.abs(error)) * 1000:.4f} mm")

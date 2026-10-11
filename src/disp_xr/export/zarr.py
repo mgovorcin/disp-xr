@@ -39,6 +39,7 @@ import xarray as xr
 
 from .._chunks import suggest_chunks
 from ..config import bounded_threads
+from ._overwrite import refuse_existing, zarr_mode
 from ._provenance import with_provenance
 
 __all__ = ["chunk_scheme", "round_mantissa", "to_netcdf", "to_zarr", "zarr_encoding"]
@@ -256,7 +257,8 @@ def to_zarr(
     store: Union[str, Path, Any],
     *,
     preset: Preset = "timeseries",
-    mode: Literal["w", "w-"] = "w-",
+    overwrite: bool = False,
+    mode: Optional[Literal["w", "w-"]] = None,
     keep_bits: Optional[int] = None,
     compression_level: int = 3,
     target_mb: Optional[float] = None,
@@ -274,8 +276,10 @@ def to_zarr(
         Local path, URL (with ``storage_options``) or any zarr ``Store``.
     preset : {"timeseries", "maps", "ministack", "whole", "tiles"}
         Chunk layout; see the module docstring.
-    mode : {"w-", "w"}
-        Fail if the store (or ``group``) exists (default), or overwrite it.
+    overwrite : bool
+        Replace an existing store (or ``group``); by default it is refused.
+    mode : {"w-", "w"}, optional
+        Deprecated: use ``overwrite``.
     keep_bits : int, optional
         Mantissa bits to keep in float variables (lossy). ``None`` keeps the
         data exact, as Cal/Val outputs need.
@@ -299,6 +303,7 @@ def to_zarr(
     ... )  # doctest: +SKIP
 
     """
+    mode = zarr_mode(mode, overwrite, "to_zarr")
     out, _ = _prepare(ds, preset, keep_bits, target_mb, json_native=True)
     out = _with_zarr_conventions(out)
     encoding = zarr_encoding(
@@ -328,16 +333,19 @@ def to_netcdf(
     keep_bits: Optional[int] = None,
     compression_level: int = 4,
     target_mb: Optional[float] = None,
+    overwrite: bool = False,
 ) -> None:
     """Write ``ds`` to NetCDF-4 (h5netcdf) with zlib and the read-chunk layout.
 
     NetCDF has no shards, so the HDF5 chunk is the read chunk of ``preset``.
+    An existing file is refused unless ``overwrite=True``.
 
     Examples
     --------
     >>> dxr.to_netcdf(ds, "F11116.nc")  # doctest: +SKIP
 
     """
+    refuse_existing([Path(path)], overwrite)
     out, _ = _prepare(ds, preset, keep_bits, target_mb)
     chunks, _ = chunk_scheme(out, preset, target_mb)
     encoding: dict[str, dict[str, Any]] = {}

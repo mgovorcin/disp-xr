@@ -78,7 +78,7 @@ print(str(caught[0].message).splitlines()[0])
 print("dtype:", ds.displacement.dtype, "| mixed:", ds.attrs["mixed_precision"])
 print("sub-second times:", int((ds.time.dt.microsecond != 0).sum()))
 
-stack = dxr.stack_disp(ds)
+stack = dxr.chain(ds)
 print(
     f"chained: {stack.sizes['time']} epochs,"
     f" {stack.time.values[0]!s:.10} to {stack.time.values[-1]!s:.10}"

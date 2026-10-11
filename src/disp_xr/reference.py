@@ -278,7 +278,7 @@ def rereference(
     Parameters
     ----------
     ds : xr.Dataset
-        DISP dataset, usually after :func:`disp_xr.stack_disp`.
+        DISP dataset, usually after :func:`disp_xr.chain`.
     method : str or ReferenceMethod
         ``"point"``, ``"median"``, ``"border"``, ``"high_coherence"`` (needs
         ``good_pixels``), ``"area"`` or ``"auto"`` (:func:`find_stable_point`).

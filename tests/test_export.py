@@ -14,7 +14,7 @@ from disp_xr.export.zarr import chunk_scheme, round_mantissa, zarr_encoding
 
 @pytest.fixture
 def ds(stack_dir):
-    return dxr.stack_disp(dxr.open_disp(stack_dir))
+    return dxr.chain(dxr.open_disp(stack_dir))
 
 
 def _equal_values(a, b):
@@ -117,7 +117,7 @@ def test_zarr_provenance(ds, tmp_path):
     assert set(json.loads(attrs["software_versions"])) >= {"xarray", "zarr", "dask"}
     assert len(json.loads(attrs["input_granules"])) == 10
     ops = [json.loads(line)["op"] for line in attrs["history"].splitlines()]
-    assert ops[-2:] == ["stack_disp", "rereference"]
+    assert ops[-2:] == ["chain", "rereference"]
 
 
 def test_zarr_refuses_existing_store(ds, tmp_path):
@@ -125,7 +125,40 @@ def test_zarr_refuses_existing_store(ds, tmp_path):
     dxr.to_zarr(ds, path)
     with pytest.raises(Exception, match="(?i)exist|contains"):
         dxr.to_zarr(ds, path)
-    dxr.to_zarr(ds, path, mode="w")
+    dxr.to_zarr(ds, path, overwrite=True)
+
+
+def test_zarr_mode_is_deprecated(ds, tmp_path):
+    path = tmp_path / "out.zarr"
+    dxr.to_zarr(ds, path)
+    with pytest.warns(DeprecationWarning, match="use overwrite=True"):
+        dxr.to_zarr(ds, path, mode="w")
+
+
+def test_netcdf_and_geotiff_refuse_existing_files(ds, tmp_path):
+    # They used to overwrite silently (API review question 3).
+    nc = tmp_path / "out.nc"
+    dxr.to_netcdf(ds, nc)
+    with pytest.raises(FileExistsError, match="overwrite=True"):
+        dxr.to_netcdf(ds, nc)
+    dxr.to_netcdf(ds, nc, overwrite=True)
+
+    tif = tmp_path / "last.tif"
+    dxr.to_geotiff(ds.isel(time=-1), tif)
+    with pytest.raises(FileExistsError, match="overwrite=True"):
+        dxr.to_geotiff(ds.isel(time=-1), tif)
+    dxr.to_geotiff(ds.isel(time=-1), tif, overwrite=True)
+
+
+def test_per_epoch_geotiff_refuses_before_writing(ds, tmp_path):
+    out = tmp_path / "epoch.tif"
+    first = dxr.to_geotiff(ds.isel(time=[1]), out, per_epoch=True)
+    before = {p: p.stat().st_mtime_ns for p in tmp_path.iterdir()}
+    with pytest.raises(FileExistsError):
+        dxr.to_geotiff(ds.isel(time=[0, 1]), out, per_epoch=True)
+    after = {p: p.stat().st_mtime_ns for p in tmp_path.iterdir()}
+    assert after == before  # nothing written, not even the new epoch
+    assert len(first) == 1
 
 
 def test_zarr_keep_bits_is_opt_in(ds, tmp_path):
@@ -228,7 +261,7 @@ def test_geotiff_from_dataset_is_a_cog_with_provenance(tmp_path):
     from disp_xr.tutorial import make_disp_stack
 
     make_disp_stack(tmp_path / "g", shape=(600, 600), epochs_per_ministack=2)
-    ds = dxr.stack_disp(dxr.open_disp(tmp_path / "g"))
+    ds = dxr.chain(dxr.open_disp(tmp_path / "g"))
     (path,) = dxr.to_geotiff(ds.isel(time=-1), tmp_path / "a.tif", layer="displacement")
     with rasterio.open(path) as src:
         tags = src.tags()
@@ -237,7 +270,7 @@ def test_geotiff_from_dataset_is_a_cog_with_provenance(tmp_path):
         assert src.tags(ns="IMAGE_STRUCTURE").get("LAYOUT") == "COG"
     assert tags["DISP_XR_VERSION"] == dxr.__version__
     assert len(json.loads(tags["INPUT_GRANULES"])) == 4
-    assert json.loads(tags["HISTORY"].splitlines()[-1])["op"] == "stack_disp"
+    assert json.loads(tags["HISTORY"].splitlines()[-1])["op"] == "chain"
     assert set(json.loads(tags["SOFTWARE_VERSIONS"])) >= {"xarray", "zarr"}
     with pytest.raises(ValueError, match="No layer"):
         dxr.to_geotiff(ds, tmp_path / "b.tif", layer="nope")

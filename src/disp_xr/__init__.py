@@ -34,6 +34,7 @@ from .reference import rereference
 from .residuals import VariogramModel, empirical_variogram, fit_variogram
 from .stack import (  # noqa: F401  (combine_disp_product is deprecated)
     NaNPolicy,
+    chain,
     combine_disp_product,
     stack_disp,
 )
@@ -89,6 +90,7 @@ __all__ = [
     "rechunk",
     "remove_plate_motion",
     "rereference",
+    "chain",
     "stack_disp",
     "to_geodataframe",
     "to_geotiff",
@@ -104,3 +106,16 @@ __all__ = [
     "validate_disp",
     "validate_virtual",
 ]
+
+
+def __getattr__(name: str) -> object:
+    """Resolve ``search_granules`` on first use: it needs the aws extra.
+
+    It is not in ``__all__``, so ``from disp_xr import *`` never imports the
+    aws dependencies.
+    """
+    if name == "search_granules":
+        from .search import search_granules
+
+        return search_granules
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

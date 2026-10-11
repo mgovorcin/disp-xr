@@ -139,7 +139,7 @@ def to_mintpy(
     Parameters
     ----------
     ds : xr.Dataset
-        Output of :func:`disp_xr.stack_disp` (optionally corrected, masked and
+        Output of :func:`disp_xr.chain` (optionally corrected, masked and
         re-referenced): ``displacement`` relative to one reference date.
     outdir : str or Path
         Output directory, created if needed.
@@ -169,7 +169,7 @@ def to_mintpy(
 
     """
     if "reference_date" not in ds.attrs:
-        raise ValueError("MintPy needs one reference date; chain with stack_disp first")
+        raise ValueError("MintPy needs one reference date; chain first (disp_xr.chain)")
     outdir = Path(outdir)
     outdir.mkdir(parents=True, exist_ok=True)
     meta = mintpy_metadata(ds)

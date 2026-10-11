@@ -89,7 +89,7 @@ center_x, center_y = float(window.x.mean()), float(window.y.mean())
 nearest = int(np.hypot(gps.x - center_x, gps.y - center_y).argmin())
 station = str(gps.station.values[nearest])
 lon, lat = float(gps.lon[nearest]), float(gps.lat[nearest])
-ds = dxr.stack_disp(dxr.mask(window, "recommended"))
+ds = dxr.chain(dxr.mask(window, "recommended"))
 ds = dxr.rereference(
     ds, "area", bbox=(lon - 0.005, lat - 0.005, lon + 0.005, lat + 0.005)
 )

@@ -2,8 +2,16 @@
 
 import numpy as np
 import pytest
+import xarray as xr
 
-from disp_xr._chunks import FILE_CHUNK, clamp_chunks, resolve_chunks, suggest_chunks
+import disp_xr  # noqa: F401  (registers .disp)
+from disp_xr._chunks import (
+    FILE_CHUNK,
+    clamp_chunks,
+    rechunk,
+    resolve_chunks,
+    suggest_chunks,
+)
 from disp_xr.config import config
 
 
@@ -105,3 +113,13 @@ def test_bounded_threads():
         assert workers() is None
     with dask.config.set(num_workers=7):  # the user's own setting wins
         assert workers() == 7
+
+
+def test_rechunk_without_a_layout_is_deprecated():
+    da = xr.DataArray(np.zeros((4, 8, 8)), dims=("time", "y", "x")).chunk(1)
+    with pytest.warns(DeprecationWarning, match="rechunk without a layout"):
+        out = rechunk(da)
+    assert out.chunks == rechunk(da, "timeseries").chunks
+    ds = da.to_dataset(name="displacement")
+    with pytest.warns(DeprecationWarning, match="rechunk without a layout"):
+        ds.disp.rechunk()

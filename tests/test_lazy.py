@@ -27,7 +27,7 @@ def stack(tmp_path_factory):
 
     folder = tmp_path_factory.mktemp("lazy") / "granules"
     make_disp_stack(folder, "three_ministacks", shape=(64, 64))
-    return dxr.stack_disp(dxr.open_disp(folder, corrections=True)).chunk(
+    return dxr.chain(dxr.open_disp(folder, corrections=True)).chunk(
         {"time": 1, "y": 32, "x": 32}
     )
 
@@ -80,7 +80,7 @@ def test_open_and_stack_are_lazy(tmp_path):
     ds = dxr.open_disp(folder, corrections=True)
     with dask.config.set(scheduler=_forbid):
         corrected = dxr.correct(ds, ["ionospheric_delay", "solid_earth_tide"])
-        out = dxr.stack_disp(corrected)
+        out = dxr.chain(corrected)
     assert out.displacement.chunks is not None
     assert np.isfinite(out.displacement.isel(time=-1).values).any()
 

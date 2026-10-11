@@ -35,7 +35,7 @@ from disp_xr.tutorial import make_disp_stack
 
 folder = Path(tempfile.mkdtemp()) / "granules"
 make_disp_stack(folder, "three_ministacks", shape=(128, 128))
-ds = dxr.stack_disp(dxr.open_disp(folder)).disp.rereference("median")
+ds = dxr.chain(dxr.open_disp(folder)).disp.rereference("median")
 velocity = dxr.fit_velocity(ds, "ols").compute()
 velocity["velocity"] = (1e3 * velocity.velocity).assign_attrs(units="mm/yr")
 # grid_mapping on every variable, so the server finds the CRS at once.

@@ -257,7 +257,7 @@ def mask(
     quality layers are kept as they are. See :func:`valid_mask` for presets and
     criteria. Every layer is per epoch, so each epoch is masked by its own
     granule's quality. Works before or after chaining; the zero epoch that
-    :func:`disp_xr.stack_disp` prepends has no quality layers and stays 0.
+    :func:`disp_xr.chain` prepends has no quality layers and stays 0.
 
     Examples
     --------

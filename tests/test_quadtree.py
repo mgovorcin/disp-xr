@@ -255,7 +255,7 @@ def test_errors():
 
 
 def test_quality_weights_on_fixture(stack_dir):
-    ds = dxr.stack_disp(dxr.open_disp(stack_dir)).disp.rereference("median")
+    ds = dxr.chain(dxr.open_disp(stack_dir)).disp.rereference("median")
     tree = quadtree(ds, threshold=0.003, min_level=1, max_level=4)
     points = tree.points.compute()
     assert points.sizes["point"] > 0

@@ -37,7 +37,7 @@ from disp_xr.tutorial import make_disp_stack, make_gnss_source, vertical_los
 
 folder = Path(tempfile.mkdtemp())
 make_disp_stack(folder / "granules", "three_ministacks", shape=(128, 128))
-ds = dxr.stack_disp(dxr.open_disp(folder / "granules")).disp.rereference("median")
+ds = dxr.chain(dxr.open_disp(folder / "granules")).disp.rereference("median")
 
 # %% [markdown]
 # ## A store with velocity and GNSS residuals

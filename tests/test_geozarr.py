@@ -29,7 +29,7 @@ BOWSER_CHECK = Path(__file__).with_name("bowser_check.py")
 
 @pytest.fixture
 def ds(stack_dir):
-    stacked = dxr.stack_disp(dxr.open_disp(stack_dir))
+    stacked = dxr.chain(dxr.open_disp(stack_dir))
     return stacked.disp.rereference("point", row=30, col=30)
 
 
@@ -63,7 +63,7 @@ def test_bowser_attrs(ds):
 def test_reference_lonlat(ds, stack_dir):
     lon, lat = reference_lonlat(ds)
     assert -180 < lon < 180 and -90 < lat < 90
-    median = dxr.stack_disp(dxr.open_disp(stack_dir)).disp.rereference("median")
+    median = dxr.chain(dxr.open_disp(stack_dir)).disp.rereference("median")
     assert reference_lonlat(median) is None
 
 

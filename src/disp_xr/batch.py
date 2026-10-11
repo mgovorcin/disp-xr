@@ -3,7 +3,7 @@
 Modeled on earth-mover's serverless-datacube-demo. A coordinator:
 
 1. builds a lazy *template* of the output (for example
-   ``dxr.stack_disp(dxr.open_disp(granules))``), which reads no pixel;
+   ``dxr.chain(dxr.open_disp(granules))``), which reads no pixel;
 2. writes the store's metadata once with :func:`init_store`;
 3. splits the frame into regions aligned to the shards with
    :func:`plan_jobs`; each :class:`RegionJob` serializes to JSON, one per AWS
@@ -26,7 +26,7 @@ the store).
 
 Examples
 --------
->>> template = dxr.stack_disp(dxr.open_disp(granules))  # doctest: +SKIP
+>>> template = dxr.chain(dxr.open_disp(granules))  # doctest: +SKIP
 >>> shards = init_store(template, "frame.zarr")  # doctest: +SKIP
 >>> jobs = plan_jobs(template, "frame.zarr", granules, shards)  # doctest: +SKIP
 >>> results = [run_region(job, chain) for job in jobs]  # doctest: +SKIP
@@ -142,7 +142,7 @@ def init_store(
 
     Examples
     --------
-    >>> template = dxr.stack_disp(dxr.open_disp(granules))  # doctest: +SKIP
+    >>> template = dxr.chain(dxr.open_disp(granules))  # doctest: +SKIP
     >>> shards = init_store(template, "frame.zarr")  # doctest: +SKIP
 
     """
@@ -228,7 +228,7 @@ def run_region(
     Examples
     --------
     >>> def chain(ds, job):
-    ...     return dxr.stack_disp(dxr.mask(ds, "recommended"))
+    ...     return dxr.chain(dxr.mask(ds, "recommended"))
     >>> result = run_region(job, chain)  # doctest: +SKIP
 
     """

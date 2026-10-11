@@ -23,7 +23,7 @@ PIXELS = [(8, 10), (20, 40), (35, 15), (50, 50), (12, 55)]
 @pytest.fixture(scope="module")
 def frame(disp_stacks):
     stack_dir = disp_stacks["two_ministacks"].paths[0].parent
-    ds = dxr.stack_disp(dxr.open_disp(stack_dir))
+    ds = dxr.chain(dxr.open_disp(stack_dir))
     fit = dxr.fit_velocity(ds, method="ols")
     return ds.assign(velocity=fit.velocity, velocity_sigma=fit.velocity_sigma)
 
@@ -196,7 +196,7 @@ def test_virtual_frame(disp_stacks, tmp_path):
     granules = sorted(disp_stacks["two_ministacks"].paths)
     repo = tmp_path / "virtual"
     dxr.build_virtual_frame(dxr.find_products(granules), repo, max_workers=1)
-    expected = dxr.stack_disp(dxr.open_disp(granules))
+    expected = dxr.chain(dxr.open_disp(granules))
     client = TestClient(serve.make_app({"virtual": repo}, tiles=False).app)
     lon, lat = lonlat(expected, 30, 20)
     r = client.get("/datasets/virtual/disp/timeseries", params={"lon": lon, "lat": lat})

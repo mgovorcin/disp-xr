@@ -16,7 +16,7 @@ import pandas as pd
 import requests
 from shapely.geometry import Polygon
 
-__all__ = ["search"]
+__all__ = ["search", "search_granules"]
 
 logger = logging.getLogger(__name__)
 
@@ -260,3 +260,8 @@ def search(
 
     # Return sorted list of products
     return products_df[mask]
+
+
+# ``disp_xr.search`` is the module, so the function is published at the top
+# level as ``dxr.search_granules`` (API review question 4).
+search_granules = search

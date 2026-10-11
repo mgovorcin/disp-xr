@@ -224,7 +224,7 @@ def fit_trajectory(
     Parameters
     ----------
     obj : xr.Dataset or xr.DataArray
-        Chained displacement ``(time, y, x)`` (see :func:`disp_xr.stack_disp`),
+        Chained displacement ``(time, y, x)`` (see :func:`disp_xr.chain`),
         or a Dataset holding it as ``layer``. NaN epochs are skipped per
         pixel.
     terms : Trajectory, optional

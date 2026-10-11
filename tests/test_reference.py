@@ -103,7 +103,7 @@ def test_unknown_method(sample_da):
 
 @pytest.fixture
 def ds(stack_dir):
-    return dxr.stack_disp(dxr.open_disp(stack_dir))
+    return dxr.chain(dxr.open_disp(stack_dir))
 
 
 def _lonlat(ds, row, col, dx=0.0, dy=0.0):

@@ -82,7 +82,7 @@ def _open_input(
     if len(paths) == 1 and _is_zarr(paths[0]):
         return xr.open_zarr(paths[0], mask_and_scale=False, decode_coords="all")
     ds = dxr.open_disp(_granules(paths), frame_id=frame_id, min_version=min_version)
-    return dxr.stack_disp(ds)
+    return dxr.chain(ds)
 
 
 def _write(ds: xr.Dataset, out: Path, preset: str, overwrite: bool) -> None:
@@ -94,9 +94,9 @@ def _write(ds: xr.Dataset, out: Path, preset: str, overwrite: bool) -> None:
     if out.exists() and not overwrite:
         raise FileExistsError(f"{out} exists; pass --overwrite to replace it")
     if out.suffix == ".zarr":
-        dxr.to_zarr(ds, out, preset=preset, mode="w")  # type: ignore[arg-type]
+        dxr.to_zarr(ds, out, preset=preset, overwrite=True)  # type: ignore[arg-type]
     else:
-        dxr.to_netcdf(ds, out, preset=preset)  # type: ignore[arg-type]
+        dxr.to_netcdf(ds, out, preset=preset, overwrite=True)  # type: ignore[arg-type]
 
 
 # --- info ----------------------------------------------------------------------
@@ -232,7 +232,6 @@ def stack(
     quality mask (per granule), chain the ministacks, re-reference, write.
     """
     import disp_xr as dxr
-    from disp_xr.product import PRODUCTS
 
     which = [c.strip() for c in corrections.split(",") if c.strip()]
     ds = dxr.open_disp(
@@ -241,18 +240,11 @@ def stack(
         frame_id=frame_id,
         min_version=min_version,
     )
-    if which == ["product"]:
-        spec = PRODUCTS[ds.attrs["product"]]
-        which = [
-            c
-            for c in spec.applicable_corrections
-            if c not in spec.pre_applied_corrections
-        ]
     if which != ["none"]:
-        ds = dxr.correct(ds, which)
+        ds = dxr.correct(ds, "product" if which == ["product"] else which)
     if mask != "none":
         ds = dxr.mask(ds, mask)
-    ds = dxr.stack_disp(ds, start=start, end=end)
+    ds = dxr.chain(ds, start=start, end=end)
     if reference != "none":
         ds = dxr.rereference(ds, reference, row=row, col=col, lon=lon, lat=lat)
     _write(ds, out, preset, overwrite)
@@ -352,7 +344,9 @@ def export(
         sub = ds[[layer]]
         if "time" in sub[layer].dims and not per_epoch:
             sub = sub.sel(time=epoch, method="nearest") if epoch else sub.isel(time=-1)
-        written = dxr.to_geotiff(sub, out, layer=layer, per_epoch=per_epoch)
+        written = dxr.to_geotiff(
+            sub, out, layer=layer, per_epoch=per_epoch, overwrite=overwrite
+        )
         click.echo(f"Wrote {len(written)} Cloud Optimized GeoTIFF file(s) to {out}")
     elif fmt == "mintpy":
         static = (
@@ -380,7 +374,7 @@ def export(
             factors=[int(f) for f in factors.split(",") if f.strip()],
             static=static,
             look_side=look_side,  # type: ignore[arg-type]
-            mode="w",
+            overwrite=True,
         )
         click.echo(f"Wrote {out}")
     else:

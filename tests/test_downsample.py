@@ -165,7 +165,7 @@ def test_spacing_rounds_to_odd_factor():
 
 
 def test_to_points(stack_dir):
-    ds = dxr.stack_disp(dxr.open_disp(stack_dir))
+    ds = dxr.chain(dxr.open_disp(stack_dir))
     coarse = downsample(ds, factor=9)
     points = to_points(coarse)
     occupied = int((coarse.n_valid.max("time") > 0).sum())
@@ -180,7 +180,7 @@ def test_to_points(stack_dir):
 
 
 def test_default_quality_weights(stack_dir):
-    ds = dxr.stack_disp(dxr.open_disp(stack_dir))
+    ds = dxr.chain(dxr.open_disp(stack_dir))
     out = downsample(ds, factor=9).compute()
     # The zero epoch (no quality layers) falls back to the static weight.
     assert np.isfinite(out.displacement.isel(time=0)).any()
@@ -198,7 +198,7 @@ def test_chunk_independent():
 
 
 def test_averaged_integer_layer_drops_its_fill(stack_dir):
-    ds = dxr.stack_disp(dxr.open_disp(stack_dir))
+    ds = dxr.chain(dxr.open_disp(stack_dir))
     out = downsample(ds, factor=9)
     assert "_FillValue" not in out.shp_counts.attrs  # 0 is a valid mean
     assert out.recommended_mask.attrs["_FillValue"] == 255
