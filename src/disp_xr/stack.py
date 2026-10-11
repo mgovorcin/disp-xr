@@ -44,8 +44,9 @@ class NaNPolicy(str, Enum):
     """How a NaN at a crossover epoch affects later ministacks.
 
     ``propagate`` (default): later epochs of that pixel become NaN, since their
-    offset is unknown. ``omit``: the missing offset is taken as zero, which
-    assumes no motion over the missing interval.
+    offset is unknown. ``omit``: the crossover's own displacement is taken as
+    zero, which assumes no motion over the missing interval, so later epochs
+    carry the offset accumulated before it.
 
     Examples
     --------
@@ -93,8 +94,10 @@ def _chain_lazy(
         if ref == first:
             continue
         (i,) = np.flatnonzero(times == ref)[:1]
-        value = da.isel(time=i, drop=True) + offsets[refs[i]]
-        offsets[ref] = value.fillna(0) if nan_policy == NaNPolicy.omit else value
+        step = da.isel(time=i, drop=True)
+        if nan_policy == NaNPolicy.omit:
+            step = step.fillna(0)
+        offsets[ref] = step + offsets[refs[i]]
     order = list(offsets)
     stacked = xr.concat([offsets[r] for r in order], dim="ministack")
     index = xr.DataArray([order.index(r) for r in refs], dims="time")
@@ -118,9 +121,9 @@ def _chain(
         out[..., i] = raw[..., i] + offset[refs[i]]
         if times[i] in later_refs:
             value = out[..., i]
-            offset[times[i]] = (
-                np.nan_to_num(value) if nan_policy == NaNPolicy.omit else value
-            )
+            if nan_policy == NaNPolicy.omit:
+                value = np.where(np.isnan(value), offset[refs[i]], value)
+            offset[times[i]] = value
     return out
 
 

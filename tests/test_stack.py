@@ -67,6 +67,19 @@ def test_nan_at_crossover(nan_policy):
     assert out.values[2, 1, 1] == 3.0  # other pixels unaffected
 
 
+def test_omit_carries_the_offset_across_a_nan_crossover():
+    # The second crossover is NaN: under omit, the third ministack keeps the
+    # offset accumulated so far (no motion over the gap) instead of restarting
+    # from zero.
+    times = ["2020-01-13", "2020-01-25", "2020-02-06", "2020-02-18", "2020-03-01"]
+    refs = ["2020-01-01", "2020-01-01", "2020-01-25", "2020-01-25", "2020-02-18"]
+    ds = _ds([1, 2, 1, 2, 5], times, refs)
+    ds.displacement[3, 0, 0] = np.nan  # 2020-02-18, the second crossover
+    out = stack_disp(ds, nan_policy="omit", zero_epoch=False).displacement
+    assert out.values[4, 0, 0] == 2 + 5  # offset 2 carried, not reset to 0
+    assert out.values[4, 1, 1] == 9  # other pixels: 2 + 2 + 5
+
+
 def test_offset_comes_from_crossover_date_not_previous_epoch():
     # The epoch before the reference change is not the crossover here: the
     # 2020-02-06 secondary of ministack 1 comes after the new reference date.
