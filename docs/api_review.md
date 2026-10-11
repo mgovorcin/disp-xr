@@ -93,6 +93,23 @@ always says what it does?
 `mask` works before or after chaining; the PRD fixes "before". Should
 `.disp.mask()` refuse chained data (as `correct` does) to enforce the order?
 
+## Decisions (2026-10-11)
+
+No outside reviewers took part: disp-xr has no other users yet, so the
+maintainer answered the open questions. The changes land in plan task T18.3
+with deprecation shims, and the frozen names go into
+[api_policy.md](api_policy.md).
+
+| # | Question | Decision |
+| --- | --- | --- |
+| 1 | `stack_disp` or `chain` | `dxr.chain` and `.disp.chain()`; `stack_disp` and `.disp.stack` stay as deprecated aliases until 1.0 |
+| 2 | Default corrections | `correct(ds)` subtracts what the product has not applied (`which="product"`), as the command line does |
+| 3 | Overwriting outputs | `overwrite: bool = False` on every writer; `to_netcdf` and `to_geotiff` no longer overwrite silently; `to_zarr(mode=)` is deprecated; `to_icechunk` keeps `mode` for appends |
+| 4 | Where `search` lives | `dxr.search_granules(...)` at the top level; `disp_xr.search.search` keeps working |
+| 5 | `nan_policy="omit"` at a NaN crossover | Carry the offset accumulated before the gap (no motion over the missing interval) instead of resetting later epochs to zero |
+| 6 | Default of `rechunk` | The layout is required; calling without it warns for one release and errors at 1.0 |
+| 7 | Masks after chaining | `.disp.mask()` refuses chained data, naming the order (mask, then chain); `dxr.mask` still accepts it |
+
 ## Already fixed during the review preparation
 
 - `to_geotiff` no longer shows an internal parameter in its signature.

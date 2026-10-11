@@ -38,9 +38,9 @@ The PRD also lives as a shared doc; `specs.md` is its copy in the repo and must 
 | M0 Foundation (v0.1) | T1–T8 | 5 / 8 (T2, T4, T5, T6, T7). Released as `v0.1.0` (2026-10-02). Open: T1.4b (name maintainers), T3.4–T3.5 (coverage badge, branch protection: need CI), T8.4 (milestone dates, needs the maintainers) |
 | M1 Core API (v0.2) | T9–T18 | 7 / 10 (T9, T10, T11, T13, T14, T15, T17). No `v0.2.0`: released with M2 as `v0.3.0` (decision of 2026-10-10). Open: T12.5 (needs DISP-NI-STATIC), T16.6 (GitHub Pages, waits for the repository to go public), T18 (API review with Cal/Val users, then the freeze) |
 | M2 Analysis (v0.3) | T19–T34 | 15 / 16. Released as `v0.3.0` (2026-10-10); gate T34 passed (`studies/gnss_validation.md`). Open: T28.5 (benchmark numbers, need a quiet node); T28.6 closed 2026-10-11 (noise-normalized metric rejected) |
-| M3 Release (v1.0) | T35–T40 | 1 / 6 (T40). T37 5 of 6 subtasks done (T37.1 budget decided 2026-10-06, T37.3a, T37.4, T37.5 and most of T37.3; T37.3b S3 half needs AWS); T35 waits for beta DISP-NISAR products; T36 parked (decision of 2026-10-04); T40 done (REST service); T38–T39 not started |
+| M3 Release (v1.0) | T35–T40 | 1 / 5 (T40). T37 5 of 6 subtasks done (T37.1 budget decided 2026-10-06, T37.3a, T37.4, T37.5 and most of T37.3; T37.3b S3 half needs AWS); T35 waits for beta DISP-NISAR products; T36 dropped (2026-10-11); T40 done (REST service); T38–T39 not started |
 
-Subtasks: 209 done, 32 open. All work is merged in `main`. CI is off (Actions minutes on a private repository); every PR
+Subtasks: 211 done, 24 open. All work is merged in `main`. CI is off (Actions minutes on a private repository); every PR
 since #30 was checked locally and says so in its description.
 
 | Requirement | Tasks | Status |
@@ -55,7 +55,7 @@ since #30 was checked locally and says so in its description.
 | F8 Time series | T20 | Done: `fit_trajectory`, `Trajectory`, `predict_trajectory` |
 | F9 Spatial models | T19, T24, T33 | Done: estimator base (T19), trends, de-ramping and gridders (T24), GNSS tie with gallery (T33) |
 | F10 GNSS | T25 | Done with geepers as the engine (`gnss` extra) |
-| F11 Multi-frame | T36 | Not started |
+| F11 Multi-frame | — | Dropped 2026-10-11 (out of scope for 1.0) |
 | F12 Export | T14 | Done: GeoTIFF, Zarr v3, NetCDF, MintPy, Icechunk, virtual stores |
 | F13 Plot | T17 | Done: `plot_map`, `plot_point`, accessor, interactive gallery page |
 | F14 CLI | T15 | Done: `info`, `stack`, `export`, `geometry`, `search`, `virtual` |
@@ -72,7 +72,7 @@ since #30 was checked locally and says so in its description.
 | C5 Map serving example | T37.5 | Done: gallery `web_tiles` (xpublish-tiles, docs environment only) |
 | C6 Batch builds and benchmarks | T37.3b, T37.4 | Region jobs done (`batch.py`); storage benchmark: local compression part in progress, S3 part needs AWS |
 | C7 Read-only REST service (opt-in) | T40 | Done: `serve.py`, `disp_xr serve`, gallery page and guide (`serving.md`); Zarr, Icechunk and virtual frames |
-| X DataTree | T6.4b, T36.1b | `open_disp_tree` done |
+| X DataTree | T6.4b | `open_disp_tree` done; `open_frames` (T36.1b) dropped with T36 |
 | X flox grouped reductions | T10.3, T23.2, T32.1 | Used in `quality_summary(by_ministack=True)`; others not needed so far |
 | X apply_ufunc kernels | T7.2, T20.3, T22.3 | Done: per-pixel fits and filters run through `apply_ufunc` on time-contiguous chunks |
 | NFR Packaging, Licensing | T1, T4.7, T38 | pixi environments and extras done; T1.4b (maintainers) and T38 (PyPI, conda-forge) open; ownership of the fork unresolved |
@@ -136,6 +136,7 @@ since #30 was checked locally and says so in its description.
 
 | Date | Decision |
 | --- | --- |
+| 2026-10-11 | Multi-frame mosaics (F11, T36) are dropped; the owner is the sole maintainer (`CODEOWNERS`); the API review (T18.2) is closed by the maintainer, with seven decisions in `api_review.md` |
 | 2026-10-11 | The noise-normalized split metric (T28.6) is dropped: it does not beat the grid and splits like `displacement`; the quadtree default stays `structure` |
 | 2026-10-10 | No `v0.2.0`: M1 and M2 are released together as `v0.3.0`; the core API is not frozen until the T18 review with Cal/Val users |
 | 2026-10-09 | GNSS against DISP (T34.2): daily GNSS solutions match the acquisition's UTC day; `compare` references InSAR and GNSS per station to the first shared epoch; station velocities need 10 shared epochs over 2 years; a GNSS step above 10 m is a monument relocation |
@@ -182,6 +183,7 @@ since #30 was checked locally and says so in its description.
 
 | Date | Trigger | Changes |
 | --- | --- | --- |
+| 2026-10-11 | Owner decisions: T36 dropped, T1.4b and T18.2 done | T36 out of the plan (graph, table, T38), F11 and X rows, M3 1 / 5, one decision line; `CODEOWNERS`, `maintainers` |
 | 2026-10-11 | Virtual-frame times fixed | `open_virtual` floors times to whole seconds like `open_disp`; the `test_virtual` item leaves "Out of sync" |
 | 2026-10-11 | `serve` reads virtual frames | C7 row; `test-serve` gains the cloud feature; virtual-frame time offset listed under "Out of sync" |
 | 2026-10-11 | T40 finished (T40.5) | `docs/gallery/rest_service.py`, `docs/serving.md` (Documents row), C7 done, M3 1 / 6 |

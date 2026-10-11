@@ -55,7 +55,7 @@ Every row ships by 1.0. Priority gives the build order: P0 first, because later 
 | F8 | Time series | Velocity and seasonal fits (linear, annual, semiannual, steps) with uncertainties | P0 | Branch `timeseries_fitting` |
 | F9 | Spatial models | Native fit/predict estimators (verde API as reference, no dependency): planar/polynomial trend, GNSS tie (fit DISP minus GNSS, predict correction), gridding of point data | P0 | none |
 | F10 | GNSS | Load GNSS time series, project to LOS, sample DISP at stations, with geepers as the engine (`gnss` extra) | P0 | geepers |
-| F11 | Multi-frame | Mosaic adjacent frames on a common grid. The default CRS is the UTM zone that holds the largest share of valid pixels; the caller can pass another. A mosaic wider than two UTM zones requires an explicit CRS. Regional products are downsampled per frame first (S2) and mosaicked at the coarse level, so 30 m data is never reprojected for them | P2 | none |
+| F11 | Multi-frame | **Dropped (2026-10-11): out of scope for 1.0.** Mosaic adjacent frames on a common grid. The default CRS is the UTM zone that holds the largest share of valid pixels; the caller can pass another. A mosaic wider than two UTM zones requires an explicit CRS. Regional products are downsampled per frame first (S2) and mosaicked at the coarse level, so 30 m data is never reprojected for them | P2 | none |
 | F12 | Export | GeoTIFF, Zarr, NetCDF, MintPy HDF5 | P1 | `io`, `mintpy` |
 | F13 | Plot | Quick-look maps and point time series via the accessor | P2 | none |
 | F14 | CLI | Small `disp_xr` command line (`info`, `stack`, `export`, `geometry`) that wraps library functions and holds no logic | P1 | `cli/geometry.py` (empty) |
@@ -318,7 +318,7 @@ M0 comes first because nothing else is safe to refactor without tests. Each diam
 - [x] Keep MintPy export in core, or move it to an optional extra? Decided: `mintpy` extra.
 - [x] Download: keep `download.py`, or defer to another package? Decided: the CMR search code stays in disp-xr as `search.py` (ported with attribution, extended to DISP-NISAR); `download.py` remains one release as a deprecated shim.
 - [x] Home organization: opera-adt or OPERA Cal/Val? Decided (2026-10-06, by the OPERA ADT lead): the repository stays on `mgovorcin/disp-xr`, which can go public there; moving it to a project organization is decided later.
-- [ ] Maintainers and reviewers: to name.
+- [x] Maintainers and reviewers: to name. Decided (2026-10-11): the owner, Marin Govorcin (`@mgovorcin`), is the sole maintainer and reviewer for now (`.github/CODEOWNERS`).
 - [ ] Target dates for each milestone.
 - [x] Memory budget per dask worker for the full-frame target. Decided (2026-10-06): 8 GB per worker, 4 GB for the coordinator (plan task T37.1).
 - [x] S1: should the S1 estimator live in disp-xr and geepers depend on it, or the reverse (one implementation shared by both)? Decided: inside disp-xr.
