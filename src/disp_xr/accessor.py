@@ -51,8 +51,16 @@ class _Common:
         """Convert length variables to ``unit`` (see :func:`disp_xr.units.to_units`)."""
         return to_units(self._obj, unit)
 
-    def rechunk(self, chunks: ChunkSpec = "timeseries") -> Any:
+    def rechunk(self, chunks: Optional[ChunkSpec] = None) -> Any:
         """Rechunk for one kind of work (see :func:`disp_xr.rechunk`)."""
+        if chunks is None:
+            warnings.warn(
+                "rechunk without a layout is deprecated; pass one, for example "
+                '.disp.rechunk("timeseries") (an error from 1.0)',
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            chunks = "timeseries"
         return rechunk(self._obj, chunks)
 
     def plot_map(self, time: Any = None, **kwargs: Any) -> Any:

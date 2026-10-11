@@ -26,8 +26,9 @@ of Technology, BSD-3-Clause. See THIRD_PARTY_NOTICES.md.
 from __future__ import annotations
 
 import math
+import warnings
 from collections.abc import Mapping
-from typing import Any, Literal, Union
+from typing import Any, Literal, Optional, Union
 
 import numpy as np
 import xarray as xr
@@ -121,7 +122,7 @@ def _stack_shape(obj: Any) -> tuple[tuple[int, int, int], np.dtype]:
     return shape, max(floats, key=lambda d: d.itemsize)
 
 
-def rechunk(obj: Any, chunks: ChunkSpec = "timeseries") -> Any:
+def rechunk(obj: Any, chunks: Optional[ChunkSpec] = None) -> Any:
     """Return ``obj`` (Dataset or DataArray) with dask chunks for one kind of work.
 
     Parameters
@@ -130,7 +131,9 @@ def rechunk(obj: Any, chunks: ChunkSpec = "timeseries") -> Any:
         DISP data with ``time``, ``y``, ``x`` dimensions (any subset).
     chunks : {"native", "timeseries", "maps"} or dict
         A preset (see the module docstring) or explicit ``{"time", "y", "x"}``
-        sizes, ``-1`` for a whole axis.
+        sizes, ``-1`` for a whole axis. Required: leaving it out still means
+        ``"timeseries"`` but warns, and is an error from 1.0 (so every call
+        says which layout it asks for).
 
     Returns
     -------
@@ -144,6 +147,14 @@ def rechunk(obj: Any, chunks: ChunkSpec = "timeseries") -> Any:
     (4,)
 
     """
+    if chunks is None:
+        warnings.warn(
+            "rechunk without a layout is deprecated; pass one, for example "
+            'rechunk(ds, "timeseries") (an error from 1.0)',
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        chunks = "timeseries"
     shape, dtype = _stack_shape(obj)
     spec = resolve_chunks(chunks, shape, dtype)
     return obj.chunk({d: n for d, n in spec.items() if d in obj.dims})
