@@ -88,7 +88,10 @@ def test_nodata_fails_connected_components(ds):
 
 
 def test_mask_after_chaining_and_history(ds):
-    out = ds.disp.chain().disp.mask("strict")
+    chained = ds.disp.chain()
+    with pytest.raises(ValueError, match="refuses chained data"):
+        chained.disp.mask("strict")  # the accessor enforces mask, then chain
+    out = dxr.mask(chained, "strict")  # the function masks chained data
     assert np.isnan(out.displacement.isel(time=1, y=0, x=0))
     assert [h["op"] for h in out.disp.history][-1] == "mask"
     assert "connected_components" in out.attrs["mask_criteria"]

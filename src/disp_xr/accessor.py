@@ -108,7 +108,18 @@ class DispDatasetAccessor(_Common):
         return chain(self._obj, **kwargs)
 
     def mask(self, preset: str | None = "recommended", **criteria: Any) -> xr.Dataset:
-        """Mask displacement by quality (see :func:`disp_xr.quality.mask`)."""
+        """Mask displacement by quality (see :func:`disp_xr.quality.mask`).
+
+        Refuses chained data: the PRD order is mask, then chain, and a chain
+        of accessor calls should read in that order. ``disp_xr.mask`` still
+        masks chained data for whoever means it.
+        """
+        if "reference_date" in self._obj.attrs:
+            raise ValueError(
+                ".disp.mask() refuses chained data: mask before chaining "
+                "(ds.disp.mask(...).disp.chain()), or call disp_xr.mask(ds, ...) "
+                "to mask chained data on purpose"
+            )
         return mask(self._obj, preset, **criteria)
 
     def correct(self, *args: Any, **kwargs: Any) -> xr.Dataset:
