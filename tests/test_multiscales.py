@@ -93,7 +93,7 @@ def test_open_reads_the_layout_not_group_names(ds, tmp_path):
     assert list(tree.children) == ["0", "2"]  # group "1" exists, not listed
     with pytest.raises(FileExistsError):
         dxr.to_pyramid(ds, store, factors=(2,))
-    dxr.to_pyramid(ds, store, factors=(3,), mode="w")
+    dxr.to_pyramid(ds, store, factors=(3,), overwrite=True)
     assert list(dxr.open_pyramid(store).children) == ["0", "1"]
 
 

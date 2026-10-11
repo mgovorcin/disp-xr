@@ -32,6 +32,7 @@ from typing import Any, Literal, Optional, Union
 import xarray as xr
 
 from ..config import config
+from ._overwrite import zarr_mode
 from ._provenance import provenance_attrs
 from .zarr import Preset, to_zarr
 
@@ -187,7 +188,8 @@ def to_pyramid(
     store: Union[str, Path, Any],
     *,
     factors: Sequence[int] = (33, 67, 333),
-    mode: Literal["w-", "w"] = "w-",
+    overwrite: bool = False,
+    mode: Optional[Literal["w-", "w"]] = None,
     preset: Preset = "timeseries",
     small_mb: Optional[float] = None,
     storage_options: Optional[Mapping[str, Any]] = None,
@@ -204,8 +206,10 @@ def to_pyramid(
         Where to write.
     factors : sequence of int
         Downsampling factors when ``data`` is a Dataset.
-    mode : {"w-", "w"}
-        Fail if the store exists (default), or overwrite it.
+    overwrite : bool
+        Replace an existing store; by default it is refused.
+    mode : {"w-", "w"}, optional
+        Deprecated: use ``overwrite``.
     preset : {"timeseries", "maps", "ministack", "whole", "tiles"}
         Chunk layout of level ``0`` and of levels too large for one chunk
         (see :func:`disp_xr.to_zarr`).
@@ -238,6 +242,7 @@ def to_pyramid(
     )
     small = config.get("chunks.target_mb") if small_mb is None else small_mb
     options = dict(storage_options) if storage_options else None
+    mode = zarr_mode(mode, overwrite, "to_pyramid")
     root = zarr.open_group(store, mode=mode, zarr_format=3, storage_options=options)
     layout = tree.attrs["multiscales"]["layout"]
     for i, entry in enumerate(layout):
@@ -246,7 +251,7 @@ def to_pyramid(
             level,
             store,
             preset=preset if i == 0 else _level_preset(level, preset, small),
-            mode="w",
+            overwrite=True,
             consolidated=False,
             storage_options=options,
             group=entry["asset"],

@@ -172,7 +172,7 @@ def build(frame: str, entry: dict) -> None:
     ds.attrs["study_floors"] = json.dumps(floors)
     print(f"{frame}: floors {floors}, reference {ds.attrs['reference']}", flush=True)
     t0 = time.perf_counter()
-    dxr.to_zarr(ds, out / "stack.zarr", preset="maps", mode="w")
+    dxr.to_zarr(ds, out / "stack.zarr", preset="maps", overwrite=True)
     print(f"{frame}: stack, {len(keep)} epochs, {time.perf_counter() - t0:.0f} s")
 
     stack = xr.open_zarr(out / "stack.zarr")

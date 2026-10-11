@@ -125,7 +125,40 @@ def test_zarr_refuses_existing_store(ds, tmp_path):
     dxr.to_zarr(ds, path)
     with pytest.raises(Exception, match="(?i)exist|contains"):
         dxr.to_zarr(ds, path)
-    dxr.to_zarr(ds, path, mode="w")
+    dxr.to_zarr(ds, path, overwrite=True)
+
+
+def test_zarr_mode_is_deprecated(ds, tmp_path):
+    path = tmp_path / "out.zarr"
+    dxr.to_zarr(ds, path)
+    with pytest.warns(DeprecationWarning, match="use overwrite=True"):
+        dxr.to_zarr(ds, path, mode="w")
+
+
+def test_netcdf_and_geotiff_refuse_existing_files(ds, tmp_path):
+    # They used to overwrite silently (API review question 3).
+    nc = tmp_path / "out.nc"
+    dxr.to_netcdf(ds, nc)
+    with pytest.raises(FileExistsError, match="overwrite=True"):
+        dxr.to_netcdf(ds, nc)
+    dxr.to_netcdf(ds, nc, overwrite=True)
+
+    tif = tmp_path / "last.tif"
+    dxr.to_geotiff(ds.isel(time=-1), tif)
+    with pytest.raises(FileExistsError, match="overwrite=True"):
+        dxr.to_geotiff(ds.isel(time=-1), tif)
+    dxr.to_geotiff(ds.isel(time=-1), tif, overwrite=True)
+
+
+def test_per_epoch_geotiff_refuses_before_writing(ds, tmp_path):
+    out = tmp_path / "epoch.tif"
+    first = dxr.to_geotiff(ds.isel(time=[1]), out, per_epoch=True)
+    before = {p: p.stat().st_mtime_ns for p in tmp_path.iterdir()}
+    with pytest.raises(FileExistsError):
+        dxr.to_geotiff(ds.isel(time=[0, 1]), out, per_epoch=True)
+    after = {p: p.stat().st_mtime_ns for p in tmp_path.iterdir()}
+    assert after == before  # nothing written, not even the new epoch
+    assert len(first) == 1
 
 
 def test_zarr_keep_bits_is_opt_in(ds, tmp_path):

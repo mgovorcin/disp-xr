@@ -94,9 +94,9 @@ def _write(ds: xr.Dataset, out: Path, preset: str, overwrite: bool) -> None:
     if out.exists() and not overwrite:
         raise FileExistsError(f"{out} exists; pass --overwrite to replace it")
     if out.suffix == ".zarr":
-        dxr.to_zarr(ds, out, preset=preset, mode="w")  # type: ignore[arg-type]
+        dxr.to_zarr(ds, out, preset=preset, overwrite=True)  # type: ignore[arg-type]
     else:
-        dxr.to_netcdf(ds, out, preset=preset)  # type: ignore[arg-type]
+        dxr.to_netcdf(ds, out, preset=preset, overwrite=True)  # type: ignore[arg-type]
 
 
 # --- info ----------------------------------------------------------------------
@@ -344,7 +344,9 @@ def export(
         sub = ds[[layer]]
         if "time" in sub[layer].dims and not per_epoch:
             sub = sub.sel(time=epoch, method="nearest") if epoch else sub.isel(time=-1)
-        written = dxr.to_geotiff(sub, out, layer=layer, per_epoch=per_epoch)
+        written = dxr.to_geotiff(
+            sub, out, layer=layer, per_epoch=per_epoch, overwrite=overwrite
+        )
         click.echo(f"Wrote {len(written)} Cloud Optimized GeoTIFF file(s) to {out}")
     elif fmt == "mintpy":
         static = (
@@ -372,7 +374,7 @@ def export(
             factors=[int(f) for f in factors.split(",") if f.strip()],
             static=static,
             look_side=look_side,  # type: ignore[arg-type]
-            mode="w",
+            overwrite=True,
         )
         click.echo(f"Wrote {out}")
     else:
