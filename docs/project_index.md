@@ -163,7 +163,6 @@ since #30 was checked locally and says so in its description.
 
 - GitHub Actions is off on `mgovorcin/disp-xr`: the private repository used up its Actions minutes (2026-10-04). The `test` workflow is disabled; the `docs` workflow (GitHub Pages, PR #43) fails at start for the same reason until it is disabled or the repository goes public. Local hooks stand in: pre-commit on commit, pytest (py312) and `mkdocs --strict` on push.
 - Local checkouts `01_OPERA/STAKEHOLDER/disp-xr` and `01_OPERA/VLM/disp-xr` are on the old `timeseries_fitting` branch, and the conda envs `disp_xr` and `disp_xr_py311` hold non-editable installs of old commits.
-- `tests/test_virtual.py::test_build_and_open` fails in the `default` solve group (virtualizarr 2.7.3, icechunk 2.2.2, zarr 3.4.0): times read back from a virtual frame carry a 0.436 s offset. Same on `main` (found 2026-10-11 with `test-serve`, which shares the solve group; CI is off). Not fixed.
 - The OPERA requirement values drawn by default (3 (1 + sqrt(L)) mm, 2 mm/yr) were to be confirmed against the requirements document before v0.3; they are released in `v0.3.0` unconfirmed (`specs.md` S4).
 ## Not verified
 
@@ -183,6 +182,7 @@ since #30 was checked locally and says so in its description.
 
 | Date | Trigger | Changes |
 | --- | --- | --- |
+| 2026-10-11 | Virtual-frame times fixed | `open_virtual` floors times to whole seconds like `open_disp`; the `test_virtual` item leaves "Out of sync" |
 | 2026-10-11 | `serve` reads virtual frames | C7 row; `test-serve` gains the cloud feature; virtual-frame time offset listed under "Out of sync" |
 | 2026-10-11 | T40 finished (T40.5) | `docs/gallery/rest_service.py`, `docs/serving.md` (Documents row), C7 done, M3 1 / 6 |
 | 2026-10-11 | T40.1 to T40.4 finished | `serve.py` (module row, C7 in progress), `serve` extra and `test-serve` environment, `docs/api/serve.md`, `cli.md`, `install.md` |
