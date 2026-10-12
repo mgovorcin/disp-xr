@@ -3,7 +3,9 @@ FROM python:3.12-slim
 RUN apt-get update && apt-get install -y --no-install-recommends libexpat1 \
  && rm -rf /var/lib/apt/lists/*
 COPY constraints.txt disp_xr-*.whl /tmp/
-RUN pip install --no-cache-dir -c /tmp/constraints.txt /tmp/disp_xr-*.whl \
+# aws and cloud extras: S3 access, Icechunk, obstore (storage_s3.py).
+RUN for w in /tmp/disp_xr-*.whl; do \
+      pip install --no-cache-dir -c /tmp/constraints.txt "$w[aws,cloud]"; done \
  && rm /tmp/disp_xr-*.whl
-COPY bench_downsample.py run.py /app/
+COPY *.py /app/
 ENTRYPOINT ["python", "-u", "/app/run.py"]

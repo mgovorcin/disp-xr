@@ -11,12 +11,13 @@ chunk, for small arrays such as coarse pyramid levels. ``"tiles"`` is for
 map viewers that read one epoch per tile (bowser): chunks of one epoch by
 256 x 256 in shards of 4 epochs by 1,024 x 1,024.
 
-Float variables are compressed with Blosc (zstd, bit shuffle), which stored
-DISP-S1 displacement 16% and coherence maps 32% smaller than plain zstd at
-the same speed (``benchmarks/README.md``). Quality layers, which repeat
+Variables are compressed with Blosc (zstd, bit shuffle), which stored
+DISP-S1 displacement 16%, coherence maps 32% and the integer masks of one
+epoch 7-46% smaller than plain zstd at the same speed
+(``benchmarks/README.md``). Quality layers (masks included), which repeat
 along time within a ministack, keep plain zstd when a chunk spans time: its
-long matches find the repeats (12x against 6x for temporal coherence).
-Integer and boolean variables keep zstd.
+long matches find the repeats (12x against 6x for temporal coherence, 30x
+against 10x for SHP counts). Boolean variables keep zstd.
 
 ``round_mantissa`` and the per-variable encoding idea are adapted from
 opera-utils (src/opera_utils/disp/_utils.py and _reformat.py, commit 97f77d9),
@@ -149,7 +150,7 @@ def _compressors(name: str, var: xr.DataArray, time_chunk: int, level: int) -> l
     from ..product import QUALITY_LAYERS
 
     repeats_in_chunk = name in QUALITY_LAYERS and time_chunk > 1
-    if var.dtype.kind != "f" or repeats_in_chunk:
+    if var.dtype.kind == "b" or repeats_in_chunk:
         return [ZstdCodec(level=level)]
     return [BloscCodec(cname="zstd", clevel=level, shuffle="bitshuffle")]
 
