@@ -1,6 +1,6 @@
 # disp-xr project index
 
-**Last indexed:** 2026-10-10 · `main` at the v0.3.0 release (`chore/release-v0.3.0`, tag `v0.3.0`) on `origin` = `mgovorcin/disp-xr`, through PR #74
+**Last indexed:** 2026-10-12 · `main` at the v0.4.0 release (`chore/release-v0.4.0`, tag `v0.4.0`) on `origin` = `mgovorcin/disp-xr`, through PR #83
 
 How and when this file is rebuilt: see "Project Index (cyclical indexing)" in `CLAUDE.md` at the repository root.
 
@@ -183,6 +183,7 @@ since #30 was checked locally and says so in its description.
 
 | Date | Trigger | Changes |
 | --- | --- | --- |
+| 2026-10-12 | Release `v0.4.0` (API frozen) | Changelog section `[0.4.0]`; index stamped |
 | 2026-10-11 | T18 finished (T18.1 resolved, T18.3 done) | Seven API decisions implemented; `api_policy.md` frozen list; M1 8 / 10; `stack.py` and `export/zarr.py` rows; a misfiled 0.3.0 changelog entry (the `open_virtual` time fix) moved to Unreleased |
 | 2026-10-11 | T28.5 finished, T28 done, M2 complete | Quadtree benchmark on a dedicated AWS Batch instance (`benchmarks/README.md`); M2 16 / 16 |
 | 2026-10-11 | Owner decisions: T36 dropped, T1.4b and T18.2 done | T36 out of the plan (graph, table, T38), F11 and X rows, M3 1 / 5, one decision line; `CODEOWNERS`, `maintainers` |
