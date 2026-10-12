@@ -159,7 +159,11 @@ def _open_repository(
     if prefix is not None and added:
         config.set_virtual_chunk_container(_container(prefix))
         prefixes.add(prefix)
-    access = {p: _chunk_access(p, credentials) for p in prefixes}
+    # Icechunk wants each container's credentials wrapped as Credentials;
+    # bare S3 static credentials are refused (icechunk 2.3).
+    access = icechunk.containers_credentials(
+        {p: _chunk_access(p, credentials) for p in prefixes}
+    )
     if not exists:
         if prefix is None:
             raise FileNotFoundError(f"No Icechunk repository at {repo}")

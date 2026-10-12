@@ -8,6 +8,12 @@ All notable changes to disp-xr. The format follows
 
 ### Fixed
 
+- `build_virtual_frame` and `open_virtual` failed on granules in S3 with
+  icechunk 2.3 (`'S3Credentials.Static' object is not an instance of
+  'Credentials'`): the per-container credentials are now wrapped with
+  `icechunk.containers_credentials`. Local virtual frames were not affected.
+  Found by the T37.3b storage benchmark.
+
 - Remote HTTPS reads sent the Earthdata Login as aiohttp's `auth=` client
   argument, which aiohttp 3.14 no longer accepts; they now send a Basic
   `Authorization` header, as opera-utils does since `4125484` (ported with
