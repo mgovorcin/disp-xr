@@ -321,13 +321,14 @@ testpaths = ["tests", "src/disp_xr"]
 # Doctests run on the package. Modules that need an optional extra or a
 # dependency being removed are skipped until their plan task rewrites them:
 # search and its alias
-# download (aws extra), timeseries/_jax_solver (jax extra). tests/data holds
+# download (aws extra), serve (serve extra), timeseries/_jax_solver (jax extra). tests/data holds
 # scripts that write reference data in other environments (geepers).
 addopts = """
   --doctest-modules
   --ignore=tests/data
   --ignore=src/disp_xr/search.py
   --ignore=src/disp_xr/download.py
+  --ignore=src/disp_xr/serve.py
   --ignore=src/disp_xr/timeseries/_jax_solver.py
 """
 doctest_optionflags = "NORMALIZE_WHITESPACE NUMBER"

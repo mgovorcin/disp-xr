@@ -162,3 +162,13 @@ def test_s3_filesystem_uses_environment_credentials(monkeypatch):
     monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "key")
     fs = _remote.get_filesystem("s3://bucket/a.nc")
     assert (fs.key, fs.secret) == ("id", "key")
+
+
+def test_https_filesystem_sends_a_basic_auth_header():
+    # aiohttp 3.14 dropped auth= from client_kwargs (opera-utils 4125484).
+    pytest.importorskip("aiohttp")
+    fs = _remote.get_filesystem(
+        "https://example.com/a.nc", earthdata_username="u", earthdata_password="p"
+    )
+    assert fs.client_kwargs["headers"]["Authorization"] == "Basic dTpw"
+    assert "auth" not in fs.client_kwargs

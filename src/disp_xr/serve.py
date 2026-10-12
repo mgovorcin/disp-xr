@@ -402,7 +402,18 @@ def open_store(path: Union[str, Path]) -> tuple[xr.Dataset, Optional[xr.Dataset]
 
 
 class DispPlugin(Plugin):
-    """xpublish plugin: the disp-xr routes for every dataset."""
+    """xpublish plugin: the disp-xr routes for every dataset.
+
+    :func:`make_app` adds it; add it yourself to combine it with other
+    xpublish plugins.
+
+    Examples
+    --------
+    >>> import xpublish  # doctest: +SKIP
+    >>> plugins = {"disp": DispPlugin()}
+    >>> rest = xpublish.Rest({"frame": ds}, plugins=plugins)  # doctest: +SKIP
+
+    """
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
 

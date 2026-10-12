@@ -40,7 +40,7 @@ The PRD also lives as a shared doc; `specs.md` is its copy in the repo and must 
 | M2 Analysis (v0.3) | T19–T34 | 16 / 16. Released as `v0.3.0` (2026-10-10); gate T34 passed (`studies/gnss_validation.md`). T28 finished 2026-10-11 (T28.5 benchmark on AWS Batch; T28.6 rejected) |
 | M3 Release (v1.0) | T35–T40 | 1 / 5 (T40). T37 5 of 6 subtasks done (T37.1 budget decided 2026-10-06, T37.3a, T37.4, T37.5 and most of T37.3; T37.3b S3 half needs AWS); T35 waits for beta DISP-NISAR products; T36 dropped (2026-10-11); T40 done (REST service); T38–T39 not started |
 
-Subtasks: 214 done, 21 open. All work is merged in `main`. CI is off (Actions minutes on a private repository); every PR
+Subtasks: 215 done, 20 open. All work is merged in `main`. CI is off (Actions minutes on a private repository); every PR
 since #30 was checked locally and says so in its description.
 
 | Requirement | Tasks | Status |
@@ -183,6 +183,7 @@ since #30 was checked locally and says so in its description.
 
 | Date | Trigger | Changes |
 | --- | --- | --- |
+| 2026-10-12 | T38.3 finished, T38.3b repeated, NISAR to v0.6 | opera-utils `4125484` diff ported (HTTPS auth header, NISAR endpoint, affine `@`); T35 and T12.5 scheduled for v0.6; `serve.py` doctests ignored without the serve extra (collection failed in `test-py312` since #77) |
 | 2026-10-12 | Release `v0.4.0` (API frozen) | Changelog section `[0.4.0]`; index stamped |
 | 2026-10-11 | T18 finished (T18.1 resolved, T18.3 done) | Seven API decisions implemented; `api_policy.md` frozen list; M1 8 / 10; `stack.py` and `export/zarr.py` rows; a misfiled 0.3.0 changelog entry (the `open_virtual` time fix) moved to Unreleased |
 | 2026-10-11 | T28.5 finished, T28 done, M2 complete | Quadtree benchmark on a dedicated AWS Batch instance (`benchmarks/README.md`); M2 16 / 16 |
