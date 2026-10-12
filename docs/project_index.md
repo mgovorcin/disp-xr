@@ -1,6 +1,6 @@
 # disp-xr project index
 
-**Last indexed:** 2026-10-12 · `main` at the v0.4.0 release (`chore/release-v0.4.0`, tag `v0.4.0`) on `origin` = `mgovorcin/disp-xr`, through PR #83
+**Last indexed:** 2026-10-12 · `main` after the v0.4.0 release (tag `v0.4.0`) on `origin` = `mgovorcin/disp-xr`, through PR #86 and branch `bench/t37-results`
 
 How and when this file is rebuilt: see "Project Index (cyclical indexing)" in `CLAUDE.md` at the repository root.
 
@@ -38,7 +38,7 @@ The PRD also lives as a shared doc; `specs.md` is its copy in the repo and must 
 | M0 Foundation (v0.1) | T1–T8 | 5 / 8 (T2, T4, T5, T6, T7). Released as `v0.1.0` (2026-10-02). Open: T1.4b (name maintainers), T3.4–T3.5 (coverage badge, branch protection: need CI), T8.4 (milestone dates, needs the maintainers) |
 | M1 Core API (v0.2) | T9–T18 | 8 / 10 (T9, T10, T11, T13, T14, T15, T17, T18). No `v0.2.0`: released with M2 as `v0.3.0` (decision of 2026-10-10); API review closed by the maintainer and the core API frozen for 0.4.0 (T18, 2026-10-11). Open: T12.5 (needs DISP-NI-STATIC), T16.6 (GitHub Pages, waits for the repository to go public) |
 | M2 Analysis (v0.3) | T19–T34 | 16 / 16. Released as `v0.3.0` (2026-10-10); gate T34 passed (`studies/gnss_validation.md`). T28 finished 2026-10-11 (T28.5 benchmark on AWS Batch; T28.6 rejected) |
-| M3 Release (v1.0) | T35–T40 | 1 / 5 (T40). T37 5 of 6 subtasks done (T37.1 budget decided 2026-10-06, T37.3a, T37.4, T37.5 and most of T37.3; T37.3b S3 half needs AWS); T35 waits for beta DISP-NISAR products; T36 dropped (2026-10-11); T40 done (REST service); T38–T39 not started |
+| M3 Release (v1.0) | T35–T40 | 1 / 5 (T40). T37 5 of 7 subtasks done (T37.1, T37.3a, T37.3b, T37.4, T37.5; T37.2 suite timed on AWS Batch at tile size, frame size running; most of T37.3); T35 waits for beta DISP-NISAR products; T36 dropped (2026-10-11); T40 done (REST service); T38–T39 not started |
 
 Subtasks: 215 done, 20 open. All work is merged in `main`. CI is off (Actions minutes on a private repository); every PR
 since #30 was checked locally and says so in its description.
@@ -70,7 +70,7 @@ since #30 was checked locally and says so in its description.
 | C3 Virtual datasets (opt-in) | T5.8, T14.2c | Done for local granules: `build_virtual_frame`, `open_virtual`, `validate_virtual`; S3 path not run against S3; `/corrections` not referenced |
 | C4 Multiscale pyramids | T27.7, T27.9 | Done: `to_pyramid`, `open_pyramid`, `build_overviews`, `to_geozarr` (bowser) |
 | C5 Map serving example | T37.5 | Done: gallery `web_tiles` (xpublish-tiles, docs environment only) |
-| C6 Batch builds and benchmarks | T37.3b, T37.4 | Region jobs done (`batch.py`); storage benchmark: local compression part in progress, S3 part needs AWS |
+| C6 Batch builds and benchmarks | T37.3b, T37.4 | Region jobs done (`batch.py`); storage benchmark done (local codecs, integer masks, S3: NetCDF, virtual Icechunk, Zarr with fsspec and obstore; `benchmarks/README.md`) |
 | C7 Read-only REST service (opt-in) | T40 | Done: `serve.py`, `disp_xr serve`, gallery page and guide (`serving.md`); Zarr, Icechunk and virtual frames |
 | X DataTree | T6.4b | `open_disp_tree` done; `open_frames` (T36.1b) dropped with T36 |
 | X flox grouped reductions | T10.3, T23.2, T32.1 | Used in `quality_summary(by_ministack=True)`; others not needed so far |
@@ -96,7 +96,7 @@ since #30 was checked locally and says so in its description.
 | `corrections.py` | F6, F15 | `correct`, `remove_plate_motion`, ITRF2014-PMM poles | T13 |
 | `geometry/los.py` | F7 | `enu_to_los`, incidence/azimuth, slant range | T12.2, T12.5 |
 | `export/raster.py` (was `io.py`) | F12 | `to_geotiff` (COG), legacy rasterio helpers | T14.1 |
-| `export/zarr.py`, `export/_overwrite.py` | F12, C1 | `to_zarr`, `to_netcdf` (with `overwrite`), chunk/shard scheme (presets `timeseries`, `maps`, `ministack`), `round_mantissa` | T14.2, T14.2b |
+| `export/zarr.py`, `export/_overwrite.py` | F12, C1 | `to_zarr`, `to_netcdf` (with `overwrite`), chunk/shard scheme (presets `timeseries`, `maps`, `ministack`), `round_mantissa` | T14.2, T14.2b, T37.3b |
 | `export/icechunk.py` | F12, C2 | `to_icechunk`, `open_icechunk` (`cloud` extra, imported lazily) | T14.2b |
 | `batch.py` | C6 | `init_store`, `plan_jobs`, `RegionJob`, `run_region`, `failed_jobs`, manifest | T37.4 |
 | `virtual.py` | C3 | `build_virtual_frame`, `open_virtual`, `validate_virtual` (`cloud` extra) | T14.2c |
@@ -183,6 +183,7 @@ since #30 was checked locally and says so in its description.
 
 | Date | Trigger | Changes |
 | --- | --- | --- |
+| 2026-10-12 | T37.3b finished, #86 merged | S3 storage benchmark on AWS Batch (`benchmarks/storage_s3.py`, `batch/` runs any script); integer masks benchmarked, integer layers compressed with Blosc per epoch (`export/zarr.py`, `specs.md` C1); #86 fixed virtual frames on S3 with icechunk 2.3 (`virtual.py`) |
 | 2026-10-12 | T38.3 finished, T38.3b repeated, NISAR to v0.6 | opera-utils `4125484` diff ported (HTTPS auth header, NISAR endpoint, affine `@`); T35 and T12.5 scheduled for v0.6; `serve.py` doctests ignored without the serve extra (collection failed in `test-py312` since #77) |
 | 2026-10-12 | Release `v0.4.0` (API frozen) | Changelog section `[0.4.0]`; index stamped |
 | 2026-10-11 | T18 finished (T18.1 resolved, T18.3 done) | Seven API decisions implemented; `api_policy.md` frozen list; M1 8 / 10; `stack.py` and `export/zarr.py` rows; a misfiled 0.3.0 changelog entry (the `open_virtual` time fix) moved to Unreleased |

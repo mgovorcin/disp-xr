@@ -6,6 +6,14 @@ All notable changes to disp-xr. The format follows
 
 ## [Unreleased]
 
+### Changed
+
+- Zarr writers compress integer layers (masks, connected components, SHP
+  counts) in one-epoch chunks with Blosc (zstd, bit shuffle), as float
+  layers, which stores them 7-46% smaller than plain zstd on DISP-S1
+  granules; in chunks that span time they keep plain zstd. Lossless: no
+  value changes. Only boolean layers always keep plain zstd.
+
 ### Fixed
 
 - `build_virtual_frame` and `open_virtual` failed on granules in S3 with

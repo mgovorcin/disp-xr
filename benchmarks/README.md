@@ -27,10 +27,91 @@ took at most 0.24 s). Medians:
   1-epoch chunks and 0.15 s from time-series chunks; a pixel series reads
   in 0.003 s from time-series chunks and 0.03 s from map chunks. Chunks of
   256 x 256 write 3-4 times slower with no gain.
-- The S3 half (NetCDF on S3, virtual Icechunk) needs AWS and is not run.
+- The S3 half is `storage_s3.py`, below.
 - Default since 2026-10-06: Blosc-zstd-3 with bit shuffle for float layers,
   zstd-3 for quality layers in chunks that span time and for integer and
   boolean layers. The "zstd-3 (default)" label above is the old default.
+
+Integer layers (`--granules`), as stored (`uint8` masks, `uint16`
+connected components, `int16` SHP counts): the first 32 F11116 granules,
+2048 x 2048, one trial on the shared node on 2026-10-12 (compression
+ratios do not depend on the machine; writes took 0.14-0.25 s per layer for
+every codec but zstd-9). Ratios:
+
+| Layer, layout | zstd-3 | Blosc-zstd-3 bitshuffle | Blosc-zstd-3 shuffle | Blosc-LZ4 | zstd-9 |
+|---|---:|---:|---:|---:|---:|
+| recommended_mask, maps | 18 | **29** | 20 | 9 | 23 |
+| recommended_mask, timeseries | **193** | 140 | 22 | 10 | 38 |
+| persistent_scatterer_mask, maps | 121 | **139** | 122 | 56 | 142 |
+| persistent_scatterer_mask, timeseries | 647 | 589 | 437 | 128 | **1105** |
+| water_mask, maps | 739 | **1094** | 636 | 147 | 909 |
+| water_mask, timeseries | 3557 | 2765 | 1341 | 202 | **4927** |
+| connected_component_labels, maps | 41 | **76** | 51 | 21 | 52 |
+| connected_component_labels, timeseries | 45 | **90** | 59 | 21 | 56 |
+| shp_counts, maps | 2.9 | 3.1 | **3.7** | 2.6 | 3.1 |
+| shp_counts, timeseries | 30 | 10 | 12 | 13 | **32** |
+
+- Per epoch (maps), Blosc with bit shuffle stores every integer layer
+  7-46% smaller than plain zstd, as it does the float layers.
+- In chunks that span time, plain zstd wins for the layers that repeat
+  within a ministack (masks, SHP counts), like coherence; connected
+  components, which change every epoch, still prefer bit shuffle.
+- Integer layers are a few MB beside hundreds of MB of displacement, so the
+  rule stays simple. Default since 2026-10-12: Blosc-zstd-3 with bit
+  shuffle for every layer except quality layers (integer masks included)
+  in chunks that span time and boolean layers, which keep zstd-3.
+
+## `storage_s3.py` (plan task T37.3b, S3 half)
+
+Reading DISP-S1 from S3, in us-west-2 next to the data: 29 F11116 granules
+(two ministacks from 2016-07-05, version 1.0, 6898 x 9618, 11 GB) in a
+scratch prefix, read as `displacement`. Run on 2026-10-12 on AWS Batch
+(`r7i.8xlarge`, touching 256 MB took 0.04 s before and after; disp-xr
+0.4.0 with the icechunk 2.3 fix, icechunk 2.3.0; `batch/`), five
+interleaved trials, every value read (210) equal to the first NetCDF
+read. Medians in seconds; reads over 1 s varied at most 1.33x between
+trials (max over min), sub-second reads up to 3.6x (S3 latency), so
+differences under about 2x between sub-second cells are noise:
+
+| Storage | open | pixel series | epoch map | 512 x 512 window, all epochs |
+|---|---:|---:|---:|---:|
+| NetCDF on S3 (`open_disp`) | 35.3 | 5.15 | 13.0 | 5.10 |
+| virtual Icechunk | 0.44 | 0.40 | 3.16 | 1.33 |
+| Zarr `maps`, 8 MB shards, fsspec | 0.52 | 0.47 | 0.85 | 0.31 |
+| Zarr `maps`, 32 MB, fsspec | 0.47 | 0.64 | 0.71 | 0.33 |
+| Zarr `maps`, 128 MB, fsspec | 0.39 | 0.79 | 0.67 | 0.34 |
+| Zarr `maps`, 8 MB, obstore | 0.35 | **0.10** | 0.32 | **0.15** |
+| Zarr `maps`, 32 MB, obstore | 0.32 | 0.18 | 0.33 | 0.25 |
+| Zarr `maps`, 128 MB, obstore | 0.35 | 0.15 | 0.41 | 0.15 |
+| Zarr `timeseries`, 8 MB, fsspec | 0.42 | 0.07 | 80.1 | 0.52 |
+| Zarr `timeseries`, 32 MB, fsspec | 0.45 | 0.07 | 78.7 | 0.51 |
+| Zarr `timeseries`, 128 MB, fsspec | 0.51 | 0.08 | 82.6 | 0.52 |
+| Zarr `timeseries`, 8 MB, obstore | 0.37 | **0.07** | 31.8 | **0.24** |
+| Zarr `timeseries`, 32 MB, obstore | 0.33 | 0.07 | 32.3 | 0.27 |
+| Zarr `timeseries`, 128 MB, obstore | 0.33 | 0.06 | 33.2 | 0.28 |
+
+One-time costs: the virtual store took 8.8 s to build and commit (it
+reads only the granules' metadata); each native Zarr store took 345-387 s
+to write from the granules, whatever the preset and shard size (bound by
+reading the NetCDF over S3).
+
+- **NetCDF on S3 is the slow path.** Opening reads the HDF5 metadata of
+  every granule (1.2 s each), and every read goes through the granules'
+  256 x 256 HDF5 chunks.
+- **A virtual store removes the open cost** (80x faster) and makes reads
+  4-13x faster for the cost of one 9 s build, with no copy of the data. Reads
+  still follow the granules' chunks, so a map is 3 s.
+- **Native Zarr is fastest once written**, and the preset decides the
+  access pattern: `maps` serves maps and windows in 0.15-0.85 s and pixel
+  series in 0.1-0.8 s; `timeseries` serves pixel series in 0.07 s but reads
+  the whole cube for one map (32-83 s), as designed.
+- **obstore reads 2-5x faster than s3fs (fsspec)** for maps, windows and
+  the pixel series of `maps` stores; a `timeseries` pixel series (one small
+  read) takes 0.07 s with either. The zarr docs mark the obstore store experimental; disp-xr takes
+  any zarr store, so pass one (`zarr.storage.ObjectStore`) for heavy reads
+  from S3.
+- **Shard size (8-128 MB) does not matter** beyond that noise, for
+  reads or writes. The default target (100 MB) stays.
 
 ## `suite.py` (plan task T37.2)
 

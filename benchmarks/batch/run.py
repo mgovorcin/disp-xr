@@ -12,6 +12,7 @@ import subprocess
 import sys
 import time
 import urllib.request
+from pathlib import Path
 
 import numpy as np
 
@@ -70,7 +71,13 @@ def main() -> int:
         "touch_256mb_s": [touch_seconds() for _ in range(3)],
     }
     print("BENCH_INFO " + json.dumps(info), flush=True)
-    rc = subprocess.call([sys.executable, "/app/bench_downsample.py"])
+    # The job command names the script and its arguments; by default the
+    # downsample benchmark. A CSV written to /tmp/out.csv is printed after.
+    args = sys.argv[1:] or ["bench_downsample.py"]
+    rc = subprocess.call([sys.executable, f"/app/{args[0]}", *args[1:]])
+    out = Path("/tmp/out.csv")
+    if out.exists():
+        print("BENCH_CSV_BEGIN\n" + out.read_text() + "BENCH_CSV_END", flush=True)
     done = {"rc": rc, "touch_after_s": touch_seconds(), "load": os.getloadavg()}
     print("BENCH_DONE " + json.dumps(done), flush=True)
     return rc

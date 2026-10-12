@@ -2,14 +2,14 @@
   "jobDefinitionName": "disp-xr-bench",
   "type": "container",
   "platformCapabilities": ["EC2"],
-  "timeout": {"attemptDurationSeconds": 7200},
+  "timeout": {"attemptDurationSeconds": 14400},
   "retryStrategy": {"attempts": 1},
   "containerProperties": {
-    "image": "700525151086.dkr.ecr.us-west-2.amazonaws.com/disp-xr-bench:t28.5",
+    "image": "700525151086.dkr.ecr.us-west-2.amazonaws.com/disp-xr-bench:t37-3b",
     "jobRoleArn": "arn:aws:iam::700525151086:role/am-batch-job-govorcin-role",
     "executionRoleArn": "arn:aws:iam::700525151086:role/am-batch-job-execution-govorcin-role",
     "resourceRequirements": [{"type": "VCPU", "value": "32"}, {"type": "MEMORY", "value": "240000"}]
   },
-  "tags": {"Project": "disp-xr", "Component": "bench-t28.5", "Owner": "govorcin"},
+  "tags": {"Project": "disp-xr", "Component": "bench", "Owner": "govorcin"},
   "propagateTags": true
 }

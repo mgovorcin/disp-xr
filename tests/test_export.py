@@ -198,7 +198,7 @@ def test_codec_per_layer_and_layout(stack_dir, preset, coherence):
     assert (blosc["cname"], blosc["shuffle"]) == ("zstd", "bitshuffle")
     # Quality layers repeat along time within a ministack: zstd finds it.
     assert name("temporal_coherence") == [coherence]
-    assert name("water_mask") == ["ZstdCodec"]
+    assert name("water_mask") == [coherence]
 
 
 # --- NetCDF ----------------------------------------------------------------------
