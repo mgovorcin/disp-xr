@@ -165,3 +165,16 @@ def test_native_copy_from_virtual(granules, tmp_path):
         xr.open_zarr(path, mask_and_scale=False).displacement.values,
         _raw(granules).displacement.values,
     )
+
+
+def test_s3_container_with_static_credentials(tmp_path):
+    """Regression: icechunk 2.3 refused bare S3 static credentials."""
+    from disp_xr._credentials import AWSCredentials
+    from disp_xr.virtual import _open_repository
+
+    repo = _open_repository(
+        tmp_path / "repo",
+        prefix="s3://bucket/granules/",
+        credentials=AWSCredentials("key", "secret", "token"),
+    )
+    assert "s3://bucket/granules/" in repo.config.virtual_chunk_containers
