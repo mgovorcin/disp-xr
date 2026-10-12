@@ -6,6 +6,16 @@ All notable changes to disp-xr. The format follows
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-10-12
+
+The core API is frozen from this release (`docs/api_policy.md`): the API
+review of 2026-10-11 settled its seven open questions, and renamed or
+removed names now follow the deprecation process. Also new: a read-only REST
+service over stores (`disp_xr serve`, provisional), and the quadtree
+benchmark (T28.5) that completes milestone M2. Two fixes **change values**:
+the NaN-crossover offset under `nan_policy="omit"`, and the correction
+default for DISP-NISAR; both are marked below.
+
 ### Added
 
 - `dxr.search_granules(...)`: the CMR search (`disp_xr.search.search`) at the
