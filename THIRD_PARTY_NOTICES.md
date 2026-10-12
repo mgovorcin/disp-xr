@@ -16,8 +16,8 @@ Every ported file carries a header naming its source. Ported code, by disp-xr fi
 | `src/disp_xr/search.py` | `UrlType`, `from_filename`, `_get_download_url`, `from_umm`, `search` | `src/opera_utils/disp/_search.py`, `_product.py`, `constants.py` | Not recorded (copied before 2025-06) |
 | `src/disp_xr/product.py` | `DispGranule` filename parsing, deduplication in `find_products` | `src/opera_utils/disp/_product.py` (`DispProduct`, `DispProductStack`), `constants.py` (`DISP_FILE_REGEX`) | `97f77d9` |
 | `src/disp_xr/_chunks.py` | `clamp_chunks` | `src/opera_utils/disp/_utils.py` (`_clamp_chunk_dict`) | `97f77d9` |
-| `src/disp_xr/_credentials.py` | `ASFEndpoint`, `AWSCredentials`, `get_temporary_aws_credentials`, `get_earthdata_username_password` | `src/opera_utils/credentials.py` | `97f77d9` |
-| `src/disp_xr/_remote.py` | `is_remote_url`, `get_filesystem`, `open_file`, `open_h5` | `src/opera_utils/_remote.py` | `97f77d9` |
+| `src/disp_xr/_credentials.py` | `ASFEndpoint`, `AWSCredentials`, `get_temporary_aws_credentials`, `get_earthdata_username_password` | `src/opera_utils/credentials.py` | `4125484` |
+| `src/disp_xr/_remote.py` | `is_remote_url`, `get_filesystem`, `open_file`, `open_h5` | `src/opera_utils/_remote.py` | `4125484` |
 | `src/disp_xr/export/mintpy.py` | MintPy file set and metadata keys | `src/opera_utils/disp/mintpy.py` | `97f77d9` |
 | `src/disp_xr/export/zarr.py` | `round_mantissa`, per-variable encoding | `src/opera_utils/disp/_utils.py`, `_reformat.py` | `97f77d9` |
 | `src/disp_xr/geometry/static.py` | CSLC-STATIC layer names and nodata values | `src/opera_utils/geometry.py` | `97f77d9` |

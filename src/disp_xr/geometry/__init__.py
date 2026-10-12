@@ -118,7 +118,7 @@ def lonlat_to_rowcol(
     if g.crs is None:
         raise ValueError("The dataset has no CRS; cannot convert lon/lat")
     x, y = Transformer.from_crs("EPSG:4326", g.crs, always_xy=True).transform(lon, lat)
-    col, row = ~g.transform * (x, y)
+    col, row = ~g.transform @ (x, y)
     # floor, not round: the transform maps pixel corners, so (0.7, 0.7) is
     # inside pixel (0, 0).
     row, col = int(np.floor(row)), int(np.floor(col))

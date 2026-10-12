@@ -6,6 +6,14 @@ All notable changes to disp-xr. The format follows
 
 ## [Unreleased]
 
+### Fixed
+
+- Remote HTTPS reads sent the Earthdata Login as aiohttp's `auth=` client
+  argument, which aiohttp 3.14 no longer accepts; they now send a Basic
+  `Authorization` header, as opera-utils does since `4125484` (ported with
+  the rest of that release check: an ASF credential endpoint for NISAR, and
+  affine transforms applied with `@` instead of the deprecated `*`).
+
 ## [0.4.0] - 2026-10-12
 
 The core API is frozen from this release (`docs/api_policy.md`): the API

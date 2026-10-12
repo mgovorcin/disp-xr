@@ -1,10 +1,13 @@
 """Open local or remote (S3, HTTPS, any fsspec URL) granules.
 
-Adapted from opera-utils (src/opera_utils/_remote.py, commit 97f77d9),
+Adapted from opera-utils (src/opera_utils/_remote.py, commit 4125484),
 Copyright (c) 2022 California Institute of Technology, BSD-3-Clause. See
 THIRD_PARTY_NOTICES.md. Changes: any fsspec protocol is accepted (tests use
 ``memory://``), listing a remote prefix is supported, and the cloud libraries
-are imported only when a remote URL is used (``aws`` extra).
+are imported only when a remote URL is used (``aws`` extra). HTTPS login sends
+a Basic ``Authorization`` header, as upstream since 4125484 (aiohttp 3.14
+dropped ``auth=`` from ``client_kwargs``), built with ``BasicAuth.encode`` so
+older aiohttp works too.
 """
 
 from __future__ import annotations
@@ -71,7 +74,8 @@ def get_filesystem(
         user, password = get_earthdata_username_password(
             earthdata_username, earthdata_password, host=ENDPOINT_TO_HOST[asf_endpoint]
         )
-        options = {"client_kwargs": {"auth": aiohttp.BasicAuth(user, password)}}
+        header = aiohttp.BasicAuth(user, password).encode()
+        options = {"client_kwargs": {"headers": {"Authorization": header}}}
     return fsspec.filesystem(scheme, **options)
 
 
