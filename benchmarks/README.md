@@ -123,6 +123,37 @@ to touch 256 MB of fresh memory (above about 2 s the node is stalling and
 the run measures the node), writes the raw rows to `results/` and prints
 median and spread. `tests/test_benchmarks.py` runs it at the smoke size.
 
+Run on 2026-10-12 on AWS Batch (`r7i.8xlarge`, 32 cores, 248 GB; touching
+256 MB took 0.04 s before and after every run; disp-xr 0.4.0; `batch/`),
+five interleaved trials. Synthetic frames of three ministacks: tile 61 x
+1024 x 1024, frame 121 x 4096 x 4096 (32 times the pixel-epochs). Medians
+in seconds:
+
+| Operation | tile | frame | frame / tile |
+|---|---:|---:|---:|
+| open | 2.93 | 7.26 | 2.5 |
+| chain | 0.21 | 2.18 | 10 |
+| mask | 2.35 | 79.9 | 34 |
+| rereference median | 2.32 | 115 | 49 |
+| fit_velocity OLS | 5.24 | 179 | 34 |
+| fit_velocity MIDAS | 4.68 | 164 | 35 |
+| fit_velocity GLS | 17.0 | 464 | 27 |
+| downsample 1 km | 6.56 | 247 | 38 |
+| quadtree | 14.1 | 563 | 40 |
+| denoise Kalman | 4.98 | 184 | 37 |
+
+- The standard deviation of the trials was at most 10% of the median at
+  the frame size (chain; 7% for the other operations) and 3% at the tile
+  size; a second frame run with three trials on
+  another instance agreed within 5% for every operation.
+- Time grows about linearly with pixel-epochs (27-49x for 32x the data);
+  open is metadata-bound (granule count), and chain is cheap.
+- Scaled linearly to a full F11116 frame (6898 x 9618, about 390 epochs,
+  13 times the frame size), one node would take about 17 min to mask,
+  24 min to re-reference, 38 min for OLS and 1.6 h for GLS. An
+  extrapolation, not a measurement; for full frames use region jobs
+  (`docs/performance.md`).
+
 Scripts that time disp-xr on synthetic data. Shared nodes vary a lot, so each
 result records the machine load; compare columns of one run, not runs.
 
