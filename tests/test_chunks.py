@@ -97,6 +97,33 @@ def test_rechunk_and_time_contiguous(stack_dir):
     assert time_contiguous(ds.displacement.load()).chunks is None  # not dask
 
 
+def test_time_contiguous_merges_within_blocks():
+    """Time is merged inside the input's blocks, halved to fit; no shuffle."""
+    import dask
+    import dask.array as darr
+    import numpy as np
+    import xarray as xr
+
+    from disp_xr._chunks import time_contiguous
+
+    data = darr.zeros((389, 2100, 3000), dtype="float32", chunks=(1, 1024, 1024))
+    da = xr.DataArray(data, dims=("time", "y", "x"))
+    with dask.config.set({"array.rechunk.method": "p2p"}):  # as on a cluster
+        out = time_contiguous(da)
+    ny, nx = out.data.chunksize[1:]
+    assert out.data.chunksize[0] == 389
+    assert 1024 % ny == 0 and 1024 % nx == 0
+    assert 389 * 4 * ny * nx <= 100e6
+    assert not any("p2p" in name for name in out.data.dask.layers)
+
+    irregular = xr.DataArray(
+        darr.zeros((4, 100, 100), chunks=((1,) * 4, (30, 70), (50, 50))),
+        dims=("time", "y", "x"),
+    )
+    assert time_contiguous(irregular).chunks[0] == (4,)
+    np.testing.assert_array_equal(time_contiguous(irregular).values, 0)
+
+
 def test_bounded_threads():
     import dask
 

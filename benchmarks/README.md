@@ -113,6 +113,36 @@ reading the NetCDF over S3).
 - **Shard size (8-128 MB) does not matter** beyond that noise, for
   reads or writes. The default target (100 MB) stays.
 
+## `profile_frame.py` (plan task T37.3)
+
+Memory and graph size of each core operation on a real frame under a dask
+`LocalCluster` with the memory budget (8 GB per worker): build time and task
+count, compute time, peak resident memory of every worker (sampled every
+0.1 s) and of the coordinator, and worker log lines about pausing, spilling
+or restarts. Timings on a shared node are indicative; the memory figures
+are not affected.
+
+Found with it on F11116 (2026-10-12): `rereference("median")` stacked every
+pixel into a pandas index (10 GB and 3 minutes in the calling process, and
+workers over 8 GB that were restarted); the median is now taken over `y` and
+`x` directly.
+
+Getting whole series per pixel from a cube opened one epoch per chunk
+(OLS, 32 F11116 epochs, 6898 x 9618, 4 workers of 8 GB, the same values
+from all three, run one after the other on the shared node, 2026-10-13):
+
+| Strategy | Seconds | Tasks |
+|---|---:|---:|
+| Normal equations summed over epochs (no rechunk) | 6500 | 82,562 |
+| Time merged within the input blocks (512 x 512), dask `tasks` rechunk | **366** | 8,950 |
+| `"timeseries"` preset (768 x 768), distributed `p2p` rechunk (the old default) | 811 | 8,004 |
+
+Summing the normal equations expands every epoch into 16 float64 terms per
+pixel, 30 times the data of the cube, so it loses to one rechunk. A
+rechunk whose output blocks divide the input blocks only concatenates, and
+the in-memory method does that faster than the shuffle; `time_contiguous`
+now does this for every per-pixel method.
+
 ## `suite.py` (plan task T37.2)
 
 The core operations end to end (open, chain, mask, re-reference,

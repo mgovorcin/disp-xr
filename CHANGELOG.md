@@ -13,8 +13,20 @@ All notable changes to disp-xr. The format follows
   layers, which stores them 7-46% smaller than plain zstd on DISP-S1
   granules; in chunks that span time they keep plain zstd. Lossless: no
   value changes. Only boolean layers always keep plain zstd.
+- Per-pixel work (`fit_trajectory`, `fit_velocity`) on a cube opened one
+  epoch per chunk merges time within each input block (halved to fit the
+  chunk-size target) with dask's in-memory rechunk, instead of reshuffling
+  to the `"timeseries"` preset: OLS on 32 full-frame epochs took 366 s
+  instead of 811 s, with the same values.
 
 ### Fixed
+
+- `rereference(ds, "median")` (and `"high_coherence"`, which takes the
+  same median) built a pandas index of every pixel: 10 GB and 3 minutes in
+  the calling process on a full frame before any data was read, and dask
+  workers over 8 GB that were restarted. The median is now taken over `y`
+  and `x` directly; values are unchanged. Found by the T37.3 full-frame
+  profile.
 
 - `build_virtual_frame` and `open_virtual` failed on granules in S3 with
   icechunk 2.3 (`'S3Credentials.Static' object is not an instance of

@@ -10,7 +10,9 @@ chunk never reads part of a file chunk. Three presets:
     epochs and blocks it needs, so maps, points and chaining stay cheap.
 ``"timeseries"``
     The whole time axis in each chunk, for per-pixel work (fits, filters).
-    Functions that need it rechunk to it themselves (:func:`time_contiguous`).
+    Functions that need it rechunk to it themselves (:func:`time_contiguous`,
+    which merges time within the input's spatial blocks instead of
+    reshuffling them).
 ``"maps"``
     One epoch per chunk, sized to the byte target, for whole-map work.
 
@@ -181,9 +183,17 @@ def data_chunks(da: xr.DataArray) -> dict[str, tuple[int, ...]]:
 def time_contiguous(obj: Any) -> Any:
     """Return ``obj`` with the whole time axis in each chunk, for per-pixel work.
 
-    Unchanged if it is not a dask array or ``time`` is already one chunk;
-    otherwise rechunked with the ``"timeseries"`` preset.
+    Unchanged if it is not a dask array or ``time`` is already one chunk.
+    Otherwise time is merged within the input's spatial blocks, each halved
+    until a chunk fits ``config["chunks.target_mb"]``, so every output chunk
+    comes from one input block per epoch (concatenation, not a shuffle), with
+    dask's in-memory ``"tasks"`` rechunk. On 32 full-frame epochs this fitted
+    OLS in 366 s against 811 s with the ``"timeseries"`` preset through the
+    distributed ``"p2p"`` shuffle (``benchmarks/README.md``). Irregular
+    spatial chunks fall back to the preset.
     """
+    import dask
+
     if isinstance(obj, xr.DataArray):
         chunks = data_chunks(obj)
     else:
@@ -193,4 +203,34 @@ def time_contiguous(obj: Any) -> Any:
             return rechunk(obj, "timeseries")
     if "time" not in chunks or len(chunks["time"]) == 1:
         return obj
-    return rechunk(obj, "timeseries")
+    shape, dtype = _stack_shape(obj)
+    sides = _block_sides(chunks, shape[0] * np.dtype(dtype).itemsize)
+    if sides is None:
+        return rechunk(obj, "timeseries")
+    with dask.config.set({"array.rechunk.method": "tasks"}):
+        return obj.chunk({"time": -1, **sides})
+
+
+def _block_sides(
+    chunks: Mapping[str, tuple[int, ...]], bytes_per_pixel: int
+) -> dict[str, int] | None:
+    """Return spatial chunk sizes that divide the input blocks and fit the target.
+
+    ``None`` if a spatial dimension is chunked irregularly.
+    """
+    sides = {}
+    for dim in ("y", "x"):
+        if dim not in chunks:
+            continue
+        sizes = chunks[dim]
+        if any(n != sizes[0] for n in sizes[:-1]) or sizes[-1] > sizes[0]:
+            return None
+        sides[dim] = sizes[0]
+    target = config.get("chunks.target_mb") * 1e6
+    while bytes_per_pixel * math.prod(sides.values()) > target:
+        halvable = [d for d, n in sides.items() if n % 2 == 0 and n // 2 >= MIN_CHUNK]
+        if not halvable:
+            break
+        largest = max(halvable, key=lambda d: sides[d])
+        sides[largest] //= 2
+    return sides
