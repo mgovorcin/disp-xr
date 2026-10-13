@@ -74,12 +74,9 @@ def _check_point(da: xr.DataArray, row: int, col: int) -> tuple[int, int]:
 def _spatial_median(da: xr.DataArray, good: Optional[xr.DataArray]) -> xr.DataArray:
     if good is not None:
         da = da.where(good)
-    stacked = da.stack(pixels=("y", "x"))
-    if stacked.chunks is not None:
-        stacked = stacked.chunk({"pixels": -1})
-    return stacked.median("pixels", skipna=True).drop_vars(
-        ["pixels", "y", "x"], errors="ignore"
-    )
+    # Not stack(pixels=("y", "x")): its pandas MultiIndex of every pixel
+    # cost 10 GB and 3 minutes on a full frame before any data was read.
+    return da.median(("y", "x"), skipna=True)
 
 
 def _border(da: xr.DataArray, n: int) -> xr.DataArray:

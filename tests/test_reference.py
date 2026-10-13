@@ -63,6 +63,14 @@ def test_median(sample_da):
     np.testing.assert_allclose(ref, np.median(sample_da.values, axis=(1, 2)))
 
 
+def test_median_lazy_matches_numpy(sample_da):
+    """The median over (y, x) of a chunked cube equals the NumPy median."""
+    lazy = sample_da.chunk({"time": 1, "y": 3, "x": 4})
+    ref = get_reference_values(lazy, method="median")
+    assert ref.chunks is not None
+    np.testing.assert_allclose(ref, np.median(sample_da.values, axis=(1, 2)))
+
+
 def test_median_honors_mask(sample_da):
     """Regression: upstream bug 5, the median ignored good_pixel_mask."""
     good = np.zeros((10, 15), bool)
