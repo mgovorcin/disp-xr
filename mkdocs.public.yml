@@ -1,0 +1,88 @@
+# Configuration of the published site (GitHub Pages): the user documentation
+# only. Planning pages, studies and the real-data notebooks whose output shows
+# local paths stay in the repository docs (mkdocs.yml) but are not published.
+#
+#   mkdocs build --strict -f mkdocs.public.yml -d SITE
+INHERIT: mkdocs.yml
+
+hooks:
+  - docs/public_site.py
+
+exclude_docs: |
+  check_plan.py
+  public_site.py
+  real_data/*.py
+  real_data/houston.ipynb
+  real_data/production_change.ipynb
+  real_data/san_andreas.ipynb
+  real_data/troposphere.ipynb
+  project_index.md
+  api_review.md
+  specs.md
+  todo.md
+  code_review.md
+  docs_plan.md
+  studies/
+
+nav:
+  - Home: index.md
+  - Get started:
+      - Install: install.md
+      - Getting started: getting-started.md
+      - Concepts: concepts.md
+      - Try it on your frame: try-it.md
+  - Tutorials:
+      - gallery/index.md
+      - Basics:
+          - Quick look at a frame: gallery/quicklook.py
+          - The command line, end to end: gallery/command_line.py
+          - Exporting results: gallery/export.py
+          - Chunks for maps and time series: gallery/chunking.py
+      - Quality and references:
+          - Quality layers and masking: gallery/quality_masks.py
+          - Quality weights: gallery/quality_weights.py
+          - Corrections and reference methods: gallery/reference.py
+          - Line-of-sight geometry and plate motion: gallery/geometry.py
+      - Time series:
+          - Velocity from a trajectory fit: gallery/velocity.py
+          - Velocity with colored-noise uncertainty: gallery/colored_noise.py
+          - Checking a velocity fit: gallery/diagnostics.py
+          - Denoising and regular time grids: gallery/denoise.py
+      - Downsampling:
+          - Downsampling with quality weights: gallery/downsample.py
+      - GNSS:
+          - Comparing DISP with GNSS: gallery/gnss_compare.py
+          - Tying DISP to GNSS: gallery/gnss_tie.py
+      - Real data:
+          - Comparing two processing versions: real_data/versions.ipynb
+      - Cloud and serving:
+          - Virtual frames and versioned stores: gallery/virtual_frames.py
+          - Serving results as web map tiles: gallery/web_tiles.py
+          - A REST service for web clients: gallery/rest_service.py
+          - Interactive browsing of a full frame: gallery/interactive.py
+  - Guides:
+      - Finding and reading granules remotely: remote.md
+      - Serving stores over HTTP: serving.md
+      - Choosing a velocity method: velocity-methods.md
+      - Command line: cli.md
+      - Large frames and batch jobs: performance.md
+      - Product notes: product_notes.md
+      - View in bowser: bowser.md
+  - API reference:
+      - api/index.md
+      - Find and open: api/open.md
+      - Process: api/process.md
+      - Spatial models: api/models.md
+      - GNSS: api/gnss.md
+      - Export: api/export.md
+      - Icechunk and virtual stores: api/cloud.md
+      - Region batch jobs: api/batch.md
+      - REST service: api/serve.md
+      - Plot: api/plot.md
+      - Accessor: api/accessor.md
+      - Settings and chunks: api/config.md
+      - Synthetic data: api/tutorial.md
+  - Development:
+      - API policy: api_policy.md
+      - Porting from opera-utils: porting.md
+      - References: references.md
