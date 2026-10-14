@@ -96,6 +96,7 @@ plugins:
 
 exclude_docs: |
   check_plan.py
+  public_site.py
   real_data/*.py
 
 nav:
