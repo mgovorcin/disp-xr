@@ -1,6 +1,7 @@
 # Publish the documentation on GitHub Pages from main.
-# Repository settings: Pages > Source = "GitHub Actions". Pages on a private
-# repository needs a paid plan; on a public one it is free.
+# Repository settings: Pages > Source = "GitHub Actions". The published site
+# is the user documentation (mkdocs.public.yml); the planning pages stay in
+# the repository.
 name: docs
 
 on:
@@ -34,7 +35,7 @@ jobs:
 
       # Executes the gallery examples; a broken example or reference fails.
       - name: Build the docs
-        run: pixi run -e docs mkdocs build --strict --site-dir site
+        run: pixi run -e docs mkdocs build --strict -f mkdocs.public.yml --site-dir site
 
       - uses: actions/upload-pages-artifact@v5
         with:

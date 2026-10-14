@@ -6,6 +6,15 @@ All notable changes to disp-xr. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- Publishing: `publish.yml` builds and publishes to PyPI on a GitHub release
+  (trusted publishing); `bench.yml` runs the benchmark suite nightly; the
+  test workflow writes a coverage badge; the documentation site
+  (`mkdocs.public.yml`) is published on GitHub Pages.
+- `benchmarks/profile_frame.py` results for every core operation on a full
+  frame, with recommendations for full-frame runs (`docs/performance.md`).
+
 ### Changed
 
 - Zarr writers compress integer layers (masks, connected components, SHP

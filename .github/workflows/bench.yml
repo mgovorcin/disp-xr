@@ -1,0 +1,37 @@
+# Nightly benchmark run (plan task T37): the core-operation suite at the smoke
+# size on a GitHub runner, so a large regression or a broken benchmark shows
+# up. Runner timings are noisy; the reference numbers come from a dedicated
+# instance (benchmarks/batch, benchmarks/README.md).
+name: bench
+
+on:
+  schedule:
+    - cron: "17 7 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  suite:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0  # setuptools_scm needs the tags to set the version
+
+      - uses: prefix-dev/setup-pixi@v0.10.2
+        with:
+          environments: test-py312
+          locked: true
+          cache: true
+
+      - name: Run the suite
+        run: >
+          pixi run -e test-py312 python benchmarks/suite.py --size smoke --trials 3
+          --out bench/suite.csv | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: bench-suite
+          path: bench/

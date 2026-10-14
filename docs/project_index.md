@@ -1,6 +1,6 @@
 # disp-xr project index
 
-**Last indexed:** 2026-10-12 · `main` after the v0.4.0 release (tag `v0.4.0`) on `origin` = `mgovorcin/disp-xr`, through PR #87 and branch `bench/t37-suite`
+**Last indexed:** 2026-10-14 · `main` after PR #91, branch `release/go-public`, on `origin` = `mgovorcin/disp-xr`
 
 How and when this file is rebuilt: see "Project Index (cyclical indexing)" in `CLAUDE.md` at the repository root.
 
@@ -38,7 +38,7 @@ The PRD also lives as a shared doc; `specs.md` is its copy in the repo and must 
 | M0 Foundation (v0.1) | T1–T8 | 5 / 8 (T2, T4, T5, T6, T7). Released as `v0.1.0` (2026-10-02). Open: T1.4b (name maintainers), T3.4–T3.5 (coverage badge, branch protection: need CI), T8.4 (milestone dates, needs the maintainers) |
 | M1 Core API (v0.2) | T9–T18 | 8 / 10 (T9, T10, T11, T13, T14, T15, T17, T18). No `v0.2.0`: released with M2 as `v0.3.0` (decision of 2026-10-10); API review closed by the maintainer and the core API frozen for 0.4.0 (T18, 2026-10-11). Open: T12.5 (needs DISP-NI-STATIC), T16.6 (GitHub Pages, waits for the repository to go public) |
 | M2 Analysis (v0.3) | T19–T34 | 16 / 16. Released as `v0.3.0` (2026-10-10); gate T34 passed (`studies/gnss_validation.md`). T28 finished 2026-10-11 (T28.5 benchmark on AWS Batch; T28.6 rejected) |
-| M3 Release (v1.0) | T35–T40 | 1 / 5 (T40). T37 6 of 7 subtasks done (T37.1, T37.2, T37.3a, T37.3b, T37.4, T37.5; most of T37.3; the nightly CI benchmark waits for CI); T35 waits for beta DISP-NISAR products; T36 dropped (2026-10-11); T40 done (REST service); T38–T39 not started |
+| M3 Release (v1.0) | T35–T40 | 2 / 5 (T37, T40). T37 done (closed 2026-10-14 with recommendations; nightly benchmark in `bench.yml`); T35 waits for beta DISP-NISAR products; T36 dropped (2026-10-11); T40 done (REST service); T38–T39 not started |
 
 Subtasks: 215 done, 20 open. All work is merged in `main`. CI is off (Actions minutes on a private repository); every PR
 since #30 was checked locally and says so in its description.
@@ -183,6 +183,7 @@ since #30 was checked locally and says so in its description.
 
 | Date | Trigger | Changes |
 | --- | --- | --- |
+| 2026-10-14 | T37 closed (T37.3 with recommendations), T1 ticked, T3.4 done, T38.4 partly done; going public | Full-frame profile in `performance.md`; #89 and #90 fixed the median and per-pixel rechunk; workflows `publish.yml`, `bench.yml`, coverage badge; docs site from `mkdocs.public.yml` (#91); AWS identifiers in `benchmarks/batch` replaced by placeholders |
 | 2026-10-12 | T37.2 finished | Suite timed on AWS Batch at tile and frame sizes (`benchmarks/README.md`); nightly CI benchmark left with the T37 done-when, waiting for CI |
 | 2026-10-12 | T37.3b finished, #86 merged | S3 storage benchmark on AWS Batch (`benchmarks/storage_s3.py`, `batch/` runs any script); integer masks benchmarked, integer layers compressed with Blosc per epoch (`export/zarr.py`, `specs.md` C1); #86 fixed virtual frames on S3 with icechunk 2.3 (`virtual.py`) |
 | 2026-10-12 | T38.3 finished, T38.3b repeated, NISAR to v0.6 | opera-utils `4125484` diff ported (HTTPS auth header, NISAR endpoint, affine `@`); T35 and T12.5 scheduled for v0.6; `serve.py` doctests ignored without the serve extra (collection failed in `test-py312` since #77) |

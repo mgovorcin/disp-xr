@@ -1,6 +1,12 @@
 
 # Xarray tools for OPERA DISP
 
+[![test](https://github.com/mgovorcin/disp-xr/actions/workflows/test.yml/badge.svg)](https://github.com/mgovorcin/disp-xr/actions/workflows/test.yml)
+[![docs](https://github.com/mgovorcin/disp-xr/actions/workflows/docs.yml/badge.svg)](https://mgovorcin.github.io/disp-xr/)
+[![coverage](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/mgovorcin/disp-xr/badges/coverage.json)](https://github.com/mgovorcin/disp-xr/actions/workflows/test.yml)
+
+Documentation: <https://mgovorcin.github.io/disp-xr/>
+
 Analysis tools using [`xarray`](xarray.dev) for OPERA Surface Displacement from Sentinel-1 (DISP-S1) and Surface Displacement from NISAR (DISP-NISAR).
 
 ## Quick start

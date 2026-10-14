@@ -101,3 +101,42 @@ jobs:
 
       - name: Run the residual EOF example
         run: pixi run -e eof python examples/eof_residuals.py
+
+  coverage-badge:
+    # A shields.io endpoint JSON on the `badges` branch, read by the README
+    # badge; no external coverage service.
+    name: coverage badge
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: coverage-xml
+
+      - name: Write the badge JSON
+        run: |
+          python3 - <<'PY'
+          import json
+          import xml.etree.ElementTree as ET
+
+          rate = float(ET.parse("coverage.xml").getroot().get("line-rate"))
+          percent = round(100 * rate)
+          color = "brightgreen" if percent >= 90 else "green" if percent >= 80 else "orange"
+          badge = {"schemaVersion": 1, "label": "coverage", "message": f"{percent}%", "color": color}
+          with open("coverage.json", "w") as f:
+              json.dump(badge, f)
+          PY
+
+      - name: Push to the badges branch
+        run: |
+          git init -q badges && mv coverage.json badges/
+          cd badges
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -q -b badges
+          git add coverage.json
+          git commit -q -m "coverage badge for ${GITHUB_SHA::7}"
+          git push -q -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${GITHUB_REPOSITORY}.git" badges
