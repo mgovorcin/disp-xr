@@ -26,7 +26,7 @@ jobs:
         with:
           fetch-depth: 0  # setuptools_scm needs the tags to set the version
 
-      - uses: prefix-dev/setup-pixi@v0.10.2
+      - uses: prefix-dev/setup-pixi@v0.11.0
         with:
           environments: ${{ matrix.environment }}
           locked: true  # fail if pixi.lock is out of date with pyproject.toml
@@ -56,7 +56,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - uses: prefix-dev/setup-pixi@v0.10.2
+      - uses: prefix-dev/setup-pixi@v0.11.0
         with:
           environments: test
           locked: true
@@ -73,7 +73,7 @@ jobs:
         with:
           fetch-depth: 0  # setuptools_scm needs the tags to set the version
 
-      - uses: prefix-dev/setup-pixi@v0.10.2
+      - uses: prefix-dev/setup-pixi@v0.11.0
         with:
           environments: docs
           locked: true
@@ -93,7 +93,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: prefix-dev/setup-pixi@v0.10.2
+      - uses: prefix-dev/setup-pixi@v0.11.0
         with:
           environments: eof
           locked: true
