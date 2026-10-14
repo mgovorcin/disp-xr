@@ -3,7 +3,7 @@
 The shared node is often too busy to time anything (see the notes in
 `../README.md`). This runs a benchmark script on a whole `r7i.8xlarge`
 (job definition: 32 vCPUs, 240,000 MiB, on an on-demand queue of
-`r7i.8xlarge` instances). `run.py` records the instance
+`r7i.8xlarge` instances). `entrypoint.py` records the instance
 type, CPU, memory and page-fault speed (`BENCH_INFO`) before the benchmark,
 and the page-fault speed and load after it (`BENCH_DONE`), so a run on a
 noisy instance shows. The job command names the script and its arguments

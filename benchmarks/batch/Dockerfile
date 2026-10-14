@@ -8,4 +8,4 @@ RUN for w in /tmp/disp_xr-*.whl; do \
       pip install --no-cache-dir -c /tmp/constraints.txt "$w[aws,cloud]"; done \
  && rm /tmp/disp_xr-*.whl
 COPY *.py /app/
-ENTRYPOINT ["python", "-u", "/app/run.py"]
+ENTRYPOINT ["python", "-u", "/app/entrypoint.py"]

@@ -1,6 +1,6 @@
 # disp-xr project index
 
-**Last indexed:** 2026-10-14 · `main` after PR #91, branch `release/go-public`, on `origin` = `mgovorcin/disp-xr`
+**Last indexed:** 2026-10-14 · `main` after PR #92, branch `ci/fix-duplicate-run`, on `origin` = `mgovorcin/disp-xr`
 
 How and when this file is rebuilt: see "Project Index (cyclical indexing)" in `CLAUDE.md` at the repository root.
 
@@ -162,7 +162,6 @@ since #30 was checked locally and says so in its description.
 
 ## Out of sync
 
-- GitHub Actions is off on `mgovorcin/disp-xr`: the private repository used up its Actions minutes (2026-10-04). The `test` workflow is disabled; the `docs` workflow (GitHub Pages, PR #43) fails at start for the same reason until it is disabled or the repository goes public. Local hooks stand in: pre-commit on commit, pytest (py312) and `mkdocs --strict` on push.
 - Local checkouts `01_OPERA/STAKEHOLDER/disp-xr` and `01_OPERA/VLM/disp-xr` are on the old `timeseries_fitting` branch, and the conda envs `disp_xr` and `disp_xr_py311` hold non-editable installs of old commits.
 - The OPERA requirement values drawn by default (3 (1 + sqrt(L)) mm, 2 mm/yr) were to be confirmed against the requirements document before v0.3; they are released in `v0.3.0` unconfirmed (`specs.md` S4).
 ## Not verified
@@ -183,6 +182,8 @@ since #30 was checked locally and says so in its description.
 
 | Date | Trigger | Changes |
 | --- | --- | --- |
+| 2026-10-14 | Canberra troposphere example removed (owner: the signal is not troposphere) | `real_data/troposphere` notebook, its gallery card and nav entries deleted |
+| 2026-10-14 | Repository public; T3 and T16 done | CI and Pages on (https://mgovorcin.github.io/disp-xr/); branch protection with required checks (T3.5, no review: sole maintainer); `benchmarks/batch/run.py` renamed `entrypoint.py` (mypy duplicate module in CI); follow-ups #93 (coordinator memory) and #94 (GLS memory) |
 | 2026-10-14 | T37 closed (T37.3 with recommendations), T1 ticked, T3.4 done, T38.4 partly done; going public | Full-frame profile in `performance.md`; #89 and #90 fixed the median and per-pixel rechunk; workflows `publish.yml`, `bench.yml`, coverage badge; docs site from `mkdocs.public.yml` (#91); AWS identifiers in `benchmarks/batch` replaced by placeholders |
 | 2026-10-12 | T37.2 finished | Suite timed on AWS Batch at tile and frame sizes (`benchmarks/README.md`); nightly CI benchmark left with the T37 done-when, waiting for CI |
 | 2026-10-12 | T37.3b finished, #86 merged | S3 storage benchmark on AWS Batch (`benchmarks/storage_s3.py`, `batch/` runs any script); integer masks benchmarked, integer layers compressed with Blosc per epoch (`export/zarr.py`, `specs.md` C1); #86 fixed virtual frames on S3 with icechunk 2.3 (`virtual.py`) |
