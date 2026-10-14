@@ -122,6 +122,10 @@ count, compute time, peak resident memory of every worker (sampled every
 or restarts. Timings on a shared node are indicative; the memory figures
 are not affected.
 
+Results for every core operation on the full F11116 frame (389 epochs,
+16 workers of 8 GB, 2026-10-14), with recommendations for full-frame runs,
+are in `docs/performance.md` ("Every core operation on a full frame").
+
 Found with it on F11116 (2026-10-12): `rereference("median")` stacked every
 pixel into a pandas index (10 GB and 3 minutes in the calling process, and
 workers over 8 GB that were restarted); the median is now taken over `y` and

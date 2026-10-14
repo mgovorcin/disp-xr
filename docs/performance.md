@@ -51,6 +51,57 @@ Memory budget (decided 2026-10-06, plan task T37.1): 8 GB per worker and
 spilled or restarted at 8 GB, and a frame prepared for writing peaks at
 about 1.2 GB on the coordinator.
 
+### Every core operation on a full frame
+
+Profiled with `benchmarks/profile_frame.py` (plan task T37.3, 2026-10-13
+and 14): F11116, 389 epochs of 6898 x 9618, opened from the NetCDF
+granules, masked, chained and re-referenced to the median, in one graph per
+operation; `LocalCluster` with 16 workers of 2 threads and 8 GB. Peak
+resident memory; times on a shared node (load 30 to 120) are indicative.
+
+| Operation | Tasks | Worker peak | Coordinator peak | Compute |
+|---|---:|---:|---:|---:|
+| open | 131,000 | 0.7 GB | 2.0 GB | 47 s |
+| chain | 360,000 | 0.7 GB | 2.1 GB | 2.6 min |
+| mask | 409,000 | 0.4 GB | 1.9 GB | 25 min |
+| rereference median | 531,000 | 5.7 GB | 2.5 GB | 35 min |
+| fit_velocity OLS | 628,000 | 6.5 GB | 8.1 GB | 72 min |
+| fit_velocity MIDAS | 620,000 | 7.1 GB, paused | 8.0 GB | 1.9 h |
+| downsample 1 km | 2,828,000 | 5.9 GB | 19 GB | 3.5 h |
+| quadtree | 4,304,000 | 5.9 GB | 122 GB | 3.4 h |
+| denoise Kalman | 633,000 | 7.3 GB, paused | (111 GB, after quadtree) | 40 min |
+| fit_velocity GLS | | over 8 GB: 71 restarts | | stopped |
+
+- **Workers** fit 8 GB for every operation but GLS. MIDAS and the Kalman
+  filter come close (paused, not restarted); give them one thread per
+  worker or 10 GB. GLS needs more than 8 GB per worker on a full frame (a
+  first run also crashed the coordinator process during its noise
+  sampling); fit it on a region of the frame, or on 16 GB workers.
+- **The coordinator** grows with the task count, 5 to 28 KB per task with
+  `LocalCluster` (graph and scheduler in one process): over the 4 GB
+  budget from a few hundred thousand tasks. A whole frame read from 389 granules
+  is 130,000 tasks before any processing, and downsampling and quadtrees
+  multiply that by levels and layers.
+- The Kalman row ran after quadtree in the same process, which had not
+  returned quadtree's memory; its coordinator figure is not its own.
+
+What to do on full frames, in order of effect:
+
+1. **Build a store first, then process it.** Write the masked, chained
+   cube once with region jobs (below) or `to_zarr`, then run velocity,
+   downsampling and quadtrees from the store: the graph no longer carries
+   389 granules, the mask, the chain and the reference.
+2. **Fewer, larger chunks.** `config.set({"chunks.read_block": 2048})`
+   should quarter the task count of an opened frame (four times fewer
+   blocks; not profiled yet); a `"timeseries"` store has
+   one chunk per spatial block for all epochs.
+3. **Run the scheduler apart from the client** (`dask scheduler` or a
+   deployed cluster) when graphs pass a few hundred thousand tasks, and
+   budget 8 to 16 GB for it; with `LocalCluster` it shares the client
+   process.
+4. **Split per-pixel methods by region** (GLS, and MIDAS or Kalman at 8 GB)
+   with `disp_xr.batch`: each job holds one region's series.
+
 ## disp-xr settings
 
 Each setting can be given in code (`disp_xr.config.set({...})`) or as an
