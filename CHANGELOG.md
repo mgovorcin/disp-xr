@@ -27,6 +27,14 @@ All notable changes to disp-xr. The format follows
   workers over 8 GB that were restarted. The median is now taken over `y`
   and `x` directly; values are unchanged. Found by the T37.3 full-frame
   profile.
+- The same medians still ran 8 GB dask workers out of memory on a full
+  frame: `np.nanmedian` peaked at about 11 times a map's bytes (3 GB for
+  one epoch of 66 million pixels). A median kernel that copies the kept
+  pixels once and partitions them in place peaks at the map itself, and on
+  a chunked cube each epoch is merged into one chunk, re-referenced there
+  and split back to the input chunks. Same values as `np.nanmedian` (lazy
+  input already used it; eager input moves by at most one float32 ulp,
+  about 1e-10 m, from xarray's float64 average of the two middle values).
 
 - `build_virtual_frame` and `open_virtual` failed on granules in S3 with
   icechunk 2.3 (`'S3Credentials.Static' object is not an instance of
