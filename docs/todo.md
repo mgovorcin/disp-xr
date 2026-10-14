@@ -116,7 +116,7 @@ Goal: make the existing code safe to change. That means installable, tested, in 
 
 ### T3. Continuous integration
 
-- [ ] **T3. Continuous integration** — Depends on: T1, T2 · PRD: NFR Testing, Typing
+- [x] **T3. Continuous integration** — Depends on: T1, T2 · PRD: NFR Testing, Typing
   - Context: `.github/` holds only `dependabot.yml` and `release.yml`, and there is no test workflow. pre-commit.ci is configured in `.pre-commit-config.yaml`.
   - Done when: every PR runs lint, mypy and tests on Python 3.12 and 3.13, and a failing test blocks merge.
   - [x] T3.1 Add `.github/workflows/test.yml`: set up the conda env (mamba or pixi), `pip install -e .[test]`, then `pytest --cov=disp_xr --doctest-modules`. Done with pixi (`prefix-dev/setup-pixi`, `locked: true` so a stale `pixi.lock` fails CI) instead of conda; checked with actionlint and by running the same commands locally. Not yet run on GitHub.
@@ -124,7 +124,7 @@ Goal: make the existing code safe to change. That means installable, tested, in 
   - [x] T3.3 Run mypy in CI (or confirm pre-commit.ci runs it). Fix existing type errors, or add narrow `# type: ignore[code]` with a TODO. Done: a `lint` job runs all pre-commit hooks, mypy included, so CI does not depend on pre-commit.ci.
   - [x] T3.3b Add a ruff banned-api rule (`TID251`) that forbids `import opera_utils` and `import verde`, so neither dependency can come back. Done; `static_layers.py` is exempt until T12.1 removes its import.
   - [x] T3.4 Upload coverage as an artifact and add a coverage badge to the README. Partly done: the coverage XML is uploaded as an artifact and the table goes to the job summary. A badge needs an external service (for example Codecov) enabled on the GitHub repo; left for the maintainers. Done 2026-10-14 without an external service: on pushes to main the `coverage-badge` job writes a shields.io endpoint JSON to the `badges` branch, read by the README badge.
-  - [ ] T3.5 Turn on branch protection: CI required, one review required. Needs repo admin rights on GitHub; not done.
+  - [x] T3.5 Turn on branch protection: CI required, one review required. Needs repo admin rights on GitHub; not done. Done 2026-10-14 after the repository went public: `main` requires the pytest (3.12, 3.13, 3.14, cloud), pre-commit and docs checks, with no force pushes or deletion. No review is required: the owner is the sole maintainer and GitHub does not let authors approve their own pull requests; add it when a second maintainer joins. CI (`test`, `docs`) re-enabled the same day; Actions are free on a public repository.
 
 ### T4. Package layout refactor
 
@@ -280,7 +280,7 @@ Goal: the everyday DISP workflow (open, mask, re-reference, correct, export, plo
 
 ### T16. Documentation site
 
-- [ ] **T16. Documentation site** — Depends on: T9 · PRD: NFR Docs
+- [x] **T16. Documentation site** — Depends on: T9 · PRD: NFR Docs
   - Context: the target is mkdocs on GitHub Pages (changed from ReadTheDocs on 2026-10-04), with an API reference from type hints and a short gallery of worked examples in the style of verde. Existing notebooks: `notebooks/workflow.ipynb`, `interactive_workflow.ipynb`, `validation/Compare_disp_versions.ipynb`.
   - Done when: the docs build in CI and publish on GitHub Pages with getting started, API reference and at least 3 gallery examples. Later tasks add one example each.
   - [x] T16.1 Add `mkdocs.yml` with material, mkdocstrings (numpy style) and mkdocs-jupyter, plus `.readthedocs.yaml`. Done; the pixi `docs` feature now has matplotlib and ipykernel, and mkdocs-material 9.7.
@@ -288,7 +288,7 @@ Goal: the everyday DISP workflow (open, mask, re-reference, correct, export, plo
   - [x] T16.3 Write gallery examples as short executed notebooks under `docs/gallery/`, using fixture data or a small public subset. Done as `# %%` scripts executed by mkdocs-jupyter: quick look, quality masks, export, chunks. The synthetic-granule writer moved from `tests/fixtures/make_disp.py` into the package as `disp_xr.tutorial`, so the gallery runs anywhere.
   - [x] T16.4 Add a CI job that builds the docs with `--strict` (broken references fail). Done; it also executes the gallery.
   - [x] T16.5 Link `specs.md` and `todo.md` from a "Development" section. Done with the index, code review, porting and references pages too. Not done: publishing on ReadTheDocs, which needs the project connected on readthedocs.org (a private repository needs a ReadTheDocs for Business account, or a public one).
-  - [ ] T16.6 Publish on GitHub Pages. Done: `.github/workflows/docs.yml` (strict build, `upload-pages-artifact`, `deploy-pages` on push to main), `site_url`, `.readthedocs.yaml` removed. Waiting: the repository going public (Pages on a private repository needs a paid plan), then Settings > Pages > Source "GitHub Actions" and CI re-enabled.
+  - [x] T16.6 Publish on GitHub Pages. Done: `.github/workflows/docs.yml` (strict build, `upload-pages-artifact`, `deploy-pages` on push to main), `site_url`, `.readthedocs.yaml` removed. Waiting: the repository going public (Pages on a private repository needs a paid plan), then Settings > Pages > Source "GitHub Actions" and CI re-enabled. Done 2026-10-14: the repository is public; Pages builds from GitHub Actions (`docs.yml`) with `mkdocs.public.yml` (the user documentation; planning pages stay in the repository), live at https://mgovorcin.github.io/disp-xr/.
   - [x] T16.7 Real-data notebook comparing two processing versions of one frame (the product-team use case of the deleted `notebooks/validation/Compare_disp_versions.ipynb`): F08622 v1.0 against v1.1 (239 granules each, `/u/operapst/bato/work/CALVAL/disp-s1_official/`). Cumulative displacement on the last common date and its difference, velocity difference, series at chosen points, and the scatter around the reference, all on a common reference; in `docs/real_data/`. Done 2026-10-10: `docs/real_data/versions.ipynb` (30 x 30 km over Brooklyn and Queens, 240 common epochs): the versions agree within noise (velocity spread 0.08 mm/yr), LaGuardia parts by a few mm from 2019, v1.1 is about 10 % quieter near the reference.
 
 ### T17. Quick-look plotting
