@@ -132,7 +132,6 @@ nav:
           - Houston subsidence, end to end: real_data/houston.ipynb
           - Reading a frame across a production change: real_data/production_change.ipynb
           - Creep on the San Andreas Fault: real_data/san_andreas.ipynb
-          - Troposphere that follows the terrain: real_data/troposphere.ipynb
           - Comparing two processing versions: real_data/versions.ipynb
       - Cloud and serving:
           - Virtual frames and versioned stores: gallery/virtual_frames.py

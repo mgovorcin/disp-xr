@@ -182,6 +182,7 @@ since #30 was checked locally and says so in its description.
 
 | Date | Trigger | Changes |
 | --- | --- | --- |
+| 2026-10-14 | Canberra troposphere example removed (owner: the signal is not troposphere) | `real_data/troposphere` notebook, its gallery card and nav entries deleted |
 | 2026-10-14 | Repository public; T3 and T16 done | CI and Pages on (https://mgovorcin.github.io/disp-xr/); branch protection with required checks (T3.5, no review: sole maintainer); `benchmarks/batch/run.py` renamed `entrypoint.py` (mypy duplicate module in CI); follow-ups #93 (coordinator memory) and #94 (GLS memory) |
 | 2026-10-14 | T37 closed (T37.3 with recommendations), T1 ticked, T3.4 done, T38.4 partly done; going public | Full-frame profile in `performance.md`; #89 and #90 fixed the median and per-pixel rechunk; workflows `publish.yml`, `bench.yml`, coverage badge; docs site from `mkdocs.public.yml` (#91); AWS identifiers in `benchmarks/batch` replaced by placeholders |
 | 2026-10-12 | T37.2 finished | Suite timed on AWS Batch at tile and frame sizes (`benchmarks/README.md`); nightly CI benchmark left with the T37 done-when, waiting for CI |

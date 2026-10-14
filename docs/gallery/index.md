@@ -114,10 +114,6 @@ not run them again.
 
     Frame F11116: the velocity step across the creeping section, against the LOS projection of 26 mm/yr.
 
--   :material-weather-cloudy: **[Troposphere that follows the terrain](../real_data/troposphere.ipynb)**
-
-    Frame F39362 (Canberra): seasonal displacement-elevation slope per epoch, and what it does to velocity.
-
 -   :material-compare-horizontal: **[Comparing two processing versions](../real_data/versions.ipynb)**
 
     Frame F08622 (New York City): the same 239 acquisitions as product version 1.0 and 1.1, on common epochs and reference.

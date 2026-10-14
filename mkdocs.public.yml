@@ -15,7 +15,6 @@ exclude_docs: |
   real_data/houston.ipynb
   real_data/production_change.ipynb
   real_data/san_andreas.ipynb
-  real_data/troposphere.ipynb
   project_index.md
   api_review.md
   specs.md
