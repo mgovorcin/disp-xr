@@ -1,0 +1,3906 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Xarray tools for OPERA DISP surface displacement products">
+      
+      
+      
+        <link rel="canonical" href="https://mgovorcin.github.io/disp-xr/references/">
+      
+      
+        <link rel="prev" href="../porting/">
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/favicon.svg">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>References - disp-xr</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,700,700i%7CJetBrains+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Inter";--md-code-font:"JetBrains Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+    
+      <link rel="stylesheet" href="../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="amber">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#references-and-practices" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="disp-xr" class="md-header__button md-logo" aria-label="disp-xr" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m11.62 1 5.66 5.67-2.12 2.12-2.12-2.12-1.42 1.42 2.33 2.32-1.16 1.17.45.46a2.5 2.5 0 0 1 2.83.5l-3.53 3.53a2.5 2.5 0 0 1-.5-2.83l-.46-.45-1.17 1.16-2.32-2.33-1.42 1.42 2.12 2.12-2.12 2.12L1 11.62 3.14 9.5l2.12 2.12 1.41-1.41-2.83-2.83c-.78-.78-.78-2.05 0-2.83l.71-.71c.78-.78 2.05-.78 2.83 0l2.83 2.83 1.41-1.41L9.5 3.14zM18 14a4 4 0 0 1-4 4v-2a2 2 0 0 0 2-2zm4 0a8 8 0 0 1-8 8v-2a6 6 0 0 0 6-6z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            disp-xr
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              References
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="amber"  aria-label="Dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="amber"  aria-label="Light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/mgovorcin/disp-xr" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    mgovorcin/disp-xr
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href=".." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../install/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Get started
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../gallery/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Tutorials
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../remote/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Guides
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../api/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  API reference
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../api_policy/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Development
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="disp-xr" class="md-nav__button md-logo" aria-label="disp-xr" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m11.62 1 5.66 5.67-2.12 2.12-2.12-2.12-1.42 1.42 2.33 2.32-1.16 1.17.45.46a2.5 2.5 0 0 1 2.83.5l-3.53 3.53a2.5 2.5 0 0 1-.5-2.83l-.46-.45-1.17 1.16-2.32-2.33-1.42 1.42 2.12 2.12-2.12 2.12L1 11.62 3.14 9.5l2.12 2.12 1.41-1.41-2.83-2.83c-.78-.78-.78-2.05 0-2.83l.71-.71c.78-.78 2.05-.78 2.83 0l2.83 2.83 1.41-1.41L9.5 3.14zM18 14a4 4 0 0 1-4 4v-2a2 2 0 0 0 2-2zm4 0a8 8 0 0 1-8 8v-2a6 6 0 0 0 6-6z"/></svg>
+
+    </a>
+    disp-xr
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/mgovorcin/disp-xr" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    mgovorcin/disp-xr
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Get started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Get started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../install/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Install
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-started/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../concepts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Concepts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../try-it/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Try it on your frame
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../gallery/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tutorials
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3" id="__nav_3_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Tutorials
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_2" id="__nav_3_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Basics
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Basics
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gallery/quicklook/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quick look at a frame
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gallery/command_line/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    The command line, end to end
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gallery/export/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Exporting results
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gallery/chunking/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Chunks for maps and time series
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_3" id="__nav_3_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quality and references
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Quality and references
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gallery/quality_masks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quality layers and masking
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gallery/quality_weights/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quality weights
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gallery/reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Corrections and reference methods
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gallery/geometry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Line-of-sight geometry and plate motion
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_4" id="__nav_3_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Time series
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Time series
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gallery/velocity/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Velocity from a trajectory fit
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gallery/colored_noise/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Velocity with colored-noise uncertainty
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gallery/diagnostics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Checking a velocity fit
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gallery/denoise/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Denoising time series and regular time grids
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_5" id="__nav_3_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Downsampling
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Downsampling
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gallery/downsample/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Downsampling with quality weights
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_6" id="__nav_3_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    GNSS
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    GNSS
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gallery/gnss_compare/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Comparing DISP with GNSS
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gallery/gnss_tie/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tying DISP to GNSS
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_7" id="__nav_3_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Real data
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Real data
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../real_data/versions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Comparing two processing versions of a frame
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_8" id="__nav_3_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cloud and serving
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Cloud and serving
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gallery/virtual_frames/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Virtual frames and versioned stores with Icechunk
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gallery/web_tiles/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Serving results as web map tiles
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gallery/rest_service/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    A REST service for web clients
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gallery/interactive/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Interactive browsing of a full frame
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Guides
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Guides
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../remote/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Finding and reading granules remotely
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../serving/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Serving stores over HTTP
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../velocity-methods/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Choosing a velocity method
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cli/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Command line
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../performance/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Large frames and batch jobs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../product_notes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Product notes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../bowser/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    View in bowser
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../api/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API reference
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5" id="__nav_5_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/open/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Find and open
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/process/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Process
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Spatial models
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/gnss/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    GNSS
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/export/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Export
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/cloud/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Icechunk and virtual stores
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/batch/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Region batch jobs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/serve/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    REST service
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/plot/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Plot
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/accessor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Accessor
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/config/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Settings and chunks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/tutorial/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Synthetic data
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Development
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Development
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_policy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API policy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../porting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Porting from opera-utils
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    References
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    References
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-earth-mover-repositories" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Earth-mover repositories
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1. Earth-mover repositories">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#11-zarr-v3-writing-prd-c1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.1 Zarr v3 writing (PRD C1)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#12-cf-and-geozarr-metadata-multiscales-prd-c4-nfr-metadata" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2 CF and GeoZarr metadata, multiscales (PRD C4, NFR Metadata)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#13-icechunk-prd-c2-opt-in" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.3 Icechunk (PRD C2, opt-in)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#14-virtual-datasets-prd-c3-opt-in" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.4 Virtual datasets (PRD C3, opt-in)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#15-batch-builds-prd-c6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.5 Batch builds (PRD C6)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#16-benchmarks-prd-nfr-benchmarks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.6 Benchmarks (PRD NFR Benchmarks)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#17-configuration-logging-and-serving" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.7 Configuration, logging and serving
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#18-do-not-copy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.8 Do not copy
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-zarr-best-practices" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Zarr best practices
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-xarray-ecosystem" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. xarray ecosystem
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. xarray ecosystem">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-dependencies" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 Dependencies
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-design-references" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 Design references
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#33-checked-and-not-used" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.3 Checked and not used
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-earth-mover-repositories" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Earth-mover repositories
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1. Earth-mover repositories">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#11-zarr-v3-writing-prd-c1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.1 Zarr v3 writing (PRD C1)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#12-cf-and-geozarr-metadata-multiscales-prd-c4-nfr-metadata" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2 CF and GeoZarr metadata, multiscales (PRD C4, NFR Metadata)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#13-icechunk-prd-c2-opt-in" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.3 Icechunk (PRD C2, opt-in)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#14-virtual-datasets-prd-c3-opt-in" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.4 Virtual datasets (PRD C3, opt-in)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#15-batch-builds-prd-c6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.5 Batch builds (PRD C6)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#16-benchmarks-prd-nfr-benchmarks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.6 Benchmarks (PRD NFR Benchmarks)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#17-configuration-logging-and-serving" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.7 Configuration, logging and serving
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#18-do-not-copy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.8 Do not copy
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-zarr-best-practices" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Zarr best practices
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-xarray-ecosystem" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. xarray ecosystem
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. xarray ecosystem">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-dependencies" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 Dependencies
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-design-references" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 Design references
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#33-checked-and-not-used" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.3 Checked and not used
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+                
+
+
+
+  
+
+
+  <nav class="md-path" aria-label="Navigation" >
+    <ol class="md-path__list">
+      
+        
+  
+  
+    <li class="md-path__item">
+      <a href=".." class="md-path__link">
+        
+  <span class="md-ellipsis">
+    Home
+  </span>
+
+      </a>
+    </li>
+  
+
+      
+      
+        
+  
+  
+    
+    
+      <li class="md-path__item">
+        <a href="../api_policy/" class="md-path__link">
+          
+  <span class="md-ellipsis">
+    Development
+  </span>
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ol>
+  </nav>
+
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="references-and-practices">References and practices<a class="headerlink" href="#references-and-practices" title="Permanent link">&para;</a></h1>
+<p>Practices disp-xr follows, where each one comes from, and which task implements it. The PRD (<a href="https://github.com/mgovorcin/disp-xr/blob/main/docs/specs.md">specs.md</a>) states the rules; this file holds the evidence and the detail.</p>
+<p>How the list was built: one reader per repository read the source, docs and examples, and a second reader re-opened every cited file and tried to refute each claim. Only confirmed or corrected practices are listed. Where the reference code has a bug or a gap, it is listed under "Do not copy".</p>
+<p>Adoption levels: <strong>core</strong> = disp-xr does this by default; <strong>opt-in</strong> = behind the <code>cloud</code> extra or a keyword; <strong>example</strong> = shown in the docs gallery only.</p>
+<h2 id="1-earth-mover-repositories">1. Earth-mover repositories<a class="headerlink" href="#1-earth-mover-repositories" title="Permanent link">&para;</a></h2>
+<p>Commits read: icechunk <code>468004a</code> (Sep 29, 2026), icechunk-nasa <code>b23165f</code>, icechunk-multiscales-demo <code>f7d058d</code>, topozarr <code>3445f9b</code>, serverless-datacube-demo <code>c71264c</code>, cloud-tensor-storage-benchmarks <code>9940ee6</code>, workshop-cng-2025-zarr <code>4326e6e</code>, xpublish-tiles <code>7372993</code>.</p>
+<h3 id="11-zarr-v3-writing-prd-c1">1.1 Zarr v3 writing (PRD C1)<a class="headerlink" href="#11-zarr-v3-writing-prd-c1" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Practice</th>
+<th>Level</th>
+<th>Source</th>
+<th>Task</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Size dask chunks by bytes, 50 to 200 MB, not by a fixed shape. For a 300-epoch float32 stack this gives 256 x 256 in space for the whole time axis. The workshop does not use sharding; with sharding this size is the shard, and the read chunk inside it is smaller (section 2)</td>
+<td>Core</td>
+<td>workshop-cng-2025-zarr <code>appendix.ipynb</code></td>
+<td>T6.5, T14.2</td>
+</tr>
+<tr>
+<td>Offer named presets: <code>timeseries</code> (time -1) and <code>maps</code> (time 1); rechunk before <code>apply_ufunc</code></td>
+<td>Core</td>
+<td>workshop-cng-2025-zarr part 2</td>
+<td>T6.5</td>
+</tr>
+<tr>
+<td>Call <code>drop_encoding()</code> before writing, then build the encoding explicitly</td>
+<td>Core</td>
+<td>workshop-cng-2025-zarr; topozarr <code>build_demo_data.py</code></td>
+<td>T14.2</td>
+</tr>
+<tr>
+<td>Shards are a whole multiple of chunks, checked; dask chunks are aligned to the shard shape before writing</td>
+<td>Core</td>
+<td>topozarr <code>chunking.py</code>, <code>coarsen.py</code></td>
+<td>T14.2</td>
+</tr>
+<tr>
+<td>One chunk grid for every variable in a store</td>
+<td>Core</td>
+<td>Corrects topozarr, whose per-dtype chunk sizes misalign mixed-dtype datasets</td>
+<td>T14.2</td>
+</tr>
+<tr>
+<td>Coordinates (<code>x</code>, <code>y</code>, <code>time</code>, <code>reference_time</code>) as single chunks</td>
+<td>Core</td>
+<td>serverless-datacube-demo <code>lib.py</code></td>
+<td>T14.2</td>
+</tr>
+<tr>
+<td>Pass <code>consolidated=False</code> for Icechunk stores</td>
+<td>Opt-in</td>
+<td>workshop-cng-2025-zarr part 1; icechunk docs</td>
+<td>T14.2b</td>
+</tr>
+<tr>
+<td>Test that <code>_FillValue</code> and CRS survive a write</td>
+<td>Core</td>
+<td>icechunk-nasa (fill values had to be fixed by hand for Zarr v3)</td>
+<td>T14.2a</td>
+</tr>
+<tr>
+<td>Accept any zarr <code>Store</code> or a URL; mention obstore as an alternative to s3fs</td>
+<td>Example</td>
+<td>topozarr; cloud-tensor-storage-benchmarks</td>
+<td>T14.2</td>
+</tr>
+</tbody>
+</table>
+<h3 id="12-cf-and-geozarr-metadata-multiscales-prd-c4-nfr-metadata">1.2 CF and GeoZarr metadata, multiscales (PRD C4, NFR Metadata)<a class="headerlink" href="#12-cf-and-geozarr-metadata-multiscales-prd-c4-nfr-metadata" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Practice</th>
+<th>Level</th>
+<th>Source</th>
+<th>Task</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Every dataset carries a <code>spatial_ref</code> coordinate with <code>crs_wkt</code> and <code>GeoTransform</code>, and each variable a <code>grid_mapping</code></td>
+<td>Core</td>
+<td>xpublish-tiles <code>datasets.py</code></td>
+<td>T6.2, T14.2a</td>
+</tr>
+<tr>
+<td>Write GeoZarr <code>spatial:</code> and <code>proj:</code> attributes next to the CF ones, from <code>ds.rio.transform()</code> and <code>ds.rio.crs</code></td>
+<td>Core</td>
+<td>topozarr <code>metadata.py</code>; xpublish-tiles</td>
+<td>T14.2a</td>
+</tr>
+<tr>
+<td><code>decode_coords="all"</code> moves <code>grid_mapping</code> from attrs to encoding; code must check both</td>
+<td>Core</td>
+<td>xpublish-tiles <code>utils.py</code></td>
+<td>T6.2</td>
+</tr>
+<tr>
+<td>Mask and label layers carry <code>flag_values</code> and <code>flag_meanings</code></td>
+<td>Core</td>
+<td>xpublish-tiles</td>
+<td>T14.2a</td>
+</tr>
+<tr>
+<td>Multiscales layout on the common parent, levels named <code>/0</code>, <code>/1</code>, ..., each with <code>derived_from</code>, a resampling method and its own transform</td>
+<td>Core</td>
+<td>topozarr <code>coarsen.py</code>, <code>metadata.py</code>; icechunk-multiscales-demo <code>lib.py</code></td>
+<td>T27.7</td>
+</tr>
+<tr>
+<td>Levels as sibling groups, so each keeps <code>y</code>/<code>x</code> and a DataTree opens without alignment errors</td>
+<td>Core</td>
+<td>icechunk-multiscales-demo <code>config.py</code></td>
+<td>T27.7</td>
+</tr>
+<tr>
+<td>Each level is self-contained: full CRS and CF attributes</td>
+<td>Core</td>
+<td>Corrects icechunk-multiscales-demo, which drops the CRS on overview levels</td>
+<td>T27.7</td>
+</tr>
+<tr>
+<td>Read levels from the <code>layout</code> metadata, never from group names</td>
+<td>Core</td>
+<td>icechunk-multiscales-demo</td>
+<td>T27.7</td>
+</tr>
+<tr>
+<td>Every level holds the same variables (readers switch levels by zoom for one variable)</td>
+<td>Core</td>
+<td>bowser <code>state.py</code> (<code>dataset_for_tile_zoom</code>)</td>
+<td>T27.7, T27.9</td>
+</tr>
+<tr>
+<td>bowser compatibility: root <code>multiscales.layout[].asset</code> finest first, CRS from <code>proj:code</code>, <code>proj:wkt2</code> or <code>spatial_ref.crs_wkt</code>, pixel-center <code>x</code>/<code>y</code> with y descending, a correct <code>GeoTransform</code> per level, NaN as missing, no reliance on consolidated metadata, factor-2 display levels</td>
+<td>Core</td>
+<td>bowser <code>geozarr.py</code>, <code>state.py</code>, <code>main.py</code>, <code>_tifs_to_geozarr.py</code> (branch <code>ops</code>, <code>0a61c6a</code>)</td>
+<td>T27.9</td>
+</tr>
+<tr>
+<td>Keep the convention ids, versions and schema URLs in one module, record the version in provenance, and test conformance. The conventions are still at pilot maturity (section 2), so the writer must be easy to migrate</td>
+<td>Core</td>
+<td>topozarr <code>test_specs.py</code></td>
+<td>T27.7</td>
+</tr>
+<tr>
+<td>Small levels (a frame at 1 km is about 250 x 300 pixels) use one spatial chunk over all of time</td>
+<td>Core</td>
+<td>icechunk-multiscales-demo</td>
+<td>T27.7</td>
+</tr>
+<tr>
+<td>Keep the 30 m level virtual and materialize only the overviews</td>
+<td>Opt-in</td>
+<td>topozarr <code>build_demo_data.py</code></td>
+<td>T27.7, T6.5b</td>
+</tr>
+</tbody>
+</table>
+<p>Downsampling rules that came out of this reading:</p>
+<ul>
+<li>Odd integer factors (33, 67, 333) keep cell centers on 30 m pixel centers. The demos use factor 2 only.</li>
+<li>A weighted median is not composable; compute each level from 30 m. A mean is composable only with stored <code>sum(w)</code>, and with NaNs a mean of block means is not the mean of the pixels.</li>
+<li>Mask and label layers need mode or "any", not a mean.</li>
+<li>Build overviews after chaining and re-referencing.</li>
+</ul>
+<h3 id="13-icechunk-prd-c2-opt-in">1.3 Icechunk (PRD C2, opt-in)<a class="headerlink" href="#13-icechunk-prd-c2-opt-in" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Practice</th>
+<th>Level</th>
+<th>Source</th>
+<th>Task</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Write with <code>icechunk.xarray.to_icechunk</code>; <code>ds.to_zarr</code> on a session store loses writes under dask.distributed or multiprocessing</td>
+<td>Opt-in</td>
+<td>icechunk <code>guides/xarray.md</code></td>
+<td>T14.2b</td>
+</tr>
+<tr>
+<td>One append commit per ministack along <code>time</code>; a new writable session after each commit; check the grid before appending</td>
+<td>Opt-in</td>
+<td>icechunk <code>guides/xarray.md</code></td>
+<td>T14.2b</td>
+</tr>
+<tr>
+<td>Provenance in commit metadata; set default commit metadata before opening the session. Keep reference dates as a coordinate, since commit metadata is invisible to xarray</td>
+<td>Opt-in</td>
+<td>icechunk <code>session.py</code>, <code>repository.py</code></td>
+<td>T14.2b</td>
+</tr>
+<tr>
+<td>Tags are immutable named versions; read with a read-only session by tag or snapshot id. <code>as_of</code> works only together with a branch</td>
+<td>Opt-in</td>
+<td>icechunk <code>understanding/version-control.md</code></td>
+<td>T14.2b</td>
+</tr>
+<tr>
+<td>Never amend a commit whose snapshot id is already in provenance; amending changes the id</td>
+<td>Opt-in</td>
+<td>icechunk <code>version-control.md</code></td>
+<td>T14.2b</td>
+</tr>
+<tr>
+<td>No snapshot expiry or garbage collection from library code; tag Cal/Val runs instead</td>
+<td>Opt-in</td>
+<td>icechunk <code>expiration.md</code>; icechunk-nasa</td>
+<td>T14.2b</td>
+</tr>
+<tr>
+<td>Distributed writes: initialize metadata, fork the session, each worker writes a region and returns its session, merge, one commit</td>
+<td>Opt-in</td>
+<td>icechunk <code>understanding/parallel.md</code>, <code>guides/dask.md</code></td>
+<td>T37.4</td>
+</tr>
+<tr>
+<td>Rebase resolves chunk conflicts only. Two jobs that both append along time change the array shape and cannot be rebased</td>
+<td>Opt-in</td>
+<td>icechunk <code>version-control.md</code></td>
+<td>T37.4</td>
+</tr>
+<tr>
+<td>Commit before a distributed read</td>
+<td>Opt-in</td>
+<td>icechunk <code>guides/dask.md</code></td>
+<td>T37.4</td>
+</tr>
+<tr>
+<td><code>Repository.open_or_create</code> for idempotent jobs; catch storage errors and conflicts separately</td>
+<td>Opt-in</td>
+<td>icechunk <code>repository.py</code>, <code>guides/error-handling.md</code></td>
+<td>T37.4</td>
+</tr>
+<tr>
+<td>Branches for comparing variants (Kalman versus LOWESS, weight settings)</td>
+<td>Example</td>
+<td>icechunk <code>version-control.md</code></td>
+<td>T16</td>
+</tr>
+</tbody>
+</table>
+<h3 id="14-virtual-datasets-prd-c3-opt-in">1.4 Virtual datasets (PRD C3, opt-in)<a class="headerlink" href="#14-virtual-datasets-prd-c3-opt-in" title="Permanent link">&para;</a></h3>
+<p>Read from VirtualiZarr <code>b45b7d9</code> and icechunk-nasa, and checked against real DISP-S1 granules.</p>
+<table>
+<thead>
+<tr>
+<th>Practice</th>
+<th>Level</th>
+<th>Source</th>
+<th>Task</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Load <code>time</code>, <code>reference_time</code>, <code>x</code>, <code>y</code> and <code>spatial_ref</code>; keep only the data layers virtual</td>
+<td>Opt-in</td>
+<td>VirtualiZarr <code>usage.md</code>; icechunk-nasa <code>write_virtual.ipynb</code></td>
+<td>T6.5b</td>
+</tr>
+<tr>
+<td>Concatenate with <code>data_vars="all"</code>, <code>coords="minimal"</code>, <code>compat="override"</code>, <code>join="exact"</code>. The DISP layers have no time dimension in the file, so <code>data_vars="minimal"</code> would keep only the first granule. Never forward the <code>open_virtual_mfdataset</code> defaults</td>
+<td>Core</td>
+<td>VirtualiZarr <code>xarray.py</code>; granule check</td>
+<td>T6.1, T6.5b</td>
+</tr>
+<tr>
+<td>Check dtype, chunk shape and codecs per layer before combining, and split a frame by production version</td>
+<td>Core</td>
+<td>icechunk-nasa design notes; VirtualiZarr <code>writers/icechunk.py</code></td>
+<td>T5.8</td>
+</tr>
+<tr>
+<td>Drop the <code>/identification</code> and <code>/metadata</code> string datasets; their lengths differ per file</td>
+<td>Core</td>
+<td>Granule check (<code>dolphin_workflow_config</code> is <code>S64571</code> in one production and <code>S78086</code> in another)</td>
+<td>T6.5b</td>
+</tr>
+<tr>
+<td>Open <code>/corrections</code> as a separate node; <code>drop_variables</code> is not forwarded into subgroups</td>
+<td>Opt-in</td>
+<td>VirtualiZarr <code>hdf.py</code></td>
+<td>T6.5b</td>
+</tr>
+<tr>
+<td>The HDF parser holds the HDF5 lock, so use processes or batch jobs, not threads</td>
+<td>Opt-in</td>
+<td>VirtualiZarr <code>scaling.md</code></td>
+<td>T6.5b</td>
+</tr>
+<tr>
+<td>Register a virtual chunk container for the source bucket; credentials for it are passed at open and are not saved with the repo</td>
+<td>Opt-in</td>
+<td>icechunk <code>virtual.md</code>; VirtualiZarr examples</td>
+<td>T6.5b</td>
+</tr>
+<tr>
+<td>Validate after every build: random pixel series and one full epoch against h5py reads</td>
+<td>Core</td>
+<td>icechunk-nasa design notes</td>
+<td>T6.5b</td>
+</tr>
+<tr>
+<td>Treat the virtual store as an ingest and index layer; write a native <code>timeseries</code> store for per-pixel work</td>
+<td>Core</td>
+<td>icechunk-nasa; VirtualiZarr caveats</td>
+<td>T6.5b, T14.2</td>
+</tr>
+<tr>
+<td>Replace a reprocessed granule with a region write, not an append</td>
+<td>Opt-in</td>
+<td>VirtualiZarr <code>accessor.py</code></td>
+<td>T6.5b</td>
+</tr>
+</tbody>
+</table>
+<p>Facts about DISP-S1 granules found during this reading (to confirm in T2.2):</p>
+<ul>
+<li>Data layers are chunked 256 x 256 with gzip level 4 and shuffle, which the HDF parser supports.</li>
+<li>One frame has about 1,000 to 1,150 chunks per layer and 14 2D layers, so about 15,000 references per granule and a few million per frame.</li>
+<li><code>time</code> units were per-file in the 2025 production and fixed (<code>seconds since 2010-01-01</code>) in the 2026 production.</li>
+<li>Displacement was float32 in a 2025 production granule and float64 in a 2026 one.</li>
+</ul>
+<h3 id="15-batch-builds-prd-c6">1.5 Batch builds (PRD C6)<a class="headerlink" href="#15-batch-builds-prd-c6" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Practice</th>
+<th>Level</th>
+<th>Source</th>
+<th>Task</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Initialize the store once from a template (<code>to_zarr(compute=False)</code>), then fill regions</td>
+<td>Core</td>
+<td>serverless-datacube-demo <code>lib.py</code>; icechunk-multiscales-demo</td>
+<td>T37.4</td>
+</tr>
+<tr>
+<td>Plan regions from the output encoding, aligned to chunk or shard boundaries. With sharding, the shard is the unit of safe parallel writing</td>
+<td>Core</td>
+<td>serverless-datacube-demo <code>lib.py</code></td>
+<td>T37.4</td>
+</tr>
+<tr>
+<td>A job is a small serializable record (frame, region, granules, parameters), so it maps to an AWS Batch array index</td>
+<td>Core</td>
+<td>serverless-datacube-demo <code>lib.py</code></td>
+<td>T37.4</td>
+</tr>
+<tr>
+<td>Skip regions that are entirely outside the valid footprint</td>
+<td>Core</td>
+<td>serverless-datacube-demo (land-tile filter)</td>
+<td>T37.4</td>
+</tr>
+<tr>
+<td>Each job returns a result record (region, timings, bytes, success, error) with its job identity; the records are the resubmission manifest</td>
+<td>Core</td>
+<td>Corrects serverless-datacube-demo, whose log has no job identity</td>
+<td>T37.4</td>
+</tr>
+<tr>
+<td>Resolve inputs on the coordinator, so a rerun sees the same granules</td>
+<td>Core</td>
+<td>Corrects serverless-datacube-demo, where each worker searches</td>
+<td>T37.4</td>
+</tr>
+<tr>
+<td>A <code>--limit</code> smoke run and a dry plan before a full run</td>
+<td>Core</td>
+<td>serverless-datacube-demo <code>main.py</code></td>
+<td>T37.4</td>
+</tr>
+<tr>
+<td>Stop a run after repeated all-failed batches or a high failure rate</td>
+<td>Core</td>
+<td>icechunk-multiscales-demo <code>coiled_app.py</code></td>
+<td>T37.4</td>
+</tr>
+<tr>
+<td>Partition in space only when the output has the whole time axis per chunk; chaining is sequential in time</td>
+<td>Core</td>
+<td>Follows from T7</td>
+<td>T37.4</td>
+</tr>
+</tbody>
+</table>
+<h3 id="16-benchmarks-prd-nfr-benchmarks">1.6 Benchmarks (PRD NFR Benchmarks)<a class="headerlink" href="#16-benchmarks-prd-nfr-benchmarks" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Practice</th>
+<th>Level</th>
+<th>Source</th>
+<th>Task</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Sweep the chunk size in bytes, with the codec held fixed</td>
+<td>Core</td>
+<td>cloud-tensor-storage-benchmarks notebook</td>
+<td>T37.3b</td>
+</tr>
+<tr>
+<td>At least 5 trials, interleaved; report median and spread; keep raw per-trial rows</td>
+<td>Core</td>
+<td>cloud-tensor-storage-benchmarks</td>
+<td>T37.3b</td>
+</tr>
+<tr>
+<td>Record library versions, instance type and region with every row</td>
+<td>Core</td>
+<td>Extends the repo, which pins almost nothing</td>
+<td>T37.2</td>
+</tr>
+<tr>
+<td>Measure the DISP access patterns: open, one pixel over all epochs, one epoch map, a window over all epochs</td>
+<td>Core</td>
+<td>icechunk-nasa design notes; the benchmark repo measures only whole-array reads</td>
+<td>T37.3b</td>
+</tr>
+<tr>
+<td>Set zarr <code>async.concurrency</code> for S3 and document it</td>
+<td>Core</td>
+<td>icechunk-nasa <code>read_virtual.ipynb</code>; icechunk <code>performance.md</code></td>
+<td>T37.3a</td>
+</tr>
+</tbody>
+</table>
+<h3 id="17-configuration-logging-and-serving">1.7 Configuration, logging and serving<a class="headerlink" href="#17-configuration-logging-and-serving" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Practice</th>
+<th>Level</th>
+<th>Source</th>
+<th>Task</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>One settings object with environment overrides</td>
+<td>Core</td>
+<td>xpublish-tiles <code>config.py</code></td>
+<td>T4.9</td>
+</tr>
+<tr>
+<td>Estimate bytes before loading and raise an error that names the remedy</td>
+<td>Core</td>
+<td>xpublish-tiles <code>pipeline.py</code></td>
+<td>T37.3a</td>
+</tr>
+<tr>
+<td>Document thread settings for compiled kernels and warm them up before timing</td>
+<td>Core</td>
+<td>xpublish-tiles README</td>
+<td>T37.2, T37.3a</td>
+</tr>
+<tr>
+<td>A registry of named synthetic datasets for tests</td>
+<td>Core</td>
+<td>xpublish-tiles tests</td>
+<td>T2.5b</td>
+</tr>
+<tr>
+<td>Serve time-independent 2D layers as tiles from the pyramid; pick levels by pixel size</td>
+<td>Example</td>
+<td>xpublish-tiles</td>
+<td>T37.5</td>
+</tr>
+</tbody>
+</table>
+<h3 id="18-do-not-copy">1.8 Do not copy<a class="headerlink" href="#18-do-not-copy" title="Permanent link">&para;</a></h3>
+<p>Bugs and gaps found in the reference code:</p>
+<ul>
+<li>bowser (<code>ops</code>, <code>0a61c6a</code>) writes <code>proj:</code>/<code>spatial:</code> attributes only on level 0 and the root, never reads <code>spatial:*</code>, <code>derived_from</code> or <code>transform</code>, chooses the level by comparing the pixel size in native CRS units with Web Mercator meters (so a geographic CRS always gets the coarsest level), keeps <code>spatial_ref</code> as a data variable, and has no Zarr tests. disp-xr writes every level self-contained, so its stores are readable by bowser and by strict GeoZarr readers. Verified on bowser's own server: none of disp-xr's extra metadata changes what bowser reads or shows, but dataset attributes must be JSON objects, not strings (see <code>docs/bowser.md</code>).</li>
+<li>icechunk-multiscales-demo sets overview coordinates to the first pixel of each block while its transform implies block centers, and its array shapes (ceil) disagree with its coarsening (floor) when a size is not divisible.</li>
+<li>topozarr coarsens by 2 only, with unweighted reductions and <code>boundary="trim"</code>.</li>
+<li>serverless-datacube-demo commits whatever sessions came back, even after failed jobs, and uses the pre-1.0 Icechunk distributed API.</li>
+<li>cloud-tensor-storage-benchmarks times Icechunk writes without the commit, leaves one backend uncompressed while others use zstd, and never checks the data it reads.</li>
+<li>workshop-cng-2025-zarr and icechunk-nasa pin pre-1.0 Icechunk and VirtualiZarr 1.x APIs; one workshop cell appends the wrong variable.</li>
+</ul>
+<h2 id="2-zarr-best-practices">2. Zarr best practices<a class="headerlink" href="#2-zarr-best-practices" title="Permanent link">&para;</a></h2>
+<p>Source: <a href="https://zarr.dev/">zarr.dev</a> and the documents it links: the <a href="https://zarr.readthedocs.io/en/stable/">zarr-python user guide</a>, the <a href="https://zarr-specs.readthedocs.io/en/latest/v3/core/index.html">Zarr v3 specification</a>, the <a href="https://zarr.dev/zeps/">ZEPs</a> and the <a href="https://github.com/zarr-conventions">zarr-conventions</a> repositories. Read on Oct 1, 2026 by one reader; these rows were not independently re-checked.</p>
+<table>
+<thead>
+<tr>
+<th>Practice</th>
+<th>Source</th>
+<th>Task</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A chunk is the unit of reading and should be at least 1 MB uncompressed. Keep the dimension you read along whole and split the others. Float32 sizes: (300, 64, 64) is 4.9 MB, (300, 128, 128) is 19.7 MB, (1, 1024, 1024) is 4 MB</td>
+<td><a href="https://zarr.readthedocs.io/en/stable/user-guide/performance/">performance guide</a></td>
+<td>T14.2</td>
+</tr>
+<tr>
+<td>A shard is the unit of writing and must be written whole. Use sharding when small chunks would create too many objects. A 30 m frame layer at 300 epochs is about 84 GB, so shards of a few hundred MB keep the object count in the hundreds</td>
+<td><a href="https://zarr.readthedocs.io/en/stable/user-guide/performance/">performance guide</a>, <a href="https://zarr-specs.readthedocs.io/en/latest/v3/codecs/sharding-indexed/index.html">sharding codec</a></td>
+<td>T14.2</td>
+</tr>
+<tr>
+<td>Make one dask chunk equal one shard. The worker memory budget must hold one uncompressed shard plus its encoded copy</td>
+<td><a href="https://zarr.readthedocs.io/en/stable/user-guide/arrays/">arrays guide</a></td>
+<td>T14.2, T37.1</td>
+</tr>
+<tr>
+<td>In xarray, set <code>encoding[var] = {chunks, shards, compressors}</code> and rechunk to shard boundaries; never pass <code>safe_chunks=False</code></td>
+<td><a href="https://docs.xarray.dev/en/latest/user-guide/io.html">xarray I/O guide</a></td>
+<td>T14.2</td>
+</tr>
+<tr>
+<td>The whole-time-axis <code>timeseries</code> preset cannot be appended to: an append rewrites every shard. Append stores use a fixed time chunk (one ministack) and time shards that are whole multiples of it. <code>timeseries</code> stores are frozen snapshots</td>
+<td>Follows from the sharding and append docs</td>
+<td>T14.2, T14.2b</td>
+</tr>
+<tr>
+<td>Default compressor is Zstandard. Benchmark plain zstd against Blosc (zstd with shuffle) for float32 with NaN, and pick from the result (done: Blosc with bit shuffle for float layers, zstd for quality layers in time-spanning chunks)</td>
+<td><a href="https://zarr.readthedocs.io/en/stable/user-guide/arrays/">arrays guide</a>, <a href="https://zarr.readthedocs.io/en/stable/api/zarr/codecs/">codecs API</a></td>
+<td>T37.3b</td>
+</tr>
+<tr>
+<td>Use only spec-defined codecs from <code>zarr.codecs</code> by default, so GDAL and other readers work. Lossy codecs are opt-in</td>
+<td><a href="https://zarr.readthedocs.io/en/stable/user-guide/v3_migration/">v3 migration</a></td>
+<td>T14.2</td>
+</tr>
+<tr>
+<td><code>fill_value</code> is required in v3. NaN for float layers means all-NaN chunks (water, off-frame) are not stored. Set the nodata value of integer masks explicitly; the default is 0</td>
+<td><a href="https://zarr-specs.readthedocs.io/en/latest/v3/data-types/index.html">data types</a></td>
+<td>T14.2a</td>
+</tr>
+<tr>
+<td>xarray keeps the CF <code>_FillValue</code> separate from the Zarr <code>fill_value</code> in v3. Round-trip tests check both, and that integer masks do not come back as float</td>
+<td><a href="https://docs.xarray.dev/en/latest/user-guide/io.html">xarray I/O guide</a></td>
+<td>T14.2a</td>
+</tr>
+<tr>
+<td>Consolidated metadata is experimental in v3 and not in the spec. Write it for plain stores, re-consolidate after an append, and never require it on read</td>
+<td><a href="https://zarr.readthedocs.io/en/stable/user-guide/consolidated_metadata/">consolidated metadata</a></td>
+<td>T14.2</td>
+</tr>
+<tr>
+<td>Arrays written with zarr-python directly need <code>dimension_names</code>, or xarray cannot open them</td>
+<td><a href="https://docs.xarray.dev/en/latest/internals/zarr-encoding-spec.html">xarray Zarr encoding</a></td>
+<td>T27.7</td>
+</tr>
+<tr>
+<td><code>async.concurrency</code> defaults to 10 and multiplies with dask threads. Set it through <code>zarr.config</code> or environment variables per job, not in code</td>
+<td><a href="https://zarr.readthedocs.io/en/stable/user-guide/config/">config guide</a></td>
+<td>T37.3a</td>
+</tr>
+<tr>
+<td>Parallel writers are safe only when they write different chunks (shards, when sharded)</td>
+<td><a href="https://zarr.readthedocs.io/en/stable/user-guide/performance/">performance guide</a></td>
+<td>T37.4</td>
+</tr>
+<tr>
+<td><code>FsspecStore</code> is the documented route for object storage; the obstore-backed store is marked experimental</td>
+<td><a href="https://zarr.readthedocs.io/en/stable/user-guide/storage/">storage guide</a></td>
+<td>T14.2, T37.3b</td>
+</tr>
+<tr>
+<td>The multiscales, <code>spatial:</code> and <code>proj:</code> conventions are at version 0.1, pilot maturity, with breaking changes expected. Arbitrary scale factors (33) are allowed. GeoZarr is a suite of these conventions, not yet a finished spec</td>
+<td><a href="https://github.com/zarr-conventions/multiscales">multiscales</a>, <a href="https://github.com/zarr-conventions/spatial">spatial</a>, <a href="https://github.com/zarr-conventions/proj">proj</a>, <a href="https://github.com/zarr-developers/geozarr-spec">geozarr-spec</a></td>
+<td>T27.7</td>
+</tr>
+<tr>
+<td>Do not rely on variable (rectilinear) chunking; that ZEP is a draft and xarray rejects it</td>
+<td><a href="https://zarr.dev/zeps/">ZEPs</a></td>
+<td>T14.2</td>
+</tr>
+</tbody>
+</table>
+<h2 id="3-xarray-ecosystem">3. xarray ecosystem<a class="headerlink" href="#3-xarray-ecosystem" title="Permanent link">&para;</a></h2>
+<p>Source: the <a href="https://docs.xarray.dev/en/latest/user-guide/ecosystem.html">xarray ecosystem page</a>, every project in every section, plus related projects that are not listed there. Maintenance status was read from GitHub on Oct 1, 2026. Function names for sarxarray, stmtools, xvec, xeofs, flox and xarray-regrid were read from source; the rest comes from project docs. One reader; not independently re-checked.</p>
+<p>Nothing InSAR-specific can be a dependency. The two SAR projects work on SLC or point-scatterer data in radar coordinates.</p>
+<h3 id="31-dependencies">3.1 Dependencies<a class="headerlink" href="#31-dependencies" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Project</th>
+<th>Status</th>
+<th>What disp-xr uses</th>
+<th>Level</th>
+<th>Task</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://github.com/corteva/rioxarray">rioxarray</a></td>
+<td>0.23.0, Jul 2026</td>
+<td>CRS and transform. Version 0.23 also writes the Zarr <code>spatial:</code> and <code>proj:</code> conventions; confirm, then let it write them</td>
+<td>Core</td>
+<td>T6.2, T14.2a</td>
+</tr>
+<tr>
+<td><a href="https://github.com/xarray-contrib/flox">flox</a></td>
+<td>0.11.2, Feb 2026</td>
+<td>Grouped reductions (<code>nanmedian</code>, <code>mode</code>, binning). No weighted reductions: a weighted mean is two sums, a weighted median needs disp-xr's own kernel</td>
+<td>Core</td>
+<td>T10.3, T23.2, T27.2</td>
+</tr>
+<tr>
+<td><a href="https://github.com/numbagg/numbagg">numbagg</a></td>
+<td>0.9.6, Sep 2026</td>
+<td>Fast NaN-aware reductions and moving windows, picked up by xarray when installed</td>
+<td>Recommended, not imported</td>
+<td>T1.5</td>
+</tr>
+<tr>
+<td><a href="https://github.com/xarray-contrib/xvec">xvec</a></td>
+<td>0.5.2, Nov 2025; API may change</td>
+<td>GNSS stations as a vector data cube (station geometry by time), point extraction, GeoDataFrame export</td>
+<td><code>gnss</code> extra</td>
+<td>T25.1</td>
+</tr>
+<tr>
+<td><a href="https://github.com/xarray-contrib/xeofs">xeofs</a></td>
+<td>3.0.4, Oct 2024; quiet since Jan 2025</td>
+<td>EOF, rotated and complex EOF for the gallery. Maintenance risk: core code never imports it, and a CI job reports breakage</td>
+<td><code>eof</code> extra</td>
+<td>T32.6d</td>
+</tr>
+<tr>
+<td><a href="https://github.com/opendatacube/odc-geo">odc-geo</a></td>
+<td>0.5.3, Jul 2026</td>
+<td>Lazy, dask-backed reprojection to a common grid. Evaluate for the mosaic before relying on <code>rio.reproject_match</code>, which loads data</td>
+<td>Optional, to evaluate</td>
+<td>T36.1</td>
+</tr>
+<tr>
+<td><a href="https://github.com/xarray-contrib/cf-xarray">cf_xarray</a></td>
+<td>0.11.3, Jun 2026</td>
+<td>Tests assert that outputs decode as CF</td>
+<td><code>test</code> extra</td>
+<td>T14.5</td>
+</tr>
+<tr>
+<td><a href="https://github.com/holoviz/hvplot">hvplot</a> with datashader</td>
+<td>Active</td>
+<td>Interactive full-frame browsing in one gallery page</td>
+<td><code>interactive</code> extra</td>
+<td>T17.4</td>
+</tr>
+<tr>
+<td><a href="https://github.com/xpublish-community/xpublish">xpublish</a></td>
+<td>Active</td>
+<td>Tile serving in the gallery (with xpublish-tiles)</td>
+<td>Docs only</td>
+<td>T37.5</td>
+</tr>
+</tbody>
+</table>
+<h3 id="32-design-references">3.2 Design references<a class="headerlink" href="#32-design-references" title="Permanent link">&para;</a></h3>
+<p>Nothing from these is imported; disp-xr copies an idea.</p>
+<table>
+<thead>
+<tr>
+<th>Project</th>
+<th>Idea copied</th>
+<th>Task</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://github.com/TUDelftGeodesy/sarxarray">SARXarray</a> (1.4.0, Aug 2026)</td>
+<td>Accessor layout on an SAR stack, and <code>multi_look</code> by <code>coarsen</code> with chosen statistics</td>
+<td>T9.2, T27.1</td>
+</tr>
+<tr>
+<td><a href="https://h3geo.org">H3</a>, matplotlib <code>hexbin</code>, PostGIS <code>ST_HexagonGrid</code></td>
+<td>Hexagonal binning: a global hierarchical hexagon grid (H3), and the planar hexagon lattice that <code>hexbin</code> and <code>ST_HexagonGrid</code> build (Carr et al. 1987). They count or average; disp-xr adds quality weights and per-cell sigmas, lazily on the stack. Why hexagons: Birch et al. 2007; global grids: Sahr et al. 2003</td>
+<td>T27.8</td>
+</tr>
+<tr>
+<td><a href="https://github.com/TUDelftGeodesy/stmtools">stmtools</a> (0.1.4)</td>
+<td>Point data as a (space, time) xarray Dataset with spatial ordering of points for chunk locality; enrichment from polygons and rasters</td>
+<td>T27.5, T28.4, T25.1</td>
+</tr>
+<tr>
+<td><a href="https://github.com/GlacioHack/xdem">xDEM</a> (0.2.3, Mar 2026)</td>
+<td>Uncertainty of a spatial average with correlated errors: variogram-based effective sample count (Hugonnet et al. 2022, Rolstad et al. 2009). The simple n_eff = (Σw)² / Σw² ignores spatial correlation and gives cell sigmas that are too small at 1 to 10 km</td>
+<td>T27.3b, T32.1</td>
+</tr>
+<tr>
+<td><a href="https://github.com/Ouranosinc/xclim">xclim</a> (0.62.0)</td>
+<td>A plain compute function wrapped by one decorator that checks units, sets CF attributes and appends history</td>
+<td>T9.3</td>
+</tr>
+<tr>
+<td><a href="https://github.com/xarray-contrib/xarray-regrid">xarray-regrid</a> (0.4.2)</td>
+<td><code>nan_threshold</code> semantics for the valid-fraction cutoff of a cell</td>
+<td>T27.3</td>
+</tr>
+<tr>
+<td><a href="https://github.com/xarray-contrib/xarray-schema">xarray-schema</a></td>
+<td>Component schemas (dims, dtype, chunks) in <code>validate_disp</code>, including a chunk check</td>
+<td>T9.5</td>
+</tr>
+<tr>
+<td><a href="https://github.com/xarray-contrib/xproj">xproj</a>, <a href="https://github.com/xarray-contrib/rasterix">rasterix</a></td>
+<td>CRS-aware alignment and a raster index built from the affine transform. Too early to depend on; keep grid and CRS access behind one helper so they can be swapped in, and fail on a CRS mismatch (adjacent frames can be in different UTM zones)</td>
+<td>T9.5, T36.1</td>
+</tr>
+<tr>
+<td><a href="https://github.com/xgcm/xrft">xrft</a> (1.0.2)</td>
+<td>Spectrum scaling and window-correction conventions. Not usable directly: it needs even spacing and no NaNs</td>
+<td>T22.1, T32.4</td>
+</tr>
+<tr>
+<td><a href="https://github.com/xarray-contrib/xskillscore">xskillscore</a>, <a href="https://github.com/arviz-devs/xarray-einstats">xarray-einstats</a></td>
+<td>Function signature <code>(a, b, dim, weights, skipna)</code>; used as test oracles for RMSE, MAD, skewness and kurtosis</td>
+<td>T32.1, T32.6b</td>
+</tr>
+<tr>
+<td><a href="https://github.com/xarray-contrib/xarray-spatial">xarray-spatial</a> (0.10.18)</td>
+<td>IDW, kriging and spline used as cross-checks for disp-xr's own estimators</td>
+<td>T19.6, T24.4</td>
+</tr>
+<tr>
+<td><a href="https://github.com/carbonplan/ndpyramid">ndpyramid</a></td>
+<td>Pyramid generation; disp-xr writes its own multiscales metadata</td>
+<td>T27.7</td>
+</tr>
+</tbody>
+</table>
+<h3 id="33-checked-and-not-used">3.3 Checked and not used<a class="headerlink" href="#33-checked-and-not-used" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Units:</strong> pint-xarray and MetPy's unit handling conflict with the rule that units live in attributes.</li>
+<li><strong>Regridding:</strong> xESMF (ESMF dependency, lat/lon focus), pyinterp.</li>
+<li><strong>Covered already:</strong> geocube, regionmask, salem, GeoWombat, Open Data Cube core (rioxarray and flox cover the need).</li>
+<li><strong>Fitting:</strong> xarray-lmfit (per-pixel lmfit is far too slow for 70 million pixels), eofs (no rotation), X-regression (dead).</li>
+<li><strong>Catalogs:</strong> stackstac, odc-stac, intake-xarray, xstac. DISP discovery goes through CMR.</li>
+<li><strong>L1 SAR readers:</strong> xarray-sentinel, xsar, pyroSAR.</li>
+<li><strong>Superseded:</strong> kerchunk formats (VirtualiZarr recommends Icechunk).</li>
+<li><strong>After 1.0:</strong> TOAD (abrupt-shift detection on (time, y, x) cubes), a candidate when automatic break detection comes into scope.</li>
+<li><strong>Other domains:</strong> the climate, ocean, radar-meteorology, machine-learning and non-Python projects on the page.</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../porting/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Porting from opera-utils">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Porting from opera-utils
+              </div>
+            </div>
+          </a>
+        
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["content.code.annotate", "content.code.copy", "content.tabs.link", "navigation.footer", "navigation.indexes", "navigation.path", "navigation.sections", "navigation.tabs", "navigation.tabs.sticky", "navigation.top", "search.highlight", "search.suggest", "toc.follow"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>
