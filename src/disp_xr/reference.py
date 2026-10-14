@@ -71,12 +71,78 @@ def _check_point(da: xr.DataArray, row: int, col: int) -> tuple[int, int]:
     return row, col
 
 
-def _spatial_median(da: xr.DataArray, good: Optional[xr.DataArray]) -> xr.DataArray:
+def _nanmedian_maps(
+    values: np.ndarray, good: Optional[np.ndarray] = None
+) -> np.ndarray:
+    """Return the median of the finite (and good) pixels of each ``(..., y, x)`` map.
+
+    Same values as ``np.nanmedian`` over the last two axes, in a fraction of
+    its memory: it peaked at about 11 times a map's bytes (3 GB for one
+    full-frame epoch), here the kept pixels are copied once and partitioned
+    in place.
+    """
+    lead = values.shape[:-2]
+    flat = values.reshape(-1, values.shape[-2] * values.shape[-1])
+    keep_good = None
     if good is not None:
-        da = da.where(good)
+        keep_good = np.broadcast_to(good, values.shape).reshape(flat.shape)
+    dtype = values.dtype if values.dtype.kind == "f" else np.dtype(np.float64)
+    out = np.full(flat.shape[0], np.nan, dtype=dtype)
+    for i, row in enumerate(flat):
+        keep = np.isfinite(row)
+        if keep_good is not None:
+            keep &= keep_good[i].astype(bool)
+        kept = row[keep]
+        n = kept.size
+        if n == 0:
+            continue
+        k = n // 2
+        if n % 2:
+            kept.partition(k)
+            out[i] = kept[k]
+        else:
+            kept.partition([k - 1, k])
+            out[i] = np.mean(kept[k - 1 : k + 1])
+    return out.reshape(lead)
+
+
+def _spatial_median(da: xr.DataArray, good: Optional[xr.DataArray]) -> xr.DataArray:
     # Not stack(pixels=("y", "x")): its pandas MultiIndex of every pixel
     # cost 10 GB and 3 minutes on a full frame before any data was read.
-    return da.median(("y", "x"), skipna=True)
+    args = [da]
+    if good is not None:
+        # Without non-index coordinates: chunked ones would be compared
+        # (computed) when the mask is aligned with the data.
+        args.append(good.reset_coords(drop=True))
+    if da.chunks is not None:
+        args = [a.chunk({"y": -1, "x": -1}) for a in args]
+    return xr.apply_ufunc(
+        _nanmedian_maps,
+        *args,
+        input_core_dims=[["y", "x"]] * len(args),
+        dask="parallelized",
+        output_dtypes=[da.dtype if da.dtype.kind == "f" else np.float64],
+    )
+
+
+def _subtract_epoch_median(
+    da: xr.DataArray, good: Optional[xr.DataArray]
+) -> xr.DataArray:
+    """Return ``da`` minus its per-epoch spatial median, one epoch at a time.
+
+    The median needs each epoch as one map chunk. Subtracting it in that
+    same chunk, then splitting back to the input chunks, lets each epoch be
+    freed once done instead of keeping its blocks until the median is known.
+    Both rechunks only concatenate or split, so they use dask's in-memory
+    method rather than the distributed shuffle.
+    """
+    import dask
+
+    chunks = dict(zip(da.dims, da.chunks))  # type: ignore[arg-type]
+    with dask.config.set({"array.rechunk.method": "tasks"}):
+        maps = da.chunk({"time": 1, "y": -1, "x": -1})
+        ref = _spatial_median(maps, good).reset_coords(drop=True)
+        return (maps - ref).chunk(chunks)
 
 
 def _border(da: xr.DataArray, n: int) -> xr.DataArray:
@@ -366,11 +432,23 @@ def rereference(
     out = ds.copy()
     for name in DISPLACEMENT_LAYERS:
         if name in ds:
-            source = ds[name] if crop is None else ds[name].isel(crop)
-            ref = get_reference_values(source, method=method, **kwargs)
-            # Non-index coordinates (spatial_ref, reference_time) come from ds[name]
-            # already; comparing them again could compute dask coordinates.
-            out[name] = ds[name] - ref.reset_coords(drop=True)
+            whole_frame_median = (
+                method in (ReferenceMethod.median, ReferenceMethod.high_coherence)
+                and crop is None
+                and ds[name].chunks is not None
+                and "time" in ds[name].dims
+            )
+            if whole_frame_median:
+                if method is ReferenceMethod.high_coherence and good_pixels is None:
+                    raise ValueError("high_coherence needs good_pixel_mask")
+                out[name] = _subtract_epoch_median(ds[name], good_pixels)
+            else:
+                source = ds[name] if crop is None else ds[name].isel(crop)
+                ref = get_reference_values(source, method=method, **kwargs)
+                # Non-index coordinates (spatial_ref, reference_time) come from
+                # ds[name] already; comparing them again could compute dask
+                # coordinates.
+                out[name] = ds[name] - ref.reset_coords(drop=True)
             out[name].attrs = ds[name].attrs
     out.attrs["reference"] = json.dumps(record)
     logger.info(f"Re-referenced displacement: {record}")

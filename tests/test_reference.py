@@ -71,6 +71,24 @@ def test_median_lazy_matches_numpy(sample_da):
     np.testing.assert_allclose(ref, np.median(sample_da.values, axis=(1, 2)))
 
 
+def test_nanmedian_maps_matches_numpy():
+    from disp_xr.reference import _nanmedian_maps
+
+    rng = np.random.default_rng(3)
+    a = rng.normal(size=(6, 21, 30)).astype("float32")
+    a[a > 0.7] = np.nan
+    a[2] = np.nan  # an all-NaN map
+    good = rng.random((21, 30)) > 0.3
+    with np.errstate(all="ignore"), pytest.warns(RuntimeWarning):
+        expected = np.nanmedian(a, axis=(1, 2))
+    np.testing.assert_array_equal(_nanmedian_maps(a), expected)
+    masked = np.where(good, a, np.nan)
+    with pytest.warns(RuntimeWarning):
+        expected = np.nanmedian(masked, axis=(1, 2))
+    np.testing.assert_array_equal(_nanmedian_maps(a, good), expected)
+    assert _nanmedian_maps(a).dtype == np.float32
+
+
 def test_median_honors_mask(sample_da):
     """Regression: upstream bug 5, the median ignored good_pixel_mask."""
     good = np.zeros((10, 15), bool)
@@ -228,6 +246,20 @@ def test_lazy_median_and_accessor_history(ds):
         out = ds.disp.rereference("median", good_pixels=dxr.valid_mask(ds, "strict"))
     assert isinstance(out.displacement.data, dask.array.Array)
     assert out.disp.history[-1]["op"] == "rereference"
+
+
+@pytest.mark.parametrize("method", ["median", "high_coherence"])
+def test_whole_frame_median_keeps_chunks_and_values(ds, method):
+    """Per-epoch medians are subtracted one epoch at a time, chunks restored."""
+    tiled = ds.chunk({"time": 1, "y": 16, "x": 24})
+    good = dxr.valid_mask(ds, "strict")
+    out = rereference(tiled, method, good_pixels=good)
+    assert out.displacement.chunks == tiled.displacement.chunks
+    assert not any("p2p" in name for name in out.displacement.data.dask.layers)
+    values = ds.displacement.values
+    with pytest.warns(RuntimeWarning):  # the all-NaN epochs
+        ref = np.nanmedian(np.where(good.values, values, np.nan), axis=(1, 2))
+    np.testing.assert_array_equal(out.displacement.values, values - ref[:, None, None])
 
 
 def test_none_is_identity(ds):
