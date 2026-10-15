@@ -52,6 +52,14 @@ _BATCH = 8192
 _SCHUR_BYTES = 64 * 2**20
 
 
+def _smallest_int(low: int, high: int) -> type:
+    """Return the smallest signed integer type holding ``low`` to ``high``."""
+    for kind in (np.int8, np.int16, np.int32):
+        if np.iinfo(kind).min <= low and high <= np.iinfo(kind).max:
+            return kind
+    return np.int64
+
+
 def _missing_groups(missing: np.ndarray, valid: np.ndarray):
     """Yield ``(sel, idx)``: pixels missing the same number of epochs, and which.
 
@@ -356,11 +364,7 @@ def gls_velocity(
     # The labels are an in-memory frame that chunking embeds in the graph: in
     # the smallest integer type they are 66 MB on a full DISP-S1 frame, not
     # 530 MB as int64 (issue #94). noise_group keeps the input's type.
-    low, high = int(labels.min()), int(labels.max())
-    labels = labels.astype(
-        next(t for t in (np.int8, np.int16, np.int32, np.int64)
-             if np.iinfo(t).min <= low and high <= np.iinfo(t).max)
-    )  # fmt: skip
+    labels = labels.astype(_smallest_int(int(labels.min()), int(labels.max())))
     if da.chunks is not None:
         labels = labels.chunk({d: data_chunks(da)[d] for d in labels.dims})
     velocity, sigma, amplitude, count = xr.apply_ufunc(
