@@ -8,6 +8,8 @@
 
 ::: disp_xr.open_static
 
+::: disp_xr.open_zarr
+
 `dxr.search_granules` is :func:`disp_xr.search.search` at the top level (it
 needs the aws extra, so it is imported on first use):
 

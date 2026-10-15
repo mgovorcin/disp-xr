@@ -43,7 +43,14 @@ from ..config import bounded_threads
 from ._overwrite import refuse_existing, zarr_mode
 from ._provenance import with_provenance
 
-__all__ = ["chunk_scheme", "round_mantissa", "to_netcdf", "to_zarr", "zarr_encoding"]
+__all__ = [
+    "chunk_scheme",
+    "open_zarr",
+    "round_mantissa",
+    "to_netcdf",
+    "to_zarr",
+    "zarr_encoding",
+]
 
 Preset = Literal["timeseries", "maps", "ministack", "whole", "tiles"]
 READ_CHUNK = {"timeseries": 64, "maps": 1024}
@@ -323,6 +330,69 @@ def to_zarr(
             storage_options=dict(storage_options) if storage_options else None,
             group=group,
         )
+
+
+def open_zarr(
+    store: Union[str, Path, Any],
+    *,
+    chunks: Any = "shards",
+    group: Optional[str] = None,
+    storage_options: Optional[Mapping[str, Any]] = None,
+    mask_and_scale: bool = False,
+    **kwargs: Any,
+) -> xr.Dataset:
+    """Open a Zarr store lazily, one dask chunk per shard.
+
+    :func:`xarray.open_zarr` makes one dask chunk per stored chunk, which
+    for a :func:`to_zarr` store is the 64 x 64 read chunk inside each shard:
+    a full DISP-S1 frame then opens as about 16,000 chunks per variable and
+    every graph built on it carries them (issue #93: 147,000 tasks for an
+    OLS fit of five epochs, 217 with one chunk per shard). One chunk per
+    shard is also the unit :func:`to_zarr` and region jobs write.
+
+    Parameters
+    ----------
+    store : str, Path or zarr store
+        Local path, URL (with ``storage_options``) or any zarr ``Store``.
+    chunks : "shards" or any :func:`xarray.open_zarr` value
+        ``"shards"`` (default): each variable chunked by its shard, or by its
+        stored chunk when it is not sharded. Anything else is passed on.
+    group : str, optional
+        Group of the store to open instead of the root.
+    storage_options : mapping, optional
+        fsspec options for a URL store.
+    mask_and_scale : bool
+        Decode fill values to NaN. Off by default, so integer layers keep
+        their dtype, as :func:`disp_xr.open_disp` does.
+    **kwargs
+        Passed to :func:`xarray.open_zarr`.
+
+    Examples
+    --------
+    >>> cube = dxr.open_zarr("F11116.zarr")  # doctest: +SKIP
+    >>> velocity = dxr.fit_velocity(cube, "midas")  # doctest: +SKIP
+
+    """
+    by_shard = isinstance(chunks, str) and chunks == "shards"
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", message="Consolidated metadata")
+        ds = xr.open_zarr(
+            store,
+            group=group,
+            chunks=None if by_shard else chunks,
+            storage_options=dict(storage_options) if storage_options else None,
+            mask_and_scale=mask_and_scale,
+            **kwargs,
+        )
+    if not by_shard:
+        return ds
+    out = ds.copy()
+    for name, var in ds.variables.items():
+        if name in ds.indexes or var.ndim == 0:
+            continue
+        blocks = var.encoding.get("shards") or var.encoding.get("chunks")
+        out[name] = var.chunk(dict(zip(var.dims, blocks)) if blocks else {})
+    return out
 
 
 @bounded_threads

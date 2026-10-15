@@ -292,7 +292,7 @@ Ideas copied without a dependency:
 | --- | --- |
 | Performance | Opening a full frame is metadata-only (no pixel reads); dask chunk shape computed from a byte target (about 100 MB) and overridable |
 | Scale | Same code runs on a laptop, a dask cluster and AWS Batch; reads local files or S3 via `s3fs`/`fsspec`; any Zarr store object can be passed for output |
-| Memory | Full-frame masking, re-referencing and export stay within 8 GB per dask worker and 4 GB for the coordinator (decided 2026-10-06; see `docs/performance.md`) |
+| Memory | Full-frame masking, re-referencing and export stay within 8 GB per dask worker and 4 GB for the coordinator (decided 2026-10-06; see `docs/performance.md`). Measured 2026-10-15 (#93): met from a store opened with `dxr.open_zarr` (coordinator 2.7 to 3.5 GB, quadtree 5.1 GB); not met by whole-frame graphs on the granules (8 to 122 GB) |
 | Testing | pytest with small synthetic DISP fixtures; target 80% line coverage; doctests on every public example; CI on every PR |
 | Typing and style | mypy clean, ruff + black via pre-commit (already configured) |
 | Docs | mkdocs on GitHub Pages: getting started, API reference from type hints, a verde-style gallery of short worked examples |

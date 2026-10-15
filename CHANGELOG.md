@@ -6,6 +6,19 @@ All notable changes to disp-xr. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- `dxr.open_zarr(store)`: opens a Zarr store with one dask chunk per shard
+  (#93). `xarray.open_zarr` chunks a `to_zarr` store by its 64 x 64 read
+  chunks, about 16,000 per variable on a full DISP-S1 frame, and every graph
+  built on it carries them: on five epochs of F11116, an OLS fit was 146,773
+  tasks, a 1 km downsample 2.16 M and a quadtree 1.87 M; by shard they are
+  217, 2,022 and 3,357. `disp_xr serve` (`open_store`) uses it; values and
+  decoding are unchanged.
+- `benchmarks/profile_frame.py --read-block N --store PATH`: profile with a
+  larger read block, or the store-first path (write the chained cube once,
+  then process the store).
+
 ## [0.5.0] - 2026-10-14
 
 The first release on PyPI (`pip install disp-xr`), with the documentation

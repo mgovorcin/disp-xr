@@ -374,16 +374,15 @@ def open_store(path: Union[str, Path]) -> tuple[xr.Dataset, Optional[xr.Dataset]
     >>> ds, gnss = open_store("frame.zarr")  # doctest: +SKIP
 
     """
-    import warnings
-
     path = Path(path)
     if (path / "zarr.json").exists() or (path / ".zgroup").exists():
-        with warnings.catch_warnings():
-            warnings.filterwarnings("ignore", message="Consolidated metadata")
-            ds = xr.open_zarr(path)
-            gnss = None
-            if (path / "gnss").is_dir():
-                gnss = xr.open_zarr(path, group="gnss")
+        from .export.zarr import open_zarr
+
+        # one dask chunk per shard (issue #93); decoded as before
+        ds = open_zarr(path, mask_and_scale=True)
+        gnss = None
+        if (path / "gnss").is_dir():
+            gnss = open_zarr(path, group="gnss", mask_and_scale=True)
         return ds, gnss
     import icechunk
 

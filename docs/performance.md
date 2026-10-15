@@ -85,20 +85,66 @@ resident memory; times on a shared node (load 30 to 120) are indicative.
 - The Kalman row ran after quadtree in the same process, which had not
   returned quadtree's memory; its coordinator figure is not its own.
 
+### The same operations from a store
+
+Profiled with `profile_frame.py --store --read-block 2048` (issue #93,
+2026-10-15), same frame and cluster: the masked, chained, re-referenced
+cube written once with `to_zarr` (91 GB, every layer), then each operation
+on `dxr.open_zarr(store)`. Node load under 10 for this run.
+
+| Operation | Tasks | Worker peak | Coordinator peak | Compute |
+|---|---:|---:|---:|---:|
+| write store (from the granules) | 600,000 | 6.0 GB | 3.1 GB | 42 min |
+| fit_velocity OLS | 9,200 | 3.0 GB | 3.5 GB | 2.3 min |
+| fit_velocity MIDAS | 5,100 | 6.4 GB, paused once | 3.5 GB | 6.0 min |
+| downsample 1 km | 89,000 | 6.0 GB | 2.8 GB | 9.0 min |
+| quadtree | 147,000 | 5.1 GB | 5.1 GB | 9.8 min build + 4.4 min |
+| denoise Kalman | 11,700 | 6.4 GB | 2.7 GB | 9.7 min |
+
+- **Every operation fits 8 GB workers** with no restarts; MIDAS paused one
+  worker briefly, as from the granules.
+- **The coordinator stays near the 4 GB budget**: at most 3.5 GB but for
+  the quadtree, 5.1 GB. It runs every operation in one process, which keeps
+  memory it once used, so each figure is an upper bound. The write itself
+  is 600,000 tasks (the rechunk from epochs to whole series) and stays at
+  3.1 GB.
+- **Write plus all five operations take 1.4 hours**, against about 10
+  hours from the granules (times are on a shared node).
+- **Open the store with `dxr.open_zarr`.** `xarray.open_zarr` makes one
+  dask chunk per 64 x 64 read chunk, about 16,000 per variable on this
+  frame, and the graphs grow with them: on five epochs, 146,773 tasks for
+  OLS, 2.16 M for a 1 km downsample and 1.87 M for a quadtree, against 217,
+  2,022 and 3,357 with one chunk per shard.
+- **The quadtree build reads the data**: its split scores are computed
+  before the points (the tree depends on them), which is the 9.8 minutes.
+
+`chunks.read_block` and the task count of an opened frame, without
+compute:
+
+| Operation | 1024 (default) | 2048 | 4096 |
+|---|---:|---:|---:|
+| open | 131,359 | 37,809 | 11,615 |
+| rereference median | 531,403 | 155,546 | 49,860 |
+| fit_velocity OLS | 628,167 | 219,131 | 109,441 |
+| downsample 1 km | 2,828,045 | 820,279 | 254,435 |
+
+Building the full-frame quadtree graph from the granules at 1024 held 221
+GB in the client after an hour and was stopped.
+
 What to do on full frames, in order of effect:
 
-1. **Build a store first, then process it.** Write the masked, chained
-   cube once with region jobs (below) or `to_zarr`, then run velocity,
-   downsampling and quadtrees from the store: the graph no longer carries
-   389 granules, the mask, the chain and the reference.
-2. **Fewer, larger chunks.** `config.set({"chunks.read_block": 2048})`
-   should quarter the task count of an opened frame (four times fewer
-   blocks; not profiled yet); a `"timeseries"` store has
-   one chunk per spatial block for all epochs.
+1. **Build a store first, then process it with `dxr.open_zarr`.** Write
+   the masked, chained cube once with region jobs (below) or `to_zarr`,
+   then run velocity, downsampling and quadtrees from the store: 30 to 120
+   times fewer tasks, and the coordinator within about 4 GB.
+2. **Use `chunks.read_block = 2048` for the write**, or for any graph on
+   the granules: 3.5 times fewer tasks than 1024 at worker peaks that still
+   fit 8 GB. The default stays 1024, which reads a pixel series faster
+   (above); 4096 cuts tasks further but makes 64 MB epoch blocks.
 3. **Run the scheduler apart from the client** (`dask scheduler` or a
-   deployed cluster) when graphs pass a few hundred thousand tasks, and
-   budget 8 to 16 GB for it; with `LocalCluster` it shares the client
-   process.
+   deployed cluster) when a graph on the granules passes a few hundred
+   thousand tasks, and budget 8 to 16 GB for it; with `LocalCluster` it
+   shares the client process.
 4. **Split per-pixel methods by region** (GLS, and MIDAS or Kalman at 8 GB)
    with `disp_xr.batch`: each job holds one region's series.
 
@@ -197,7 +243,7 @@ needs the whole frame, so apply it afterwards on the assembled store,
 lazily:
 
 ```python
-cube = xr.open_zarr("s3://bucket/F11116.zarr").disp.rereference("median")
+cube = dxr.open_zarr("s3://bucket/F11116.zarr").disp.rereference("median")
 velocity = dxr.fit_velocity(cube, "midas")
 cells = dxr.downsample(cube, factor=33)
 report = dxr.residuals.compare(cells, dxr.gnss.load(cube), dxr.open_static(cube))

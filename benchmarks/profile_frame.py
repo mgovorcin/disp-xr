@@ -20,6 +20,12 @@ Run::
 
     pixi run -e test python benchmarks/profile_frame.py GRANULE_DIR \\
         --workers 16 --threads 2 --memory 8GB --out frame_profile.csv
+
+``--read-block`` sets ``chunks.read_block`` for the whole run. ``--store``
+profiles the recommended full-frame path (issue #93): the masked, chained,
+re-referenced cube is written once to a Zarr store (operation ``write
+store``, skipped when the store exists) and the processing operations read
+from it instead of the granules.
 """
 
 from __future__ import annotations
@@ -30,6 +36,7 @@ import threading
 import time
 from collections.abc import Callable
 from pathlib import Path
+from typing import Any
 
 import pandas as pd
 import psutil
@@ -75,7 +82,60 @@ def _reset_sampler(dask_worker) -> int:
     return sampler.reset()
 
 
-def operations(folder: Path) -> dict[str, Callable[[], xr.DataArray]]:
+class _Call:
+    """A side-effecting call profiled like a lazy result (one graph, one run)."""
+
+    def __init__(self, graph_of: Any, run: Callable[[], None]):
+        self._graph_of, self._run = graph_of, run
+
+    def __dask_graph__(self):
+        return self._graph_of.__dask_graph__()
+
+    def compute(self) -> None:
+        self._run()
+
+
+def _processing(chained: xr.Dataset) -> dict[str, Callable[[], Any]]:
+    """Operations on a masked, chained, re-referenced cube."""
+    return {
+        "fit_velocity ols": lambda: dxr.fit_velocity(chained, "ols").velocity,
+        "fit_velocity midas": lambda: dxr.fit_velocity(chained, "midas").velocity,
+        "fit_velocity gls": lambda: dxr.fit_velocity(chained, "gls").velocity,
+        "downsample 1 km": lambda: (
+            dxr.downsample(chained, factor=33, layers=["displacement"]).displacement
+        ),
+        "quadtree": lambda: (
+            dxr.quadtree(
+                chained, threshold=0.003, min_level=3, max_level=7
+            ).points.displacement
+        ),
+        "denoise kalman": lambda: dxr.denoise(chained, "kalman").displacement.sum(),
+    }
+
+
+def store_operations(folder: Path, store: Path) -> dict[str, Callable[[], Any]]:
+    """Write the chained cube once (unless the store exists), then read it."""
+    ops: dict[str, Callable[[], Any]] = {}
+    if not store.exists():
+        ds = dxr.open_disp(folder)
+        chained = dxr.chain(dxr.mask(ds, "recommended")).disp.rereference("median")
+        ops["write store"] = lambda: _Call(chained, lambda: dxr.to_zarr(chained, store))
+    # opened lazily, after the write has run
+    stored = {}
+
+    def from_store(name: str) -> Callable[[], Any]:
+        def build():
+            if "ds" not in stored:
+                stored["ds"] = dxr.open_zarr(store)
+            return _processing(stored["ds"])[name]()
+
+        return build
+
+    ops.update({name: from_store(name) for name in _processing(xr.Dataset())})
+    return ops
+
+
+def operations(folder: Path) -> dict[str, Callable[[], Any]]:
     """Return the lazy builders of each operation's (small) result."""
     ds = dxr.open_disp(folder)
     chained = dxr.chain(dxr.mask(ds, "recommended")).disp.rereference("median")
@@ -86,20 +146,7 @@ def operations(folder: Path) -> dict[str, Callable[[], xr.DataArray]]:
         "rereference median": (
             lambda: dxr.rereference(dxr.chain(ds), "median").displacement.sum()
         ),
-        "fit_velocity ols": lambda: dxr.fit_velocity(chained, "ols").velocity,
-        "fit_velocity midas": lambda: dxr.fit_velocity(chained, "midas").velocity,
-        "fit_velocity gls": lambda: dxr.fit_velocity(chained, "gls").velocity,
-        "downsample 1 km": (
-            lambda: dxr.downsample(
-                chained, factor=33, layers=["displacement"]
-            ).displacement
-        ),
-        "quadtree": (
-            lambda: dxr.quadtree(
-                chained, threshold=0.003, min_level=3, max_level=7
-            ).points.displacement
-        ),
-        "denoise kalman": lambda: dxr.denoise(chained, "kalman").displacement.sum(),
+        **_processing(chained),
     }
 
 
@@ -114,13 +161,15 @@ def flagged_lines(client: Client, seen: set[str]) -> list[str]:
     return lines
 
 
-def profile(folder: Path, client: Client, only: list[str] | None) -> pd.DataFrame:
+def profile(
+    folder: Path, client: Client, only: list[str] | None, store: Path | None = None
+) -> pd.DataFrame:
     """Build and compute each operation; return one row per operation."""
     coordinator = PeakSampler()
     client.run(_start_sampler)
     seen: set[str] = set()
     rows = []
-    builders = operations(folder)
+    builders = operations(folder) if store is None else store_operations(folder, store)
     for name, build in builders.items():
         if only and name not in only:
             continue
@@ -164,8 +213,12 @@ def main() -> None:
     parser.add_argument("--memory", default="8GB", help="memory limit per worker")
     parser.add_argument("--only", nargs="*", help="operations to run")
     parser.add_argument("--out", type=Path, required=True)
+    parser.add_argument("--read-block", type=int, help="chunks.read_block")
+    parser.add_argument("--store", type=Path, help="Zarr store of the chained cube")
     args = parser.parse_args()
+    settings = {} if args.read_block is None else {"chunks.read_block": args.read_block}
     with (
+        dxr.config.set(settings),
         LocalCluster(
             n_workers=args.workers,
             threads_per_worker=args.threads,
@@ -174,7 +227,7 @@ def main() -> None:
         Client(cluster) as client,
     ):
         print(f"dashboard {client.dashboard_link}", flush=True)
-        table = profile(args.granules, client, args.only)
+        table = profile(args.granules, client, args.only, args.store)
     table.to_csv(args.out, index=False)
     print(table.to_string(index=False))
 
