@@ -45,6 +45,24 @@ _COMPONENT_KAPPA = {"white": 0.0, "flicker": -1.0, "randomwalk": -2.0}
 _SELECTABLE = ("FNWN", "PLWN", "RWFNWN")
 # Pixels solved together in _gls_block.
 _BATCH = 8192
+# Bytes of one (pixels, k, k) stack of missing-epoch blocks; pixels missing
+# k epochs are solved in pieces under it. A masked full-frame block has
+# pixels missing 150 of 390 epochs (median) and up to all of them: in one
+# piece these stacks took 18.7 GB for 256 x 256 pixels (issue #94).
+_SCHUR_BYTES = 64 * 2**20
+
+
+def _missing_groups(missing: np.ndarray, valid: np.ndarray):
+    """Yield ``(sel, idx)``: pixels missing the same number of epochs, and which.
+
+    Each piece holds at most ``_SCHUR_BYTES`` of ``(len(sel), k, k)`` float64.
+    """
+    for k in np.unique(missing[missing > 0]):
+        sel_k = np.flatnonzero(missing == k)
+        step = max(1, _SCHUR_BYTES // (8 * int(k) ** 2))
+        for start in range(0, sel_k.size, step):
+            sel = sel_k[start : start + step]
+            yield sel, np.nonzero(~valid[sel])[1].reshape(len(sel), k)
 
 
 @dataclass(frozen=True)
@@ -104,19 +122,14 @@ def _shape_of(res, model: str) -> tuple[tuple[float, float], ...]:
 
 def _fit_sample(args: tuple) -> tuple:
     """Fit one sampled pixel with every candidate model (runs in a worker)."""
-    from threadpoolctl import threadpool_limits
-
     times, values, terms, models = args
     out: list[tuple] = []
-    # Many fits run side by side in threads; BLAS threads inside each would
-    # oversubscribe the machine.
-    with threadpool_limits(limits=1):
-        for model in models:
-            try:
-                res = fit_noise(times, values, terms=terms, model=model)
-                out.append((model, _shape_of(res, model), res.bic))
-            except (ValueError, np.linalg.LinAlgError):
-                out.append((model, None, np.nan))
+    for model in models:
+        try:
+            res = fit_noise(times, values, terms=terms, model=model)
+            out.append((model, _shape_of(res, model), res.bic))
+        except (ValueError, np.linalg.LinAlgError):
+            out.append((model, None, np.nan))
     return tuple(out)
 
 
@@ -166,14 +179,22 @@ def estimate_group_noise(
     # Threads, not processes: a spawned process re-imports the caller's
     # script, which fails for scripts without a __main__ guard. The Cholesky
     # factorizations that dominate each fit release the GIL.
+    from threadpoolctl import threadpool_limits
+
     from ..config import config
 
     workers = max_workers or min(len(tasks), int(config.get("num_workers") or 1))
-    if workers > 1 and len(tasks) > 1:
-        with ThreadPoolExecutor(workers) as pool:
-            results = list(pool.map(_fit_sample, tasks))
-    else:
-        results = [_fit_sample(t) for t in tasks]
+    # One BLAS thread per fit, set once around the pool: the BLAS thread count
+    # is process-wide, so a limit entered and left inside each worker thread
+    # lets one thread restore the default while others are mid-call. Issue
+    # #94: a GLS run crashed the calling process (segfault, not reproduced)
+    # during this sampling.
+    with threadpool_limits(limits=1):
+        if workers > 1 and len(tasks) > 1:
+            with ThreadPoolExecutor(workers) as pool:
+                results = list(pool.map(_fit_sample, tasks))
+        else:
+            results = [_fit_sample(t) for t in tasks]
 
     shapes: dict[int, NoiseShape] = {}
     for group in sorted(set(owners)):
@@ -228,9 +249,7 @@ def _gls_block(
             qy = y @ q  # (pixels, n_t); y is zero at missing epochs
             rhs = y @ b  # Aᵀ Q y per pixel
             normal = np.broadcast_to(m_full, (len(members), n_p, n_p)).copy()
-            for k in np.unique(missing[missing > 0]):
-                sel = np.flatnonzero(missing == k)
-                idx = np.nonzero(~valid[sel])[1].reshape(len(sel), k)  # missing epochs
+            for sel, idx in _missing_groups(missing, valid):  # idx: missing epochs
                 s_inv = np.linalg.inv(q[idx[:, :, None], idx[:, None, :]])  # (s, k, k)
                 b_m = b[idx]  # (s, k, n_p)
                 z_m = np.take_along_axis(qy[sel], idx, axis=1)  # (s, k)
@@ -245,9 +264,7 @@ def _gls_block(
             r = np.where(valid, y - beta @ design.T, 0.0)
             qr = r @ q
             quad = np.einsum("st,st->s", r, qr)
-            for k in np.unique(missing[missing > 0]):
-                sel = np.flatnonzero(missing == k)
-                idx = np.nonzero(~valid[sel])[1].reshape(len(sel), k)
+            for sel, idx in _missing_groups(missing, valid):
                 s_inv = np.linalg.inv(q[idx[:, :, None], idx[:, None, :]])
                 w_m = np.take_along_axis(qr[sel], idx, axis=1)
                 quad[sel] -= np.einsum("sk,skl,sl->s", w_m, s_inv, w_m)
