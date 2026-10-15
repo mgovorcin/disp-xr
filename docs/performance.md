@@ -197,7 +197,7 @@ needs the whole frame, so apply it afterwards on the assembled store,
 lazily:
 
 ```python
-cube = xr.open_zarr("s3://bucket/F11116.zarr").disp.rereference("median")
+cube = dxr.open_zarr("s3://bucket/F11116.zarr").disp.rereference("median")
 velocity = dxr.fit_velocity(cube, "midas")
 cells = dxr.downsample(cube, factor=33)
 report = dxr.residuals.compare(cells, dxr.gnss.load(cube), dxr.open_static(cube))

@@ -314,3 +314,27 @@ def test_map_outputs_carry_grid_mapping(ds):
         for var, da in out.data_vars.items():
             if {"y", "x"} <= set(da.dims):
                 assert da.attrs.get("grid_mapping") == "spatial_ref", (name, var)
+
+
+def test_open_zarr_makes_one_dask_chunk_per_shard(ds, tmp_path):
+    """Issue #93: xarray chunks a store by its 64 x 64 read chunks, which
+    multiplies every graph built on it; dxr.open_zarr chunks by shard."""
+    path = tmp_path / "out.zarr"
+    big = ds.isel(y=np.arange(160) % ds.sizes["y"], x=np.arange(200) % ds.sizes["x"])
+    big = big.assign_coords(
+        y=ds.y[0].item() + np.arange(160) * float(ds.y[1] - ds.y[0]),
+        x=ds.x[0].item() + np.arange(200) * float(ds.x[1] - ds.x[0]),
+    )
+    dxr.to_zarr(big, path)
+    shards = zarr.open_group(path, mode="r")["displacement"].shards
+    plain = xr.open_zarr(path, mask_and_scale=False)
+    back = dxr.open_zarr(path)
+    disp = back.displacement.data
+    assert plain.displacement.data.numblocks[1:] == (3, 4)  # 64 x 64 read chunks
+    assert disp.chunksize == tuple(min(s, n) for s, n in zip(shards, disp.shape))
+    assert disp.numblocks[1:] < plain.displacement.data.numblocks[1:]
+    for name in big.data_vars:
+        _equal_values(back[name], plain[name])
+        assert back[name].dtype == big[name].dtype
+    # any other chunks value is passed to xarray
+    assert dxr.open_zarr(path, chunks={}).displacement.data.numblocks[1:] == (3, 4)
