@@ -126,7 +126,7 @@ def store_operations(folder: Path, store: Path) -> dict[str, Callable[[], Any]]:
     def from_store(name: str) -> Callable[[], Any]:
         def build():
             if "ds" not in stored:
-                stored["ds"] = xr.open_zarr(store, chunks={})
+                stored["ds"] = dxr.open_zarr(store)
             return _processing(stored["ds"])[name]()
 
         return build
