@@ -29,6 +29,10 @@ All notable changes to disp-xr. The format follows
 - GLS noise sampling sets the one-BLAS-thread limit once around its thread
   pool instead of inside each thread; the BLAS thread count is process-wide,
   so a per-thread limit could be undone by another thread mid-call (#94).
+- GLS embeds its in-memory noise-group labels in the dask graph in the
+  smallest integer type (int8 for coherence groups): 66 MB on a full
+  DISP-S1 frame instead of 530 MB, a 511 MB graph sent to the scheduler.
+  `noise_group` keeps its type (#94).
 
 ## [0.5.0] - 2026-10-14
 

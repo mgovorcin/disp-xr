@@ -124,6 +124,24 @@ def test_missing_epoch_blocks_are_solved_in_bounded_pieces(monkeypatch):
         np.testing.assert_array_equal(a, b)
 
 
+def test_labels_enter_the_graph_as_the_smallest_integer(frame):
+    """Issue #94: the in-memory label map is embedded in the dask graph; as
+    int64 it was 530 MB on a full frame, as int8 it is 66 MB."""
+    from disp_xr.timeseries import gls
+
+    ds, _ = frame
+    shapes = {g: NoiseShape("PLWN", ((-1.0, 0.7), (0.0, 0.3))) for g in (0, 1)}
+    out = gls.gls_velocity(
+        ds.chunk({"y": 6, "x": 6}), terms=TERMS, n_groups=2, shapes=shapes
+    )
+    graph = dict(out.velocity.__dask_graph__())
+    embedded = [
+        v for v in graph.values() if isinstance(v, np.ndarray) and v.shape == (6, 6)
+    ]
+    assert embedded and all(v.dtype == np.int8 for v in embedded)
+    assert out.noise_group.dtype == np.int64
+
+
 @pytest.fixture(scope="module")
 def frame():
     return _flicker_frame()
@@ -141,6 +159,7 @@ def test_groups_and_noise_table(fit):
     # Both halves are flicker plus white.
     assert table.kappa.between(-1.4, -0.6).all()
     assert set(np.unique(fit.noise_group)) == {0, 1}
+    assert fit.noise_group.dtype == np.int64  # the type of coherence_groups
     assert fit.attrs["method"] == "gls"
 
 

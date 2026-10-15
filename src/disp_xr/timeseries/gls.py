@@ -352,6 +352,15 @@ def gls_velocity(
     )
     column = terms.names.index("linear_trend")
     labels = labels.where(labels.isin(group_ids), -1)
+    label_dtype = labels.dtype
+    # The labels are an in-memory frame that chunking embeds in the graph: in
+    # the smallest integer type they are 66 MB on a full DISP-S1 frame, not
+    # 530 MB as int64 (issue #94). noise_group keeps the input's type.
+    low, high = int(labels.min()), int(labels.max())
+    labels = labels.astype(
+        next(t for t in (np.int8, np.int16, np.int32, np.int64)
+             if np.iinfo(t).min <= low and high <= np.iinfo(t).max)
+    )  # fmt: skip
     if da.chunks is not None:
         labels = labels.chunk({d: data_chunks(da)[d] for d in labels.dims})
     velocity, sigma, amplitude, count = xr.apply_ufunc(
@@ -383,7 +392,11 @@ def gls_velocity(
             "noise_amplitude": amplitude.assign_attrs(
                 units=units, long_name="total noise amplitude (per pixel)"
             ),
-            "noise_group": labels.assign_attrs(long_name="noise group (-1: none)"),
+            "noise_group": (
+                labels.astype(label_dtype).assign_attrs(
+                    long_name="noise group (-1: none)"
+                )
+            ),
             "kappa": kappa.assign_attrs(long_name="power-law index of the group"),
             "white_fraction": white,
             "n_valid": count,
