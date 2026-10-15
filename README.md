@@ -7,7 +7,7 @@
 
 Documentation: <https://mgovorcin.github.io/disp-xr/>
 
-Analysis tools using [`xarray`](xarray.dev) for OPERA Surface Displacement from Sentinel-1 (DISP-S1) and Surface Displacement from NISAR (DISP-NISAR).
+Analysis tools using [`xarray`](https://xarray.dev) for OPERA Surface Displacement from Sentinel-1 (DISP-S1) and Surface Displacement from NISAR (DISP-NISAR).
 
 ## Quick start
 

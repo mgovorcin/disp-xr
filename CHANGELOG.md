@@ -6,6 +6,17 @@ All notable changes to disp-xr. The format follows
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-10-14
+
+The first release on PyPI (`pip install disp-xr`), with the documentation
+at <https://mgovorcin.github.io/disp-xr/>. Benchmarks and memory hardening
+(plan task T37) are done: storage on S3, the core-operation suite on a
+dedicated instance, and every core operation profiled on a full frame, with
+recommendations for full-frame runs in `docs/performance.md`. The profile
+found and fixed two memory problems in the median re-reference and made
+per-pixel fits twice as fast. No value changes, except a median of eager
+(NumPy) data by at most one float32 ulp; see Fixed.
+
 ### Added
 
 - Publishing: `publish.yml` builds and publishes to PyPI on a GitHub release
