@@ -4,8 +4,13 @@
 [![test](https://github.com/mgovorcin/disp-xr/actions/workflows/test.yml/badge.svg)](https://github.com/mgovorcin/disp-xr/actions/workflows/test.yml)
 [![docs](https://github.com/mgovorcin/disp-xr/actions/workflows/docs.yml/badge.svg)](https://mgovorcin.github.io/disp-xr/)
 [![coverage](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/mgovorcin/disp-xr/badges/coverage.json)](https://github.com/mgovorcin/disp-xr/actions/workflows/test.yml)
+[![PyPI](https://img.shields.io/pypi/v/disp-xr)](https://pypi.org/project/disp-xr/)
 
 Documentation: <https://mgovorcin.github.io/disp-xr/>
+
+```bash
+pip install disp-xr
+```
 
 Analysis tools using [`xarray`](https://xarray.dev) for OPERA Surface Displacement from Sentinel-1 (DISP-S1) and Surface Displacement from NISAR (DISP-NISAR).
 

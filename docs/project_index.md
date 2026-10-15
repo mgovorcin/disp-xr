@@ -182,6 +182,7 @@ since #30 was checked locally and says so in its description.
 
 | Date | Trigger | Changes |
 | --- | --- | --- |
+| 2026-10-14 | v0.5.0 on PyPI | Published by `publish.yml` (trusted publishing, approved in the `pypi` environment); README PyPI badge; T38.4 notes |
 | 2026-10-14 | Release `v0.5.0` (first on PyPI) | Changelog section `[0.5.0]`; README link fixed for the PyPI page; index stamped |
 | 2026-10-14 | Canberra troposphere example removed (owner: the signal is not troposphere) | `real_data/troposphere` notebook, its gallery card and nav entries deleted |
 | 2026-10-14 | Repository public; T3 and T16 done | CI and Pages on (https://mgovorcin.github.io/disp-xr/); branch protection with required checks (T3.5, no review: sole maintainer); `benchmarks/batch/run.py` renamed `entrypoint.py` (mypy duplicate module in CI); follow-ups #93 (coordinator memory) and #94 (GLS memory) |
