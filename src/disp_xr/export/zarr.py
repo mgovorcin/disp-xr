@@ -384,8 +384,15 @@ def open_zarr(
             mask_and_scale=mask_and_scale,
             **kwargs,
         )
-    if not by_shard:
-        return ds
+    return chunk_by_shard(ds) if by_shard else ds
+
+
+def chunk_by_shard(ds: xr.Dataset) -> xr.Dataset:
+    """Return ``ds`` with one dask chunk per stored shard of each variable.
+
+    A variable without shards gets one chunk per stored chunk. Index
+    coordinates and scalars are left as they are.
+    """
     out = ds.copy()
     for name, var in ds.variables.items():
         if name in ds.indexes or var.ndim == 0:

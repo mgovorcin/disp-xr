@@ -23,7 +23,13 @@ import numpy as np
 import xarray as xr
 
 from ..config import bounded_threads
-from .zarr import Preset, _prepare, _with_zarr_conventions, zarr_encoding
+from .zarr import (
+    Preset,
+    _prepare,
+    _with_zarr_conventions,
+    chunk_by_shard,
+    zarr_encoding,
+)
 
 if TYPE_CHECKING:
     import icechunk
@@ -253,7 +259,7 @@ def open_icechunk(
     branch: Optional[str] = None,
     tag: Optional[str] = None,
     snapshot_id: Optional[str] = None,
-    chunks: Any = None,
+    chunks: Any = "shards",
     mask_and_scale: bool = False,
 ) -> xr.Dataset:
     """Open a DISP dataset from an Icechunk repository, read-only.
@@ -268,8 +274,11 @@ def open_icechunk(
         Repository, or a local directory holding one.
     branch, tag, snapshot_id : str, optional
         Version to read.
-    chunks : optional
-        Passed to :func:`xarray.open_zarr`; by default the stored chunks.
+    chunks : "shards" or any :func:`xarray.open_zarr` value
+        ``"shards"`` (default): one dask chunk per shard, as
+        :func:`disp_xr.open_zarr` (xarray's own default is one chunk per
+        64 x 64 read chunk; ``None`` gives no dask at all, so any
+        computation loads the whole store). Anything else is passed on.
     mask_and_scale : bool
         Decode fill values to NaN. Off by default, so integer layers keep
         their dtype, as :func:`disp_xr.open_disp` does.
@@ -289,12 +298,15 @@ def open_icechunk(
     session = repository.readonly_session(
         branch=branch, tag=tag, snapshot_id=snapshot_id
     )
+    by_shard = isinstance(chunks, str) and chunks == "shards"
     ds = xr.open_zarr(
         session.store,
         consolidated=False,
-        chunks=chunks,
+        chunks=None if by_shard else chunks,
         mask_and_scale=mask_and_scale,
         decode_coords="all",
     )
+    if by_shard:
+        ds = chunk_by_shard(ds)
     ds.attrs["source_snapshot_id"] = session.snapshot_id
     return ds

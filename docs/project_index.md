@@ -1,6 +1,6 @@
 # disp-xr project index
 
-**Last indexed:** 2026-10-16 · `main` after v0.5.1 (branch `docs/open-zarr-tutorials`) on `origin` = `mgovorcin/disp-xr`
+**Last indexed:** 2026-10-16 · `main` after v0.5.1 (branch `feat/icechunk-shards-tutorial`) on `origin` = `mgovorcin/disp-xr`
 
 How and when this file is rebuilt: see "Project Index (cyclical indexing)" in `CLAUDE.md` at the repository root.
 
@@ -97,9 +97,9 @@ since #30 was checked locally and says so in its description.
 | `geometry/los.py` | F7 | `enu_to_los`, incidence/azimuth, slant range | T12.2, T12.5 |
 | `export/raster.py` (was `io.py`) | F12 | `to_geotiff` (COG), legacy rasterio helpers | T14.1 |
 | `export/zarr.py`, `export/_overwrite.py` | F12, C1 | `to_zarr`, `open_zarr` (one dask chunk per shard, #93), `to_netcdf` (with `overwrite`), chunk/shard scheme (presets `timeseries`, `maps`, `ministack`), `round_mantissa` | T14.2, T14.2b, T37.3b |
-| `export/icechunk.py` | F12, C2 | `to_icechunk`, `open_icechunk` (`cloud` extra, imported lazily) | T14.2b |
+| `export/icechunk.py` | F12, C2 | `to_icechunk`, `open_icechunk` (one dask chunk per shard by default; `cloud` extra, imported lazily) | T14.2b |
 | `batch.py` | C6 | `init_store`, `plan_jobs`, `RegionJob`, `run_region`, `failed_jobs`, manifest | T37.4 |
-| `virtual.py` | C3 | `build_virtual_frame`, `open_virtual`, `validate_virtual` (`cloud` extra) | T14.2c |
+| `virtual.py` | C3 | `build_virtual_frame`, `open_virtual` (chunked as `open_disp`), `validate_virtual` (`cloud` extra) | T14.2c |
 | `export/_provenance.py` | NFR Provenance, Metadata | Provenance and CF flag attributes | T14.4 |
 | `export/mintpy.py` (was `mintpy.py`) | F12 | `to_mintpy`: timeseries, quality masks, geometry (h5py only) | T14.3 |
 | `open.py` | F2 | `open_disp`, `open_disp_tree` | T7 (chaining on top) |
@@ -182,6 +182,7 @@ since #30 was checked locally and says so in its description.
 
 | Date | Trigger | Changes |
 | --- | --- | --- |
+| 2026-10-16 | Icechunk chunk defaults and tutorial | `open_icechunk` chunks by shard (`export/zarr.py` `chunk_by_shard`), `open_virtual` chunks as `open_disp` (the chain of a virtual frame was eager, also in `serve`); `gallery/virtual_frames.py` expanded into the Icechunk tutorial (history, branches, S3) |
 | 2026-10-16 | Gallery pages on `open_zarr` | `command_line` and `export` reopen stores with `dxr.open_zarr` (the export page prints the read chunk and the shard); `web_tiles` says when xarray's small chunks are right; `config.md` `read_block` row |
 | 2026-10-15 | Release `v0.5.1`; T38.3b repeated | Changelog section `[0.5.1]`; opera-utils upstream unchanged since `4125484`, the 0.5.0 wheel ships `THIRD_PARTY_NOTICES.md` and `LICENSES/`; index stamped |
 | 2026-10-15 | #98, #99, #100 merged; #93 and #94 closed | `open_zarr` (`export/zarr.py`, used by `serve.open_store`); `profile_frame.py --read-block --store`; GLS bounded missing-epoch stacks and int8 labels in the graph; store-first and GLS full-frame tables in `performance.md`; NFR Memory row; Python 3.12–3.14 classifiers |

@@ -55,7 +55,7 @@ nav:
       - Real data:
           - Comparing two processing versions: real_data/versions.ipynb
       - Cloud and serving:
-          - Virtual frames and versioned stores: gallery/virtual_frames.py
+          - "Icechunk: virtual frames and versioned stores": gallery/virtual_frames.py
           - Serving results as web map tiles: gallery/web_tiles.py
           - A REST service for web clients: gallery/rest_service.py
           - Interactive browsing of a full frame: gallery/interactive.py
