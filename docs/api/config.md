@@ -16,7 +16,7 @@ with config.set({"chunks.target_mb": 50}):
 | Key | Default | Meaning |
 |---|---|---|
 | `chunks.target_mb` | 100 | Uncompressed size of one dask chunk (and Zarr shard) for the `timeseries` and `maps` presets, in MB |
-| `chunks.read_block` | 1024 | Spatial block read from each granule; the `native` chunk size |
+| `chunks.read_block` | 1024 | Spatial block read from each granule; the `native` chunk size. 2048 gives 3.5 times fewer tasks when writing a full-frame store (`performance.md`) |
 | `max_load_bytes` | 2 GiB | Largest array export and plotting load into memory |
 | `cache.dir` | `None` | Downloaded static layers; `None` means `$XDG_CACHE_HOME/disp_xr` or `~/.cache/disp_xr` |
 | `threads` | `None` | Threads per worker for compiled kernels |

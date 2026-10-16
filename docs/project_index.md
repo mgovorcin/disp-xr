@@ -1,6 +1,6 @@
 # disp-xr project index
 
-**Last indexed:** 2026-10-15 · `main` at the v0.5.1 release (branch `chore/release-0.5.1`, after #98, #99, #100) on `origin` = `mgovorcin/disp-xr`
+**Last indexed:** 2026-10-16 · `main` after v0.5.1 (branch `docs/open-zarr-tutorials`) on `origin` = `mgovorcin/disp-xr`
 
 How and when this file is rebuilt: see "Project Index (cyclical indexing)" in `CLAUDE.md` at the repository root.
 
@@ -182,6 +182,7 @@ since #30 was checked locally and says so in its description.
 
 | Date | Trigger | Changes |
 | --- | --- | --- |
+| 2026-10-16 | Gallery pages on `open_zarr` | `command_line` and `export` reopen stores with `dxr.open_zarr` (the export page prints the read chunk and the shard); `web_tiles` says when xarray's small chunks are right; `config.md` `read_block` row |
 | 2026-10-15 | Release `v0.5.1`; T38.3b repeated | Changelog section `[0.5.1]`; opera-utils upstream unchanged since `4125484`, the 0.5.0 wheel ships `THIRD_PARTY_NOTICES.md` and `LICENSES/`; index stamped |
 | 2026-10-15 | #98, #99, #100 merged; #93 and #94 closed | `open_zarr` (`export/zarr.py`, used by `serve.open_store`); `profile_frame.py --read-block --store`; GLS bounded missing-epoch stacks and int8 labels in the graph; store-first and GLS full-frame tables in `performance.md`; NFR Memory row; Python 3.12–3.14 classifiers |
 | 2026-10-14 | v0.5.0 on PyPI | Published by `publish.yml` (trusted publishing, approved in the `pypi` environment); README PyPI badge; T38.4 notes |

@@ -13,7 +13,6 @@ from pathlib import Path
 
 import h5py
 import rasterio
-import xarray as xr
 
 import disp_xr as dxr
 from disp_xr.tutorial import make_disp_stack
@@ -32,8 +31,13 @@ ds = ds.disp.rereference("median")
 
 # %%
 dxr.to_zarr(ds, work / "frame.zarr", preset="timeseries")
-back = xr.open_zarr(work / "frame.zarr", decode_coords="all")
-print("CRS:", back.rio.crs, "| chunks:", back.displacement.encoding["chunks"])
+# dxr.open_zarr gives one dask chunk per shard; xarray.open_zarr would give
+# one per read chunk inside it, which on a full frame is thousands of chunks
+# and a graph to match (docs/performance.md).
+back = dxr.open_zarr(work / "frame.zarr", decode_coords="all")
+print("CRS:", back.rio.crs)
+print("read chunk:", back.displacement.encoding["chunks"])
+print("shard (dask chunk):", back.displacement.data.chunksize)
 for line in back.attrs["history"].splitlines():
     print(json.loads(line)["op"])
 
