@@ -1,6 +1,6 @@
 # disp-xr project index
 
-**Last indexed:** 2026-10-14 · `main` at the v0.5.0 release (branch `docs/readme-link`, tag `v0.5.0`) on `origin` = `mgovorcin/disp-xr`
+**Last indexed:** 2026-10-15 · `main` at the v0.5.1 release (branch `chore/release-0.5.1`, after #98, #99, #100) on `origin` = `mgovorcin/disp-xr`
 
 How and when this file is rebuilt: see "Project Index (cyclical indexing)" in `CLAUDE.md` at the repository root.
 
@@ -79,7 +79,7 @@ since #30 was checked locally and says so in its description.
 | NFR Testing, typing | T2, T3 | Done locally: 601 tests, laziness and graph-size tests, mypy and ruff in pre-commit; GitHub Actions disabled (billing), local pre-commit and pre-push hooks stand in |
 | NFR Compatibility | T5.7, T35 | DISP-S1 across productions done (float precision and time encoding, `product_notes.md`); DISP-NISAR waits for products (T35) |
 | NFR Metadata, Provenance | T14.2a, T14.4 | Done: history on every result, provenance attributes in every export |
-| NFR Benchmarks, Performance, Memory | T37 | Benchmark suite (timed on AWS Batch at tile and frame sizes), laziness and graph-size audits, load guard, `performance.md`; memory budget decided (8 GB per worker, 4 GB coordinator) |
+| NFR Benchmarks, Performance, Memory | T37 | Benchmark suite (timed on AWS Batch at tile and frame sizes), laziness and graph-size audits, load guard, `performance.md`; memory budget decided (8 GB per worker, 4 GB coordinator) and met from a store opened with `open_zarr` (2026-10-15, #93, #94: every core operation incl. GLS fits 8 GB workers; coordinator 2.7–3.5 GB, quadtree 5.1 GB) |
 | NFR Docs | T16, T38.3 | Site with 18 executed gallery pages, a tutorial for every feature, guides (remote, performance, product notes); GitHub Pages workflow ready, publishing waits for the repository to go public; docstring examples incomplete (T38.3) |
 | API rules (config, history, order) | T4.9, T9, T15.2 | Config and history done; processing order in T15.2 |
 
@@ -96,7 +96,7 @@ since #30 was checked locally and says so in its description.
 | `corrections.py` | F6, F15 | `correct`, `remove_plate_motion`, ITRF2014-PMM poles | T13 |
 | `geometry/los.py` | F7 | `enu_to_los`, incidence/azimuth, slant range | T12.2, T12.5 |
 | `export/raster.py` (was `io.py`) | F12 | `to_geotiff` (COG), legacy rasterio helpers | T14.1 |
-| `export/zarr.py`, `export/_overwrite.py` | F12, C1 | `to_zarr`, `to_netcdf` (with `overwrite`), chunk/shard scheme (presets `timeseries`, `maps`, `ministack`), `round_mantissa` | T14.2, T14.2b, T37.3b |
+| `export/zarr.py`, `export/_overwrite.py` | F12, C1 | `to_zarr`, `open_zarr` (one dask chunk per shard, #93), `to_netcdf` (with `overwrite`), chunk/shard scheme (presets `timeseries`, `maps`, `ministack`), `round_mantissa` | T14.2, T14.2b, T37.3b |
 | `export/icechunk.py` | F12, C2 | `to_icechunk`, `open_icechunk` (`cloud` extra, imported lazily) | T14.2b |
 | `batch.py` | C6 | `init_store`, `plan_jobs`, `RegionJob`, `run_region`, `failed_jobs`, manifest | T37.4 |
 | `virtual.py` | C3 | `build_virtual_frame`, `open_virtual`, `validate_virtual` (`cloud` extra) | T14.2c |
@@ -121,13 +121,13 @@ since #30 was checked locally and says so in its description.
 | `hexagons.py` | S2 (hexagon mode) | `downsample_hex` (planar and H3), `to_geodataframe`, `cell_polygons`, `hex_axial`, `hex_centers`, `hexagon_vertices` | T27.8 |
 | `downsample.py` | S2 | `downsample`, `to_points` | T27 |
 | `residuals.py` | S2 (cell uncertainty), S4 | Variograms and correlated cell sigma; `compare` (per-station reference epoch, velocity gate), `Comparison` (with `to_zarr`), `Requirement`, `DISP_S1_DISPLACEMENT`, `DISP_S1_VELOCITY` (geepers metrics) | T27.3b, T27.8, T32, T34.2 |
-| `serve.py` | C7 | `DispPlugin` (xpublish routes `timeseries`, `velocity`, `cells`, `gnss`, `provenance`), `make_app`, `open_store`; `disp_xr serve` | T40 |
+| `serve.py` | C7 | `DispPlugin` (xpublish routes `timeseries`, `velocity`, `cells`, `gnss`, `provenance`), `make_app`, `open_store` (Zarr via `open_zarr`); `disp_xr serve` | T40 |
 | `weights.py` | S2 | `quality_weights`, `residual_cycles`, `network_degree`, `residual_cycle_histogram` | T26 |
 | `plot.py` | F13 | `plot_map`, `plot_point`, `diverging_cmap` (`plot` extra, imported lazily) | T17 |
 | `accessor.py`, `_history.py`, `units.py`, `validate.py` | API rules | `.disp` accessor, operation history, unit conversion, validation | — |
 | `config.py` | API rules | `donfig` settings, `DISP_XR_*` overrides, `check_load` and `LoadTooLargeError` | T37.3a |
 | `cli/__init__.py` | F14, F16 | `disp_xr` commands wrapping library functions | T15 |
-| `timeseries/` | F8, S1, S4 | `trajectory.py` (`fit_trajectory`), `noise.py` (`fit_noise`, from geepers), `velocity.py` (`fit_velocity`: OLS, Whittle, MIDAS, GLS), `gls.py` (grouped GLS), design matrix, legacy `fit_timeseries_block`; jax optional | T20, T21, T22, T23, T32 |
+| `timeseries/` | F8, S1, S4 | `trajectory.py` (`fit_trajectory`), `noise.py` (`fit_noise`, from geepers), `velocity.py` (`fit_velocity`: OLS, Whittle, MIDAS, GLS), `gls.py` (grouped GLS; missing-epoch blocks solved in pieces of at most 64 MB, #94), design matrix, legacy `fit_timeseries_block`; jax optional | T20, T21, T22, T23, T32 |
 | `utils.py` | — | Deprecated aliases only | T38 |
 | `quality_metrics.py`, `io.py`, `mintpy.py`, `static_layers.py`, `download.py` | — | Deprecated aliases | T38 |
 | `log/` | Infrastructure | Unchanged | — |
@@ -173,7 +173,7 @@ since #30 was checked locally and says so in its description.
 
 ## Checks passed this cycle
 
-- `python docs/check_plan.py`: 39 tasks, 232 subtasks, no duplicate or dangling ids; "Depends on" lines, mermaid graph and dependency table agree; no cycles; every task except T39 unlocks another; headings match task titles.
+- `python docs/check_plan.py`: 39 tasks, 235 subtasks, no duplicate or dangling ids; "Depends on" lines, mermaid graph and dependency table agree; no cycles; every task except T39 unlocks another; headings match task titles.
 - All relative links in `docs/*.md` and `CLAUDE.md` resolve.
 - No sentence in `specs.md`, `todo.md` or `code_review.md` tells disp-xr to depend on, wrap or vendor opera_utils.
 - Every requirement in the table above has at least one task.
@@ -182,6 +182,8 @@ since #30 was checked locally and says so in its description.
 
 | Date | Trigger | Changes |
 | --- | --- | --- |
+| 2026-10-15 | Release `v0.5.1`; T38.3b repeated | Changelog section `[0.5.1]`; opera-utils upstream unchanged since `4125484`, the 0.5.0 wheel ships `THIRD_PARTY_NOTICES.md` and `LICENSES/`; index stamped |
+| 2026-10-15 | #98, #99, #100 merged; #93 and #94 closed | `open_zarr` (`export/zarr.py`, used by `serve.open_store`); `profile_frame.py --read-block --store`; GLS bounded missing-epoch stacks and int8 labels in the graph; store-first and GLS full-frame tables in `performance.md`; NFR Memory row; Python 3.12–3.14 classifiers |
 | 2026-10-14 | v0.5.0 on PyPI | Published by `publish.yml` (trusted publishing, approved in the `pypi` environment); README PyPI badge; T38.4 notes |
 | 2026-10-14 | Release `v0.5.0` (first on PyPI) | Changelog section `[0.5.0]`; README link fixed for the PyPI page; index stamped |
 | 2026-10-14 | Canberra troposphere example removed (owner: the signal is not troposphere) | `real_data/troposphere` notebook, its gallery card and nav entries deleted |

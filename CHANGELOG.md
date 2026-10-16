@@ -6,6 +6,14 @@ All notable changes to disp-xr. The format follows
 
 ## [Unreleased]
 
+## [0.5.1] - 2026-10-15
+
+Full frames now fit the memory budget (8 GB per worker, about 4 GB for the
+coordinator) when processed from a store: `dxr.open_zarr` opens a store
+with one dask chunk per shard, which cuts graphs 30 to 120 times, and GLS
+no longer exceeds 8 GB per worker on masked data (follow-ups #93 and #94 of
+the T37 profile; numbers in `docs/performance.md`). No value changes.
+
 ### Added
 
 - `dxr.open_zarr(store)`: opens a Zarr store with one dask chunk per shard
