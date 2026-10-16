@@ -70,13 +70,13 @@ resident memory; times on a shared node (load 30 to 120) are indicative.
 | downsample 1 km | 2,828,000 | 5.9 GB | 19 GB | 3.5 h |
 | quadtree | 4,304,000 | 5.9 GB | 122 GB | 3.4 h |
 | denoise Kalman | 633,000 | 7.3 GB, paused | (111 GB, after quadtree) | 40 min |
-| fit_velocity GLS | | over 8 GB: 71 restarts | | stopped |
+| fit_velocity GLS | | over 8 GB: 71 restarts | | stopped (fixed, #94: below) |
 
 - **Workers** fit 8 GB for every operation but GLS. MIDAS and the Kalman
-  filter come close (paused, not restarted); give them one thread per
-  worker or 10 GB. GLS needs more than 8 GB per worker on a full frame (a
+  filter come close (paused, not restarted); from a store they fit with
+  two threads (below). GLS needed more than 8 GB per worker on a full frame (a
   first run also crashed the coordinator process during its noise
-  sampling); fit it on a region of the frame, or on 16 GB workers.
+  sampling); since #94 it fits, see the table below.
 - **The coordinator** grows with the task count, 5 to 28 KB per task with
   `LocalCluster` (graph and scheduler in one process): over the 4 GB
   budget from a few hundred thousand tasks. A whole frame read from 389 granules
@@ -100,9 +100,18 @@ on `dxr.open_zarr(store)`. Node load under 10 for this run.
 | downsample 1 km | 89,000 | 6.0 GB | 2.8 GB | 9.0 min |
 | quadtree | 147,000 | 5.1 GB | 5.1 GB | 9.8 min build + 4.4 min |
 | denoise Kalman | 11,700 | 6.4 GB | 2.7 GB | 9.7 min |
+| fit_velocity GLS (#94) | 6,200 | 2.8 GB | 2.9 GB | 4.5 min sampling + 57 min |
 
 - **Every operation fits 8 GB workers** with no restarts; MIDAS paused one
-  worker briefly, as from the granules.
+  worker briefly, as from the granules. GLS (run after #94, separately)
+  peaks at 2.8 GB: it solved the pixels missing `k` epochs as one
+  `(pixels, k, k)` stack, and masked pixels miss a median of 150 of the 390
+  epochs, which took 18.7 GB for one 256 x 256 block on one thread; it now
+  solves them in pieces of at most 64 MB (2.7 GB for that block).
+- **One thread per worker** (16 x 1 x 8 GB, #94) brings the peaks of the
+  two closest to the limit down but costs time: MIDAS 3.6 GB (2 threads:
+  6.4 GB, one pause) in 9.1 min (6.0), the Kalman filter 4.5 GB (6.4 GB)
+  in 22 min (9.7). Two threads fit 8 GB; use one only on smaller workers.
 - **The coordinator stays near the 4 GB budget**: at most 3.5 GB but for
   the quadtree, 5.1 GB. It runs every operation in one process, which keeps
   memory it once used, so each figure is an upper bound. The write itself
@@ -145,8 +154,8 @@ What to do on full frames, in order of effect:
    deployed cluster) when a graph on the granules passes a few hundred
    thousand tasks, and budget 8 to 16 GB for it; with `LocalCluster` it
    shares the client process.
-4. **Split per-pixel methods by region** (GLS, and MIDAS or Kalman at 8 GB)
-   with `disp_xr.batch`: each job holds one region's series.
+4. **Split per-pixel methods by region** with `disp_xr.batch` when workers
+   have less than 8 GB: each job holds one region's series.
 
 ## disp-xr settings
 
