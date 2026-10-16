@@ -19,6 +19,10 @@ All notable changes to disp-xr. The format follows
   larger read block, or the store-first path (write the chained cube once,
   then process the store).
 
+### Changed
+
+- PyPI classifiers for Python 3.12, 3.13 and 3.14, the versions CI tests.
+
 ### Fixed
 
 - `fit_velocity(method="gls")` memory on masked data (#94). Pixels missing
