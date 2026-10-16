@@ -118,7 +118,9 @@ plt.show()
 # `{base}/tilejson.json` with the same parameters describes the layer
 # (bounds, zooms) for clients that read TileJSON. To serve a whole frame,
 # open its store lazily (`xr.open_zarr`, or a pyramid from `to_geozarr`):
-# tiles read only the chunks they cover.
+# tiles read only the chunks they cover. Here the small read chunks are what
+# you want; for whole-frame processing, open the store with `dxr.open_zarr`
+# (one chunk per shard) instead.
 
 # %%
 server.should_exit = True

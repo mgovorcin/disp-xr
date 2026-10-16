@@ -27,8 +27,7 @@ import subprocess
 import tempfile
 from pathlib import Path
 
-import xarray as xr
-
+import disp_xr as dxr
 from disp_xr.tutorial import make_disp_stack
 
 work = Path(tempfile.mkdtemp())
@@ -81,7 +80,7 @@ run("export", "F11116.zarr", "--format", "geozarr", "--out", "view.zarr", "--fla
 # their parameters, and package versions.
 
 # %%
-ds = xr.open_zarr(work / "F11116.zarr")
+ds = dxr.open_zarr(work / "F11116.zarr")
 print(dict(ds.sizes))
 print(ds.attrs["reference"])
 print("steps:", [step["op"] for step in ds.disp.history])
