@@ -124,9 +124,10 @@ not run them again.
 
 <div class="grid cards" markdown>
 
--   :material-database-clock-outline: **[Virtual frames and versioned stores](virtual_frames.py)**
+-   :material-database-clock-outline: **[Icechunk: virtual frames and versioned stores](virtual_frames.py)**
 
-    Icechunk: reference granules in place, commit, time travel, tag.
+    Reference granules in place, append, tag, branch, read the history, and
+    process from the store.
 
 -   :material-map-outline: **[Serving results as web map tiles](web_tiles.py)**
 

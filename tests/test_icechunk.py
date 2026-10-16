@@ -136,3 +136,17 @@ def test_snapshot_id_reaches_downstream_provenance(ds, repo, tmp_path):
     path = tmp_path / "out.zarr"
     dxr.to_zarr(dxr.open_icechunk(repo), path)
     assert xr.open_zarr(path).attrs["source_snapshot_id"] == snapshot
+
+
+def test_open_chunks_by_shard(ds, repo):
+    """Like dxr.open_zarr: one dask chunk per shard, not per 64 x 64 read
+    chunk; chunks=None (no dask) is still available."""
+    dxr.to_icechunk(ds, repo, message="m")
+    back = dxr.open_icechunk(repo)
+    disp = back.displacement
+    shards = disp.encoding["shards"]
+    assert disp.data.chunksize == tuple(min(s, n) for s, n in zip(shards, disp.shape))
+    assert dxr.open_icechunk(repo, chunks=None).displacement.chunks is None
+    raw = dxr.open_icechunk(repo, chunks={}).displacement.data.chunksize
+    assert raw == tuple(disp.encoding["chunks"])
+    _equal_values(back.displacement, ds.displacement)

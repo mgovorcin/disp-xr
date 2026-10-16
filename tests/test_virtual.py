@@ -178,3 +178,15 @@ def test_s3_container_with_static_credentials(tmp_path):
         credentials=AWSCredentials("key", "secret", "token"),
     )
     assert "s3://bucket/granules/" in repo.config.virtual_chunk_containers
+
+
+def test_open_chunks_like_open_disp(granules, tmp_path):
+    """The stored chunks are the granules' HDF5 chunks and, without dask, a
+    chain loaded the whole frame; open_virtual chunks as open_disp does."""
+    repo = tmp_path / "repo"
+    build_virtual_frame(granules, repo, max_workers=1)
+    virtual = open_virtual(repo).displacement
+    direct = dxr.open_disp(granules).displacement
+    assert virtual.chunks == direct.chunks
+    assert dxr.chain(open_virtual(repo)).displacement.chunks is not None  # lazy
+    assert open_virtual(repo, chunks=None).displacement.chunks is None
