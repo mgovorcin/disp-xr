@@ -90,6 +90,58 @@ def test_schur_complement_matches_dense_gls(shape):
         assert count[i] == np.isfinite(data[i]).sum()
 
 
+def test_missing_epoch_blocks_are_solved_in_bounded_pieces(monkeypatch):
+    """Issue #94: pixels missing many epochs are solved in pieces whose
+    (pixels, k, k) stacks stay under _SCHUR_BYTES; the result is unchanged."""
+    from disp_xr.timeseries import gls
+
+    rng = np.random.default_rng(5)
+    n = 60
+    times = _times(n)
+    design = TERMS.design(times)
+    data = rng.normal(0, 1e-3, (300, n)).cumsum(axis=1) * 0.1
+    data[rng.random(data.shape) < 0.5] = np.nan  # about 30 of 60 epochs missing
+    shape = NoiseShape("PLWN", ((-1.0, 0.7), (0.0, 0.3)))
+    obs_idx, _ = _sampling_grid(times, None)
+    inverse = np.linalg.inv(shape.covariance(obs_idx))[None]
+    args = (data, np.zeros(300, int), design, inverse, np.array([0]), 2, 0)
+    whole = _gls_block(*args)
+    sizes = []
+    real = gls._missing_groups
+
+    def spy(missing, valid):
+        for sel, idx in real(missing, valid):
+            sizes.append((len(sel), len(sel) * idx.shape[1] ** 2 * 8))
+            yield sel, idx
+
+    monkeypatch.setattr(gls, "_SCHUR_BYTES", 8 * 30**2 * 3)  # 3 pixels at k=30
+    monkeypatch.setattr(gls, "_missing_groups", spy)
+    pieces = _gls_block(*args)
+    # over the budget only when one pixel alone is (k > 30 here)
+    assert all(nbytes <= 8 * 30**2 * 3 or n_px == 1 for n_px, nbytes in sizes)
+    assert len(sizes) > len(np.unique(np.isnan(data).sum(axis=1)))
+    for a, b in zip(whole, pieces):
+        np.testing.assert_array_equal(a, b)
+
+
+def test_labels_enter_the_graph_as_the_smallest_integer(frame):
+    """Issue #94: the in-memory label map is embedded in the dask graph; as
+    int64 it was 530 MB on a full frame, as int8 it is 66 MB."""
+    from disp_xr.timeseries import gls
+
+    ds, _ = frame
+    shapes = {g: NoiseShape("PLWN", ((-1.0, 0.7), (0.0, 0.3))) for g in (0, 1)}
+    out = gls.gls_velocity(
+        ds.chunk({"y": 6, "x": 6}), terms=TERMS, n_groups=2, shapes=shapes
+    )
+    graph = dict(out.velocity.__dask_graph__())
+    embedded = [
+        v for v in graph.values() if isinstance(v, np.ndarray) and v.shape == (6, 6)
+    ]
+    assert embedded and all(v.dtype == np.int8 for v in embedded)
+    assert out.noise_group.dtype == np.int64
+
+
 @pytest.fixture(scope="module")
 def frame():
     return _flicker_frame()
@@ -107,6 +159,7 @@ def test_groups_and_noise_table(fit):
     # Both halves are flicker plus white.
     assert table.kappa.between(-1.4, -0.6).all()
     assert set(np.unique(fit.noise_group)) == {0, 1}
+    assert fit.noise_group.dtype == np.int64  # the type of coherence_groups
     assert fit.attrs["method"] == "gls"
 
 
