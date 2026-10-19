@@ -1,6 +1,6 @@
 # disp-xr project index
 
-**Last indexed:** 2026-10-16 · `main` after v0.5.1 (branch `feat/icechunk-shards-tutorial`) on `origin` = `mgovorcin/disp-xr`
+**Last indexed:** 2026-10-19 · `main` at the v0.5.2 release (branch `chore/release-0.5.2`, after #103) on `origin` = `mgovorcin/disp-xr`
 
 How and when this file is rebuilt: see "Project Index (cyclical indexing)" in `CLAUDE.md` at the repository root.
 
@@ -182,6 +182,7 @@ since #30 was checked locally and says so in its description.
 
 | Date | Trigger | Changes |
 | --- | --- | --- |
+| 2026-10-19 | Release `v0.5.2` | Changelog section `[0.5.2]` (#103: `open_icechunk` and `open_virtual` chunk defaults, Icechunk tutorial); index stamped |
 | 2026-10-16 | Icechunk chunk defaults and tutorial | `open_icechunk` chunks by shard (`export/zarr.py` `chunk_by_shard`), `open_virtual` chunks as `open_disp` (the chain of a virtual frame was eager, also in `serve`); `gallery/virtual_frames.py` expanded into the Icechunk tutorial (history, branches, S3) |
 | 2026-10-16 | Gallery pages on `open_zarr` | `command_line` and `export` reopen stores with `dxr.open_zarr` (the export page prints the read chunk and the shard); `web_tiles` says when xarray's small chunks are right; `config.md` `read_block` row |
 | 2026-10-15 | Release `v0.5.1`; T38.3b repeated | Changelog section `[0.5.1]`; opera-utils upstream unchanged since `4125484`, the 0.5.0 wheel ships `THIRD_PARTY_NOTICES.md` and `LICENSES/`; index stamped |
