@@ -6,6 +6,15 @@ All notable changes to disp-xr. The format follows
 
 ## [Unreleased]
 
+## [0.5.2] - 2026-10-19
+
+Icechunk stores and virtual frames open with dask chunks fit for
+processing, as Zarr stores do since 0.5.1: `open_icechunk` by shard, and
+`open_virtual` as `open_disp` does. Before, both opened without dask, so
+chaining a virtual frame, or any computation on an Icechunk store, loaded
+all of it into memory (also in `disp_xr serve`). The Icechunk gallery page
+is now a full tutorial. No value changes.
+
 ### Changed
 
 - `open_icechunk` gives one dask chunk per shard by default
