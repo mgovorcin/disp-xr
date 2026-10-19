@@ -6,6 +6,27 @@ All notable changes to disp-xr. The format follows
 
 ## [Unreleased]
 
+### Changed
+
+- `open_icechunk` gives one dask chunk per shard by default
+  (`chunks="shards"`), like `open_zarr`. Before, its default (`chunks=None`)
+  gave no dask at all, so any computation loaded the whole store, and
+  `chunks={}` gave one chunk per 64 x 64 read chunk. Values are unchanged;
+  `chunks=None` still gives no dask.
+
+### Fixed
+
+- `open_virtual` chunks a virtual frame as `open_disp` does
+  (`chunks="native"`: one epoch by `chunks.read_block` pixels). Without dask,
+  `chain(open_virtual(...))` loaded the whole frame when called, and so did
+  `disp_xr serve` on a virtual frame, whose docs said it chained lazily.
+
+### Documentation
+
+- The Icechunk gallery page (`virtual_frames`) became a full tutorial: when
+  to use a virtual frame or a versioned store, chunks for processing, the
+  commit history and its provenance, branches, and S3.
+
 ## [0.5.1] - 2026-10-15
 
 Full frames now fit the memory budget (8 GB per worker, about 4 GB for the

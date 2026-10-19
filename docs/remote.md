@@ -72,7 +72,7 @@ dxr.build_virtual_frame(list(s3_urls), "s3://my-bucket/F11116-virtual")
 ds = dxr.open_virtual("s3://my-bucket/F11116-virtual")
 ```
 
-See the [virtual frames example](gallery/virtual_frames.py) for building,
+See the [Icechunk example](gallery/virtual_frames.py) for building,
 validating and extending one.
 
 ## Static layers

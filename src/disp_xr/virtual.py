@@ -371,7 +371,7 @@ def open_virtual(
     branch: Optional[str] = None,
     tag: Optional[str] = None,
     snapshot_id: Optional[str] = None,
-    chunks: Any = None,
+    chunks: Any = "native",
     credentials: Optional[AWSCredentials] = None,
 ) -> xr.Dataset:
     """Open a virtual frame read-only, with access to its granules.
@@ -380,6 +380,12 @@ def open_virtual(
     access to every virtual chunk container in its config: local directories,
     or S3 with ``credentials`` (default: environment, then ASF).
 
+    ``chunks="native"`` (default) chunks the frame as :func:`disp_xr.open_disp`
+    does: one epoch by ``config["chunks.read_block"]`` pixels. The stored
+    chunks are the granules' own HDF5 chunks, too small to compute on, and
+    without dask (``chunks=None``) a chain or a fit loads the whole frame.
+    Any other value is passed to :func:`xarray.open_zarr`.
+
     Examples
     --------
     >>> ds = dxr.open_virtual("F11116-virtual/")  # doctest: +SKIP
@@ -387,9 +393,18 @@ def open_virtual(
 
     """
     repository = _open_repository(repo, credentials=credentials)
+    native = isinstance(chunks, str) and chunks == "native"
     ds = open_icechunk(
-        repository, branch=branch, tag=tag, snapshot_id=snapshot_id, chunks=chunks
+        repository,
+        branch=branch,
+        tag=tag,
+        snapshot_id=snapshot_id,
+        chunks=None if native else chunks,
     )
+    if native:
+        from ._chunks import rechunk
+
+        ds = rechunk(ds, "native")
     # The references point at the granules' own time variables, which
     # productions encode with sub-second parts; open_disp keeps whole
     # seconds (as in granule names), and a frame must read the same both ways.
