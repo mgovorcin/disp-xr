@@ -6,6 +6,15 @@ All notable changes to disp-xr. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- `group=` in `build_virtual_frame`, `open_virtual`, `validate_virtual` and
+  `open_icechunk`: one repository can hold a frame whose granules come from
+  several productions (one group each, since one virtual array cannot mix
+  dtypes), next to other groups such as stored chain offsets. On F11116
+  (2025-04 float32, 2025-11 and 2026-08 float64 productions) the three groups
+  plus native chain offsets reproduce `chain(open_disp(...))` bit for bit.
+
 ## [0.5.2] - 2026-10-19
 
 Icechunk stores and virtual frames open with dask chunks fit for

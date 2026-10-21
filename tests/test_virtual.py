@@ -190,3 +190,26 @@ def test_open_chunks_like_open_disp(granules, tmp_path):
     assert virtual.chunks == direct.chunks
     assert dxr.chain(open_virtual(repo)).displacement.chunks is not None  # lazy
     assert open_virtual(repo, chunks=None).displacement.chunks is None
+
+
+def test_one_group_per_production(granules, tmp_path):
+    """Granules that differ in dtype cannot share a virtual array: each
+    production goes in its own group of one repository."""
+    repo = tmp_path / "repo"
+    products = dxr.find_products(granules)
+    first = products[products.reference_time == products.reference_time.min()]
+    second = products[products.reference_time > products.reference_time.min()]
+    build_virtual_frame(first, repo, group="production/a", max_workers=1)
+    build_virtual_frame(second, repo, group="production/b", max_workers=1)
+    a = open_virtual(repo, group="production/a")
+    b = open_virtual(repo, group="production/b")
+    assert a.sizes["time"] == len(first) and b.sizes["time"] == len(second)
+    direct = dxr.open_disp(granules)
+    both = xr.concat([a, b], dim="time").displacement
+    np.testing.assert_array_equal(both.values, direct.displacement.values)
+    dxr.validate_virtual(repo, second, n_samples=2, group="production/b")
+    session = icechunk.Repository.open(
+        icechunk.local_filesystem_storage(str(repo))
+    ).readonly_session("main")
+    root = xr.open_zarr(session.store, consolidated=False)
+    assert not root.data_vars  # the root holds no frame of its own
