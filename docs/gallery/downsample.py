@@ -179,7 +179,7 @@ gdf[["h3_cell", "displacement", "n_eff", "geometry"]].head()
 # the leaves back on the 30 m grid.
 #
 # Which to use: in the T29 trade study (three DISP-S1 frames,
-# [report](../studies/split_metric.md)), the regular grid of `downsample`
+# [report][split-metric]), the regular grid of `downsample`
 # reconstructed the 30 m field better than any quadtree with the same number
 # of points, and agreed better with GNSS except across a creeping fault. Use
 # the grid by default and the quadtree for sharp, local gradients. The
@@ -189,6 +189,8 @@ gdf[["h3_cell", "displacement", "n_eff", "geometry"]].head()
 # For Cal/Val accuracy runs, a stricter coherence floor in the weights
 # (`dxr.quality_weights(ds, floors={"temporal_coherence": 0.8})`) agreed
 # better with GNSS, at the cost of 12 to 39% of the pixels.
+#
+# [split-metric]: https://github.com/mgovorcin/disp-xr/blob/main/docs/studies/split_metric.md
 
 # %%
 tree = dxr.quadtree(

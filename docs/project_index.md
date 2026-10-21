@@ -1,6 +1,6 @@
 # disp-xr project index
 
-**Last indexed:** 2026-10-19 · `main` at the v0.5.2 release (branch `chore/release-0.5.2`, after #103) on `origin` = `mgovorcin/disp-xr`
+**Last indexed:** 2026-10-20 · `main` after v0.5.2 (branch `docs/cmr-virtual-cube`) on `origin` = `mgovorcin/disp-xr`
 
 How and when this file is rebuilt: see "Project Index (cyclical indexing)" in `CLAUDE.md` at the repository root.
 
@@ -182,6 +182,7 @@ since #30 was checked locally and says so in its description.
 
 | Date | Trigger | Changes |
 | --- | --- | --- |
+| 2026-10-20 | CMR to lazy cube guide | `remote.md` section "From a CMR search to a lazy data cube" (script, productions, reference pixel, `__main__` guard, native store for heavy work, timings on F11116); the Icechunk tutorial's S3 section points to it; gallery links to guide pages (`remote`, `serving`) used `.md` paths that mkdocs-jupyter does not rewrite (404 on the site) and now use site paths, and the split-metric study link (not on the public site) goes to GitHub |
 | 2026-10-19 | Release `v0.5.2` | Changelog section `[0.5.2]` (#103: `open_icechunk` and `open_virtual` chunk defaults, Icechunk tutorial); index stamped |
 | 2026-10-16 | Icechunk chunk defaults and tutorial | `open_icechunk` chunks by shard (`export/zarr.py` `chunk_by_shard`), `open_virtual` chunks as `open_disp` (the chain of a virtual frame was eager, also in `serve`); `gallery/virtual_frames.py` expanded into the Icechunk tutorial (history, branches, S3) |
 | 2026-10-16 | Gallery pages on `open_zarr` | `command_line` and `export` reopen stores with `dxr.open_zarr` (the export page prints the read chunk and the shard); `web_tiles` says when xarray's small chunks are right; `config.md` `read_block` row |
