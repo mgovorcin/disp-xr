@@ -192,24 +192,41 @@ diff = (on_branch.displacement - on_main.displacement).isel(time=-1)
 print(f"largest difference at the last epoch: {float(abs(diff).max()) * 1e3:.2f} mm")
 
 # %% [markdown]
-# ## On S3
+# ## From a CMR search to a lazy cube on S3
 #
-# A virtual frame takes an `s3://` location directly, and reads the granules
-# with the `AWS_*` environment variables or temporary ASF credentials
-# (renewed automatically; direct S3 access works from AWS `us-west-2`). For
-# a versioned store, pass an Icechunk repository on S3:
+# On a real frame the granules come from CMR: their S3 links go straight
+# into `build_virtual_frame`, and `chain` and `rereference` run lazily on
+# the virtual frame, so only the chunks a read needs are fetched from the
+# granules. Run it in AWS `us-west-2` (direct S3 access), keep one
+# production per frame, and reference to a pixel valid at every epoch:
 #
 # ```python
-# dxr.build_virtual_frame(list(s3_urls), "s3://my-bucket/F11116-virtual")
-# frame = dxr.chain(dxr.open_virtual("s3://my-bucket/F11116-virtual"))
+# from disp_xr.reference import find_stable_point
 #
+# table = dxr.search_granules(frame_id=11116, url_type="s3")
+# granules = dxr.find_products(list(table["filename"]))
+# granules = granules[granules.production_time.dt.strftime("%Y-%m") == "2025-04"]
+# dxr.build_virtual_frame(granules, "s3://my-bucket/F11116-virtual")
+#
+# frame = dxr.open_virtual("s3://my-bucket/F11116-virtual")
+# row, col = find_stable_point(frame)
+# cube = dxr.chain(frame).disp.rereference("point", row=row, col=col)
+# ```
+#
+# A versioned store of results can live on S3 too, as an Icechunk
+# repository passed to `to_icechunk`:
+#
+# ```python
 # storage = icechunk.s3_storage(
 #     bucket="my-bucket", prefix="F11116-results", from_env=True
 # )
 # repo = icechunk.Repository.open_or_create(storage)
-# dxr.to_icechunk(frame, repo, message="chained frame", tag="calval-2026-10")
-# cube = dxr.open_icechunk(repo, tag="calval-2026-10")
+# dxr.to_icechunk(cube, repo, message="chained frame", tag="calval-2026-10")
+# stored = dxr.open_icechunk(repo, tag="calval-2026-10")
 # ```
 #
-# See [Remote access](../remote.md) for credentials, and
-# [Exporting results](export.py) for plain Zarr, NetCDF and GeoTIFF.
+# [Remote access](../../remote/#from-a-cmr-search-to-a-lazy-data-cube) has
+# the full script, what to know before running it (productions, the
+# reference pixel, the `__main__` guard, when to write a native store) and
+# timings on a real frame. [Exporting results](export.py) covers plain
+# Zarr, NetCDF and GeoTIFF.

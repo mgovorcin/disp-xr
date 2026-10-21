@@ -14,7 +14,7 @@
 # when the store holds them, so they are computed once, by whoever builds the
 # store. This page builds such a store from a synthetic frame, starts the
 # service and queries every route, then shows a MapLibre client. Deploying
-# the service is covered in [Serving stores over HTTP](../serving.md).
+# the service is covered in [Serving stores over HTTP](../../serving/).
 
 # %%
 import socket

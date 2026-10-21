@@ -65,15 +65,100 @@ S3 access works only from AWS `us-west-2`; elsewhere use HTTPS.
 Reading a whole frame over the network is slow: every epoch is a separate
 file, and opening it reads its metadata. For repeated work, build a virtual
 frame once. It references the chunks in place, and every later open reads
-only the chunk index:
+only the chunk index.
+
+### From a CMR search to a lazy data cube
+
+The links CMR returns go straight into a virtual frame, and the rebasing
+across ministacks (`chain`) and the re-reference run lazily on top of it:
+nothing is read until values are asked for, and then only the chunks needed.
 
 ```python
-dxr.build_virtual_frame(list(s3_urls), "s3://my-bucket/F11116-virtual")
-ds = dxr.open_virtual("s3://my-bucket/F11116-virtual")
+import disp_xr as dxr
+from disp_xr.reference import find_stable_point
+
+
+def main():
+    # 1. CMR: the frame's granules, with S3 links in the "filename" column
+    table = dxr.search_granules(frame_id=11116, url_type="s3")
+
+    # 2. One production per frame (see below), as a list of links
+    granules = dxr.find_products(list(table["filename"]))
+    keep = granules.production_time.dt.strftime("%Y-%m") == "2025-04"
+
+    # 3. Virtual frame: one commit per ministack, no pixels copied
+    dxr.build_virtual_frame(granules[keep], "s3://my-bucket/F11116-virtual")
+    dxr.validate_virtual("s3://my-bucket/F11116-virtual", granules[keep], n_samples=3)
+
+    # 4. Lazy cube: rebase, mask, re-reference to a stable pixel
+    frame = dxr.open_virtual("s3://my-bucket/F11116-virtual")
+    row, col = find_stable_point(frame)
+    cube = dxr.chain(dxr.mask(frame, "recommended")).disp.rereference(
+        "point", row=row, col=col
+    )
+    series = cube.displacement.isel(y=3500, x=4800).values  # reads one pixel's chunks
+
+
+if __name__ == "__main__":  # build_virtual_frame starts worker processes
+    main()
 ```
 
+New granules later: search again and pass only the new ones to
+`build_virtual_frame`; they become new commits on the same frame, and
+earlier snapshots stay readable.
+
+Things to know:
+
+- **Run it in AWS `us-west-2`.** Direct S3 reads of the ASF bucket work only
+  there (`AWS_*` variables, or temporary ASF credentials renewed
+  automatically). Elsewhere, download the granules and build the frame from
+  the local files; the repository itself can be a local folder or your own
+  bucket.
+- **One production per frame.** A frame's granules can come from several
+  productions that store displacement in different dtypes (F11116: float32
+  for 314 granules produced in 2025-04, float64 for 75 produced later), and a
+  virtual frame refuses to mix them (`MixedProductionError`). Select one
+  production with `production_time`, or build one frame per production.
+- **Pick the reference pixel with `find_stable_point`.** A `"point"`
+  reference must be valid at every epoch: where it is masked, the whole
+  epoch becomes NaN. `find_stable_point` (what `rereference("auto")` uses)
+  picks a pixel never masked, coherent and free of phase jumps; it reads the
+  quality layers of every epoch once (33 min on F11116 with dask threads; its
+  docstring recommends a `distributed.LocalCluster`), so find it once per
+  frame and keep the pixel. Avoid `"median"` for point queries: a
+  spatial median needs every pixel of each epoch, so one pixel's series
+  reads the whole frame.
+- **Guard the script.** `build_virtual_frame(max_workers>1)` parses
+  granules in worker processes, which re-import the calling script; without
+  `if __name__ == "__main__":` each worker runs it again and the pool fails
+  (`BrokenProcessPool`).
+- **Heavy work goes to a native store.** Reads follow the granules' own small
+  HDF5 chunks, which suits exploring, point series and `disp_xr serve`. For
+  whole-frame fits, write the lazy cube once (`dxr.to_zarr(cube, ...)`, or
+  `dxr.to_icechunk(cube, repo, tag=...)` to version it) and process it with
+  `dxr.open_zarr` / `dxr.open_icechunk`.
+
+Measured on F11116 (314 granules, 118 GB, on local disk of a shared node,
+disp-xr 0.5.2):
+
+| Step | Time |
+|---|---:|
+| CMR search (389 granules) | 6–15 s |
+| Build the virtual frame (21 commits; repository 0.5 GB) | 97–110 s |
+| Validate 3 pixels in 11 layers | 3 min |
+| Lazy cube: chain, mask, point re-reference (1.1 M tasks, nothing read) | 18–20 s |
+| One pixel's series, 315 epochs (read only) | 13.5 s |
+| Open, build the lazy cube and read that series: virtual frame vs `open_disp` | about 33 s vs 65 s, identical values |
+| One full epoch map | 47 s |
+| Open an earlier snapshot | 0.1 s |
+
+On local disk the granules' metadata is cheap to read, so most of the gain
+there is from skipping libhdf5 (its lock serializes threads). On S3, where
+each metadata read is a network round trip, the virtual frame opens 80
+times faster (0.44 s against 35 s for 29 granules, `benchmarks/README.md`).
+
 See the [Icechunk example](gallery/virtual_frames.py) for building,
-validating and extending one.
+validating, extending and versioning a frame on synthetic granules.
 
 ## Static layers
 
