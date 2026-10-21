@@ -252,6 +252,7 @@ def build_virtual_frame(
     repo: RepoLike,
     *,
     branch: str = "main",
+    group: Optional[str] = None,
     layers: Optional[Sequence[str]] = None,
     max_workers: Optional[int] = None,
     credentials: Optional[AWSCredentials] = None,
@@ -274,6 +275,12 @@ def build_virtual_frame(
         opened with access to it.
     branch : str
         Branch to commit to.
+    group : str, optional
+        Group to write instead of the root, for example one group per
+        production (``"production/2025-04"``): a frame whose granules differ in
+        dtype or encoding is kept as one group per production, since one
+        virtual array cannot mix them. Other groups of the repository (a
+        native ``chain`` group, other productions) are left as they are.
     layers : sequence of str, optional
         Layers to reference. Defaults to all displacement and quality layers.
     max_workers : int, optional
@@ -322,15 +329,15 @@ def build_virtual_frame(
         repository.create_branch(branch, repository.lookup_branch("main"))
 
     by_url = dict(zip(urls, _open_granules(urls, drop, credentials, max_workers)))
-    existing = _read(repository.readonly_session(branch=branch))
+    existing = _read(repository.readonly_session(branch=branch), group)
     granted = (
         json.loads(existing.attrs["input_granules"]) if existing is not None else []
     )
     snapshots = []
-    for ref, group in group_ministacks(df).items():
-        names = [Path(str(p)).name for p in group["path"]]
+    for ref, members in group_ministacks(df).items():
+        names = [Path(str(p)).name for p in members["path"]]
         ds = xr.concat(
-            [by_url[_url(p)] for p in group["path"]],
+            [by_url[_url(p)] for p in members["path"]],
             dim="time",
             data_vars="all",
             coords="minimal",
@@ -339,28 +346,28 @@ def build_virtual_frame(
         )
         ds.attrs = {
             "product": product,
-            "frame_id": int(group["frame_id"].iloc[0]),
-            "product_versions": sorted(set(group["version"])),
+            "frame_id": int(members["frame_id"].iloc[0]),
+            "product_versions": sorted(set(members["version"])),
             "input_granules": granted + names,
             "virtual": "true",
         }
         out = with_provenance(ds)
         session = repository.writable_session(branch)
         if existing is None:
-            out.vz.to_icechunk(session.store)
+            out.vz.to_icechunk(session.store, group=group)
         else:
             _check_append(out, existing)
-            out.vz.to_icechunk(session.store, append_dim="time")
+            out.vz.to_icechunk(session.store, group=group, append_dim="time")
         meta = _commit_metadata(out)
         meta["input_granules"] = names
         meta["virtual"] = True
         message = (
             f"Reference {len(names)} granules of ministack "
-            f"{pd.Timestamp(ref):%Y-%m-%d}"
+            f"{pd.Timestamp(ref):%Y-%m-%d}" + (f" in {group}" if group else "")
         )
         snapshots.append(session.commit(message, metadata=meta))
         granted += names
-        existing = _read(repository.readonly_session(branch=branch))
+        existing = _read(repository.readonly_session(branch=branch), group)
         logger.info(f"{message} ({snapshots[-1]})")
     return snapshots
 
@@ -373,6 +380,7 @@ def open_virtual(
     snapshot_id: Optional[str] = None,
     chunks: Any = "native",
     credentials: Optional[AWSCredentials] = None,
+    group: Optional[str] = None,
 ) -> xr.Dataset:
     """Open a virtual frame read-only, with access to its granules.
 
@@ -384,7 +392,8 @@ def open_virtual(
     does: one epoch by ``config["chunks.read_block"]`` pixels. The stored
     chunks are the granules' own HDF5 chunks, too small to compute on, and
     without dask (``chunks=None``) a chain or a fit loads the whole frame.
-    Any other value is passed to :func:`xarray.open_zarr`.
+    Any other value is passed to :func:`xarray.open_zarr`. ``group`` opens
+    one group (for example one production) instead of the root.
 
     Examples
     --------
@@ -400,6 +409,7 @@ def open_virtual(
         tag=tag,
         snapshot_id=snapshot_id,
         chunks=None if native else chunks,
+        group=group,
     )
     if native:
         from ._chunks import rechunk
@@ -427,6 +437,7 @@ def validate_virtual(
     seed: int = 0,
     branch: str = "main",
     credentials: Optional[AWSCredentials] = None,
+    group: Optional[str] = None,
 ) -> dict[str, Any]:
     """Check a virtual frame against the granules, read with h5py.
 
@@ -451,7 +462,7 @@ def validate_virtual(
 
     """
     df = _products(granules)
-    ds = open_virtual(repo, branch=branch, credentials=credentials)
+    ds = open_virtual(repo, branch=branch, credentials=credentials, group=group)
     times = pd.DatetimeIndex(df["secondary_time"]).tz_localize(None).values
     if ds.sizes["time"] != len(df) or not np.array_equal(
         ds["time"].values.astype("datetime64[s]"), times.astype("datetime64[s]")

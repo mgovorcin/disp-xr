@@ -61,16 +61,23 @@ def _repository(repo: RepoLike, create: bool) -> icechunk.Repository:
     return icechunk.Repository.open(storage)
 
 
-def _read(session: icechunk.Session) -> Optional[xr.Dataset]:
-    """Open the root group of ``session`` raw, or ``None`` if it has no data."""
+def _read(
+    session: icechunk.Session, group: Optional[str] = None
+) -> Optional[xr.Dataset]:
+    """Open ``group`` (default: the root) of ``session`` raw, or ``None`` if empty."""
     from zarr.errors import GroupNotFoundError
 
     try:
-        return xr.open_zarr(
-            session.store, consolidated=False, mask_and_scale=False, decode_coords="all"
+        ds = xr.open_zarr(
+            session.store,
+            group=group,
+            consolidated=False,
+            mask_and_scale=False,
+            decode_coords="all",
         )
-    except GroupNotFoundError:
+    except (GroupNotFoundError, FileNotFoundError, KeyError):
         return None
+    return ds if ds.data_vars else None
 
 
 def _check_append(ds: xr.Dataset, existing: xr.Dataset) -> None:
@@ -261,6 +268,7 @@ def open_icechunk(
     snapshot_id: Optional[str] = None,
     chunks: Any = "shards",
     mask_and_scale: bool = False,
+    group: Optional[str] = None,
 ) -> xr.Dataset:
     """Open a DISP dataset from an Icechunk repository, read-only.
 
@@ -282,6 +290,9 @@ def open_icechunk(
     mask_and_scale : bool
         Decode fill values to NaN. Off by default, so integer layers keep
         their dtype, as :func:`disp_xr.open_disp` does.
+    group : str, optional
+        Group to open instead of the root (for example one production of a
+        virtual frame, ``"production/2025-04"``).
 
     Examples
     --------
@@ -301,6 +312,7 @@ def open_icechunk(
     by_shard = isinstance(chunks, str) and chunks == "shards"
     ds = xr.open_zarr(
         session.store,
+        group=group,
         consolidated=False,
         chunks=None if by_shard else chunks,
         mask_and_scale=mask_and_scale,
