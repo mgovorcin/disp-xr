@@ -8,6 +8,11 @@ All notable changes to disp-xr. The format follows
 
 ### Added
 
+- `build_virtual_frame(..., reference_urls={name: url})`: parse local
+  copies of granules and store other URLs in the references, for example
+  ASF's `s3://` objects (copies must be byte-identical; CMR lists an MD5
+  per granule). The virtual chunk container is registered for the URLs'
+  location, and writing needs no credentials.
 - Frame repositories (`disp_xr.frame`): `add_chain_offsets(repo)` stores,
   in a native `chain` group next to a virtual frame, the offset map of each
   ministack (the chained displacement at its reference date), and

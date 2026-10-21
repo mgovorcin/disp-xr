@@ -23,7 +23,7 @@ import json
 import logging
 import multiprocessing
 import os
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Optional, Union
@@ -137,6 +137,7 @@ def _open_repository(
     *,
     prefix: Optional[str] = None,
     credentials: Optional[AWSCredentials] = None,
+    authorize: bool = True,
 ) -> icechunk.Repository:
     """Open (with ``prefix``: or create) a repository with virtual chunk access.
 
@@ -161,8 +162,13 @@ def _open_repository(
         prefixes.add(prefix)
     # Icechunk wants each container's credentials wrapped as Credentials;
     # bare S3 static credentials are refused (icechunk 2.3).
-    access = icechunk.containers_credentials(
-        {p: _chunk_access(p, credentials) for p in prefixes}
+    # Writing references reads no chunk, so it needs no credentials.
+    access = (
+        icechunk.containers_credentials(
+            {p: _chunk_access(p, credentials) for p in prefixes}
+        )
+        if authorize
+        else None
     )
     if not exists:
         if prefix is None:
@@ -256,6 +262,7 @@ def build_virtual_frame(
     layers: Optional[Sequence[str]] = None,
     max_workers: Optional[int] = None,
     credentials: Optional[AWSCredentials] = None,
+    reference_urls: Optional[Mapping[str, str]] = None,
 ) -> list[str]:
     """Write a frame of granules to an Icechunk repository as virtual references.
 
@@ -288,6 +295,14 @@ def build_virtual_frame(
     credentials : AWSCredentials, optional
         For ``s3://`` granules. Defaults to ``AWS_*`` environment variables,
         then ASF temporary credentials.
+    reference_urls : mapping of str to str, optional
+        Granule file name to the URL the references store, for every granule:
+        parse local copies of granules published elsewhere (for example ASF's
+        ``s3://`` objects) and reference the published ones. The copies must be
+        byte-identical, since the byte ranges are taken from them; check sizes
+        and checksums first (CMR lists an MD5 per granule). The virtual chunk
+        container is registered for the URLs' location, and no credentials
+        are needed to write.
 
     Returns
     -------
@@ -322,13 +337,34 @@ def build_virtual_frame(
     drop = [v for v in available if v not in keep]
 
     urls = [_url(p) for p in df["path"]]
-    prefix = _container_prefix(urls)
-    repository = _open_repository(repo, prefix=prefix, credentials=credentials)
+    names = [Path(str(p)).name for p in df["path"]]
+    if reference_urls is None:
+        targets = urls
+    else:
+        missing = [n for n in names if n not in reference_urls]
+        if missing:
+            raise ValueError(
+                f"reference_urls has no URL for {len(missing)} granules, "
+                f"for example {missing[0]}"
+            )
+        targets = [reference_urls[n] for n in names]
+    prefix = _container_prefix(targets)
+    repository = _open_repository(
+        repo,
+        prefix=prefix,
+        credentials=credentials,
+        authorize=reference_urls is None,
+    )
     _check_container(repository, prefix)
     if branch not in repository.list_branches():
         repository.create_branch(branch, repository.lookup_branch("main"))
 
-    by_url = dict(zip(urls, _open_granules(urls, drop, credentials, max_workers)))
+    opened = _open_granules(urls, drop, credentials, max_workers)
+    # Each granule is one file: every reference of it points at its target.
+    by_url = {
+        url: ds if url == target else ds.vz.rename_paths(target)
+        for url, target, ds in zip(urls, targets, opened)
+    }
     existing = _read(repository.readonly_session(branch=branch), group)
     granted = (
         json.loads(existing.attrs["input_granules"]) if existing is not None else []
