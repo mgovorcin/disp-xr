@@ -6,6 +6,17 @@ All notable changes to disp-xr. The format follows
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-10-21
+
+Frame repositories: a whole DISP frame as one Icechunk repository of virtual
+references to its granules, one group per production, plus the rebasing
+between ministacks stored once (`add_chain_offsets`), so `open_frame` returns
+the continuous series, equal to `chain(open_disp(...))` bit for bit, in
+seconds and with late epochs read in 2-3 s instead of 35-48 s (F11116, 389
+granules). References can be parsed from local copies and point at the
+published granules (`reference_urls`). No value changes to existing
+functions. DISP-NISAR support moves to 0.7.
+
 ### Added
 
 - `build_virtual_frame(..., reference_urls={name: url})`: parse local
