@@ -213,3 +213,49 @@ def test_one_group_per_production(granules, tmp_path):
     ).readonly_session("main")
     root = xr.open_zarr(session.store, consolidated=False)
     assert not root.data_vars  # the root holds no frame of its own
+
+
+def test_reference_urls_point_elsewhere(granules, tmp_path):
+    """Parse one copy, reference another (e.g. local copies of ASF's S3
+    objects): the frame reads the referenced files only."""
+    published = tmp_path / "published"
+    shutil.copytree(granules, published)
+    repo = tmp_path / "repo"
+    urls = {p.name: p.as_uri() for p in published.glob("*.nc")}
+    build_virtual_frame(granules, repo, max_workers=1, reference_urls=urls)
+    shutil.rmtree(granules)  # the parsed copy is gone
+    back = open_virtual(repo)
+    np.testing.assert_array_equal(
+        back.displacement.values, dxr.open_disp(published).displacement.values
+    )
+    config = icechunk.Repository.fetch_config(
+        icechunk.local_filesystem_storage(str(repo))
+    )
+    assert list(config.virtual_chunk_containers) == [published.as_uri() + "/"]
+
+
+def test_reference_urls_on_s3_need_no_credentials(granules, tmp_path, monkeypatch):
+    def refuse(*_):
+        raise AssertionError("writing references must not fetch credentials")
+
+    monkeypatch.setattr(dxr.virtual.AWSCredentials, "from_env", refuse)
+    monkeypatch.setattr(dxr.virtual.AWSCredentials, "from_asf", refuse)
+    urls = {
+        p.name: f"s3://some-bucket/OPERA_L3_DISP-S1_V1/{p.stem}/{p.name}"
+        for p in granules.glob("*.nc")
+    }
+    repo = tmp_path / "repo"
+    build_virtual_frame(granules, repo, max_workers=1, reference_urls=urls)
+    config = icechunk.Repository.fetch_config(
+        icechunk.local_filesystem_storage(str(repo))
+    )
+    assert list(config.virtual_chunk_containers) == ["s3://some-bucket/"]
+
+
+def test_reference_urls_must_cover_every_granule(granules, tmp_path):
+    one = next(granules.glob("*.nc"))
+    with pytest.raises(ValueError, match="no URL for"):
+        build_virtual_frame(
+            granules, tmp_path / "repo", max_workers=1,
+            reference_urls={one.name: one.as_uri()},
+        )  # fmt: skip

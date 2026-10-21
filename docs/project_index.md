@@ -1,6 +1,6 @@
 # disp-xr project index
 
-**Last indexed:** 2026-10-20 · `main` after #106 (branch `feat/open-frame`) on `origin` = `mgovorcin/disp-xr`
+**Last indexed:** 2026-10-20 · `main` after #107 (branch `feat/virtual-reference-urls`) on `origin` = `mgovorcin/disp-xr`
 
 How and when this file is rebuilt: see "Project Index (cyclical indexing)" in `CLAUDE.md` at the repository root.
 
@@ -183,6 +183,7 @@ since #30 was checked locally and says so in its description.
 
 | Date | Trigger | Changes |
 | --- | --- | --- |
+| 2026-10-20 | Virtual references to published copies | `build_virtual_frame(reference_urls=)` and `_open_repository(authorize=)` in `virtual.py`; three tests |
 | 2026-10-20 | Frame repositories | `frame.py` (new): `add_chain_offsets`, `open_frame`; `api/cloud.md` section; Icechunk tutorial section "A continuous series, rebased once"; `tests/test_frame.py` |
 | 2026-10-20 | Virtual frames per production group | `group=` in `virtual.py` (`build_virtual_frame`, `open_virtual`, `validate_virtual`) and `export/icechunk.py` (`open_icechunk`, `_read`); prototype of per-frame repositories with stored chain offsets on F11116 (bit-identical to `chain`) |
 | 2026-10-20 | CMR to lazy cube guide | `remote.md` section "From a CMR search to a lazy data cube" (script, productions, reference pixel, `__main__` guard, native store for heavy work, timings on F11116); the Icechunk tutorial's S3 section points to it; gallery links to guide pages (`remote`, `serving`) used `.md` paths that mkdocs-jupyter does not rewrite (404 on the site) and now use site paths, and the split-metric study link (not on the public site) goes to GitHub |
