@@ -147,9 +147,15 @@ disp-xr 0.5.2):
 | Build the virtual frame (21 commits; repository 0.5 GB) | 97–110 s |
 | Validate 3 pixels in 11 layers | 3 min |
 | Lazy cube: chain, mask, point re-reference (1.1 M tasks, nothing read) | 18–20 s |
-| One pixel's series, 315 epochs | 13.5 s (`open_disp`: 65 s, identical values) |
+| One pixel's series, 315 epochs (read only) | 13.5 s |
+| Open, build the lazy cube and read that series: virtual frame vs `open_disp` | about 33 s vs 65 s, identical values |
 | One full epoch map | 47 s |
 | Open an earlier snapshot | 0.1 s |
+
+On local disk the granules' metadata is cheap to read, so most of the gain
+there is from skipping libhdf5 (its lock serializes threads). On S3, where
+each metadata read is a network round trip, the virtual frame opens 80
+times faster (0.44 s against 35 s for 29 granules, `benchmarks/README.md`).
 
 See the [Icechunk example](gallery/virtual_frames.py) for building,
 validating, extending and versioning a frame on synthetic granules.
