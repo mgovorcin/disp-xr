@@ -8,6 +8,17 @@ All notable changes to disp-xr. The format follows
 
 ### Added
 
+- Frame repositories (`disp_xr.frame`): `add_chain_offsets(repo)` stores,
+  in a native `chain` group next to a virtual frame, the offset map of each
+  ministack (the chained displacement at its reference date), and
+  `open_frame(repo, tag=...)` returns the continuous series from it, equal
+  to `chain(open_disp(granules))` bit for bit, reading every epoch as itself
+  and one offset map. New ministacks only need their own offsets
+  (incremental), every `production/*` group is read in time order (mixed
+  precisions cast to float32, as in `open_disp`), and the offsets are plain
+  Zarr for readers without disp-xr. On F11116 (389 granules, three
+  productions), a last-epoch map took 2 s against 37-48 s with `chain`.
+
 - `group=` in `build_virtual_frame`, `open_virtual`, `validate_virtual` and
   `open_icechunk`: one repository can hold a frame whose granules come from
   several productions (one group each, since one virtual array cannot mix

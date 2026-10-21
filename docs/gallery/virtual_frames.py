@@ -96,6 +96,40 @@ print("dask chunks:", virtual.displacement.data.chunksize)
 print("granule chunks:", virtual.displacement.encoding["chunks"])
 
 # %% [markdown]
+# ## A continuous series, rebased once
+#
+# `chain` redoes the rebasing on every read: an epoch of the last ministack
+# also reads one crossover epoch per earlier ministack. `add_chain_offsets`
+# stores that arithmetic once, as a native `chain` group of the same
+# repository (one offset map per ministack), and `open_frame` returns the
+# continuous series from it: every epoch reads itself and one offset map,
+# and the result equals `chain` exactly. On a full DISP-S1 frame (F11116,
+# 389 granules), a last-epoch map took 2 s this way against 37-48 s with
+# `chain`, for 4 GB of offsets next to the 0.5 GB of references.
+
+# %%
+dxr.add_chain_offsets(work / "virtual", tag="frame-v1")
+frame = dxr.open_frame(work / "virtual", tag="frame-v1")
+same = np.array_equal(
+    frame.displacement.values,
+    dxr.chain(dxr.open_disp(work / "F11116")).displacement.values,
+    equal_nan=True,
+)
+print(dict(frame.sizes), "| equal to chain(open_disp):", same)
+
+# %% [markdown]
+# New granules later: `build_virtual_frame` appends them, and another
+# `add_chain_offsets` computes only the new ministacks' offsets, from the
+# stored ones. A frame whose granules mix productions (displacement stored
+# as float32 in some, float64 in others) keeps one group per production,
+# `build_virtual_frame(part, repo, group="production/<name>")`; `open_frame`
+# reads every `production/*` group in time order, as `open_disp` reads mixed
+# granules (cast to float32).
+#
+# Without disp-xr, the `chain` group is plain Zarr:
+# `raw + chain.displacement_offset.sel(ministack=raw.reference_time)`.
+
+# %% [markdown]
 # ## Time travel
 #
 # Every commit stays readable. Opening the frame as of the second commit

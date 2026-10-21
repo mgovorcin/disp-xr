@@ -24,6 +24,7 @@ from .export import (
     to_pyramid,
     to_zarr,
 )
+from .frame import add_chain_offsets, open_frame
 from .geometry.los import enu_to_los
 from .geometry.static import open_static
 from .hexagons import downsample_hex, to_geodataframe
@@ -60,6 +61,7 @@ __all__ = [
     "Trajectory",
     "VariogramModel",
     "__version__",
+    "add_chain_offsets",
     "build_overviews",
     "build_virtual_frame",
     "config",
@@ -80,6 +82,7 @@ __all__ = [
     "models",
     "open_disp",
     "open_disp_tree",
+    "open_frame",
     "open_icechunk",
     "open_pyramid",
     "open_static",
