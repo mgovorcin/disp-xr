@@ -1,6 +1,6 @@
 # disp-xr project index
 
-**Last indexed:** 2026-10-20 · `main` after #105 (branch `feat/virtual-frame-groups`) on `origin` = `mgovorcin/disp-xr`
+**Last indexed:** 2026-10-20 · `main` after #106 (branch `feat/open-frame`) on `origin` = `mgovorcin/disp-xr`
 
 How and when this file is rebuilt: see "Project Index (cyclical indexing)" in `CLAUDE.md` at the repository root.
 
@@ -100,6 +100,7 @@ since #30 was checked locally and says so in its description.
 | `export/icechunk.py` | F12, C2 | `to_icechunk`, `open_icechunk` (one dask chunk per shard by default; `cloud` extra, imported lazily) | T14.2b |
 | `batch.py` | C6 | `init_store`, `plan_jobs`, `RegionJob`, `run_region`, `failed_jobs`, manifest | T37.4 |
 | `virtual.py` | C3 | `build_virtual_frame`, `open_virtual` (chunked as `open_disp`), `validate_virtual` (`cloud` extra) | T14.2c |
+| `frame.py` | C3 | `add_chain_offsets`, `open_frame`: a frame repository of virtual production groups plus native chain offsets (`cloud` extra) | follow-up of T14.2c (no plan task yet) |
 | `export/_provenance.py` | NFR Provenance, Metadata | Provenance and CF flag attributes | T14.4 |
 | `export/mintpy.py` (was `mintpy.py`) | F12 | `to_mintpy`: timeseries, quality masks, geometry (h5py only) | T14.3 |
 | `open.py` | F2 | `open_disp`, `open_disp_tree` | T7 (chaining on top) |
@@ -182,6 +183,7 @@ since #30 was checked locally and says so in its description.
 
 | Date | Trigger | Changes |
 | --- | --- | --- |
+| 2026-10-20 | Frame repositories | `frame.py` (new): `add_chain_offsets`, `open_frame`; `api/cloud.md` section; Icechunk tutorial section "A continuous series, rebased once"; `tests/test_frame.py` |
 | 2026-10-20 | Virtual frames per production group | `group=` in `virtual.py` (`build_virtual_frame`, `open_virtual`, `validate_virtual`) and `export/icechunk.py` (`open_icechunk`, `_read`); prototype of per-frame repositories with stored chain offsets on F11116 (bit-identical to `chain`) |
 | 2026-10-20 | CMR to lazy cube guide | `remote.md` section "From a CMR search to a lazy data cube" (script, productions, reference pixel, `__main__` guard, native store for heavy work, timings on F11116); the Icechunk tutorial's S3 section points to it; gallery links to guide pages (`remote`, `serving`) used `.md` paths that mkdocs-jupyter does not rewrite (404 on the site) and now use site paths, and the split-metric study link (not on the public site) goes to GitHub |
 | 2026-10-19 | Release `v0.5.2` | Changelog section `[0.5.2]` (#103: `open_icechunk` and `open_virtual` chunk defaults, Icechunk tutorial); index stamped |
