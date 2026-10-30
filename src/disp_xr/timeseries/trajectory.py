@@ -1,9 +1,10 @@
 """Trajectory models fitted to every pixel by ordinary least squares.
 
 A trajectory is a sum of terms in time: a polynomial (offset, velocity,
-acceleration), annual and semiannual sine/cosine pairs, Heaviside steps, and
+acceleration), annual and semiannual sine/cosine pairs, Heaviside steps,
 postseismic ``log1p(dt / tau)`` and ``1 - exp(-dt / tau)`` terms with a fixed
-``tau``. The terms and their names match geepers ``trend._design_matrix``, and
+``tau``, and rate changes ``max(0, t - t_change)`` at given dates (a continuous
+piecewise-linear trend). The terms match geepers ``trend._design_matrix``, and
 the coefficient names encode the model, so :func:`get_predicted` can rebuild
 it from a fit.
 
@@ -52,11 +53,19 @@ class Trajectory:
     postseismic_log, postseismic_exp : tuple of (str, float)
         ``(onset date, tau in days)`` of ``log1p(dt / tau)`` and
         ``1 - exp(-dt / tau)`` terms.
+    rate_changes : tuple of str
+        Dates where the rate changes and the series stays continuous, with no
+        offset: hinges ``max(0, t - t_change)``, estimated in units per year
+        as ``rate_change_<date>``. ``linear_trend`` stays the rate before the
+        first change; :func:`fit_trajectory` also reports the rate after the
+        last one.
 
     Examples
     --------
     >>> Trajectory(steps=("2023-02-06",)).names
     ['constant', 'linear_trend', 'annual_sin', 'annual_cos', 'step_2023-02-06']
+    >>> Trajectory(periods=(), rate_changes=("2021-06-01",)).names
+    ['constant', 'linear_trend', 'rate_change_2021-06-01']
 
     """
 
@@ -65,6 +74,7 @@ class Trajectory:
     steps: tuple[str, ...] = ()
     postseismic_log: tuple[tuple[str, float], ...] = field(default=())
     postseismic_exp: tuple[tuple[str, float], ...] = field(default=())
+    rate_changes: tuple[str, ...] = ()
 
     def _kwargs(self) -> dict:
         def by_onset(terms: tuple[tuple[str, float], ...]) -> dict[str, list]:
@@ -79,6 +89,7 @@ class Trajectory:
             "step_dates": list(self.steps),
             "exponential_terms": by_onset(self.postseismic_exp),
             "logarithmic_terms": by_onset(self.postseismic_log),
+            "rate_change_dates": list(self.rate_changes),
         }
 
     @property
@@ -92,9 +103,17 @@ class Trajectory:
 
 
 def _solve(
-    data: np.ndarray, weights: np.ndarray, design: np.ndarray, min_valid: int
-) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-    """Fit ``data`` (..., time) per pixel; return coefficients, sigmas, rms, count."""
+    data: np.ndarray,
+    weights: np.ndarray,
+    design: np.ndarray,
+    min_valid: int,
+    contrast: Optional[np.ndarray] = None,
+) -> tuple[np.ndarray, ...]:
+    """Fit ``data`` (..., time) per pixel; return coefficients, sigmas, rms, count.
+
+    With ``contrast`` (one weight per coefficient), also the sigma of that
+    combination of coefficients, from the full parameter covariance.
+    """
     from threadpoolctl import threadpool_limits
 
     from ..config import config
@@ -102,7 +121,7 @@ def _solve(
     # Dask runs one task per core already; BLAS threads inside each task would
     # oversubscribe the machine.
     with threadpool_limits(limits=config.get("threads") or 1):
-        return _solve_block(data, weights, design, min_valid)
+        return _solve_block(data, weights, design, min_valid, contrast)
 
 
 # A NaN pattern shared by at least this many pixels is solved as one
@@ -112,8 +131,12 @@ GROUP_MIN_PIXELS = 64
 
 
 def _solve_block(
-    data: np.ndarray, weights: np.ndarray, design: np.ndarray, min_valid: int
-) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    data: np.ndarray,
+    weights: np.ndarray,
+    design: np.ndarray,
+    min_valid: int,
+    contrast: Optional[np.ndarray] = None,
+) -> tuple[np.ndarray, ...]:
     shape = data.shape[:-1]
     n_time, n_par = design.shape
     y = data.reshape(-1, n_time).astype(np.float64)
@@ -123,6 +146,7 @@ def _solve_block(
     coef = np.full((y.shape[0], n_par), np.nan)
     sigma = np.full((y.shape[0], n_par), np.nan)
     rms = np.full(y.shape[0], np.nan)
+    contrast_sigma = np.full(y.shape[0], np.nan)
     enough = count >= max(min_valid, n_par + 1)
 
     # Uniform weights (the common case) let pixels that share a valid-epoch
@@ -159,22 +183,29 @@ def _solve_block(
         coef[members] = c
         sigma[members] = np.sqrt(np.diag(inv)[None, :] * (rss / dof)[:, None])
         rms[members] = np.sqrt(rss / rows.sum())
+        if contrast is not None:
+            contrast_sigma[members] = np.sqrt(contrast @ inv @ contrast * (rss / dof))
 
     rest = enough & ~grouped
     if rest.any():
-        c, s_, r = _batched(y[rest], w[rest], count[rest], design)
-        coef[rest], sigma[rest], rms[rest] = c, s_, r
-    return (
+        c, s_, r, cs = _batched(y[rest], w[rest], count[rest], design, contrast)
+        coef[rest], sigma[rest], rms[rest], contrast_sigma[rest] = c, s_, r, cs
+    out = (
         coef.reshape(*shape, n_par),
         sigma.reshape(*shape, n_par),
         rms.reshape(shape),
         count.reshape(shape),
     )
+    return out if contrast is None else (*out, contrast_sigma.reshape(shape))
 
 
 def _batched(
-    y: np.ndarray, w: np.ndarray, count: np.ndarray, design: np.ndarray
-) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    y: np.ndarray,
+    w: np.ndarray,
+    count: np.ndarray,
+    design: np.ndarray,
+    contrast: Optional[np.ndarray] = None,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """Solve per-pixel normal equations ``N = Aᵀ W A`` in one batched call."""
     n_time, n_par = design.shape
     outer = np.einsum("tp,tq->tpq", design, design).reshape(n_time, n_par * n_par)
@@ -188,6 +219,7 @@ def _batched(
     coef = np.full((y.shape[0], n_par), np.nan)
     sigma = np.full((y.shape[0], n_par), np.nan)
     rms = np.full(y.shape[0], np.nan)
+    contrast_sigma = np.full(y.shape[0], np.nan)
     if ok.any():
         inverse = np.linalg.inv(normal[ok])
         coef[ok] = np.einsum("npq,nq->np", inverse, rhs[ok])
@@ -196,7 +228,10 @@ def _batched(
         variance = rss / (count[ok] - n_par)
         sigma[ok] = np.sqrt(np.diagonal(inverse, axis1=1, axis2=2) * variance[:, None])
         rms[ok] = np.sqrt(rss / w[ok].sum(axis=1))
-    return coef, sigma, rms
+        if contrast is not None:
+            quadratic = np.einsum("p,npq,q->n", contrast, inverse, contrast)
+            contrast_sigma[ok] = np.sqrt(quadratic * variance)
+    return coef, sigma, rms, contrast_sigma
 
 
 def check_not_denoised(obj: Union[xr.Dataset, xr.DataArray], allow: bool) -> None:
@@ -249,13 +284,19 @@ def fit_trajectory(
         unit (per year for rates), ``velocity`` and ``velocity_sigma`` when the
         model has a linear term, ``<period>_amplitude`` and
         ``<period>_amplitude_sigma`` for each sine/cosine pair, ``rms`` of the
-        residuals and ``n_valid`` epochs. Lazy if the input is.
+        residuals and ``n_valid`` epochs. With ``rate_changes`` on a linear
+        trend, ``velocity`` is the rate before the first change, and
+        ``present_velocity`` and ``present_velocity_sigma`` the rate after the
+        last one (the sigma includes the covariance of the terms, so it is
+        larger than either alone). Lazy if the input is.
 
     Examples
     --------
     >>> terms = Trajectory(steps=("2023-02-06",))
     >>> fit = dxr.fit_trajectory(ds, terms)  # doctest: +SKIP
     >>> fit.velocity.disp.plot_map()  # doctest: +SKIP
+    >>> terms = Trajectory(rate_changes=("2021-06-01",))
+    >>> dxr.fit_trajectory(ds, terms).present_velocity  # doctest: +SKIP
 
     """
     terms = terms or Trajectory()
@@ -276,17 +317,28 @@ def fit_trajectory(
     weights = weights.broadcast_like(da)
     if da.chunks is not None:
         weights = weights.chunk(data_chunks(da))
-    coef, sigma, rms, count = xr.apply_ufunc(
+    # The rate after the last change, with a quadratic or cubic trend too,
+    # is not one number.
+    contrast = None
+    if terms.rate_changes and terms.polynomial == 1:
+        contrast = np.array(
+            [n == "linear_trend" or n.startswith("rate_change_") for n in names],
+            dtype=np.float64,
+        )
+    results = xr.apply_ufunc(
         _solve,
         da,
         weights,
         input_core_dims=[["time"], ["time"]],
-        output_core_dims=[["coefficient"], ["coefficient"], [], []],
-        kwargs={"design": design, "min_valid": min_valid},
+        output_core_dims=[["coefficient"], ["coefficient"], [], []]
+        + ([[]] if contrast is not None else []),
+        kwargs={"design": design, "min_valid": min_valid, "contrast": contrast},
         dask="parallelized",
-        output_dtypes=[np.float64, np.float64, np.float64, np.int64],
+        output_dtypes=[np.float64, np.float64, np.float64, np.int64]
+        + ([np.float64] if contrast is not None else []),
         dask_gufunc_kwargs={"output_sizes": {"coefficient": len(names)}},
     )
+    coef, sigma, rms, count = results[:4]
     units = da.attrs.get("units", "")
     out = xr.Dataset(
         {
@@ -303,6 +355,17 @@ def fit_trajectory(
         out["velocity_sigma"] = out.sigma.sel(coefficient="linear_trend", drop=True)
         out["velocity"].attrs = {"units": f"{units}/year", "long_name": "velocity"}
         out["velocity_sigma"].attrs = {"units": f"{units}/year"}
+    if contrast is not None:
+        weight = xr.DataArray(
+            contrast, dims="coefficient", coords={"coefficient": names}
+        )
+        out["present_velocity"] = xr.dot(out.coefficients, weight, dim="coefficient")
+        out["present_velocity_sigma"] = results[4]
+        out["present_velocity"].attrs = {
+            "units": f"{units}/year",
+            "long_name": "velocity after the last rate change",
+        }
+        out["present_velocity_sigma"].attrs = {"units": f"{units}/year"}
     for name in names:
         if name.endswith("_sin") and f"{name[:-4]}_cos" in names:
             label = name[:-4]
