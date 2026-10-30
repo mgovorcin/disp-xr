@@ -119,3 +119,24 @@ for method in ("ols", "whittle", "midas"):
     print(f"{method:>8}: median velocity sigma {sigma:.2f} mm/yr")
 whittle = dxr.fit_velocity(ds, "whittle", terms=terms).compute()
 print(f"median kappa: {float(whittle.kappa.median()):.2f} (white noise is 0)")
+
+
+# %% [markdown]
+# ## A rate that changes
+#
+# `rate_changes` adds a change of slope at a known date, with no offset: the
+# series stays continuous. `velocity` stays the rate before the first change;
+# `present_velocity` is the rate after the last one, and its sigma includes
+# the covariance between the terms. It needs `method="ols"`, since the other
+# methods report a single rate. These sigmas assume white noise, as above.
+
+# %%
+middle = str(ds.time.values[len(ds.time) // 2])[:10]
+changing = dxr.Trajectory(polynomial=1, periods=(1.0,), rate_changes=(middle,))
+fit_change = dxr.fit_trajectory(ds, changing).compute()
+print([str(name) for name in fit_change.coefficient.values])
+print(
+    f"before: {float(fit_change.velocity.median()) * 1000:.1f} mm/yr, "
+    f"now: {float(fit_change.present_velocity.median()) * 1000:.1f} "
+    f"+- {float(fit_change.present_velocity_sigma.median()) * 1000:.1f} mm/yr"
+)

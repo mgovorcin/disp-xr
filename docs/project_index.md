@@ -1,6 +1,6 @@
 # disp-xr project index
 
-**Last indexed:** 2026-10-21 · `main` at the v0.6.0 release (branch `chore/release-0.6.0`, after #108) on `origin` = `mgovorcin/disp-xr`
+**Last indexed:** 2026-10-30 · `main` after v0.6.0 (branch `feat/trajectory-rate-changes`) on `origin` = `mgovorcin/disp-xr`
 
 How and when this file is rebuilt: see "Project Index (cyclical indexing)" in `CLAUDE.md` at the repository root.
 
@@ -183,6 +183,7 @@ since #30 was checked locally and says so in its description.
 
 | Date | Trigger | Changes |
 | --- | --- | --- |
+| 2026-10-30 | Trajectory rate changes | `rate_changes` in `Trajectory` (`timeseries/trajectory.py`, `_design_matrix.py`), `present_velocity` in `fit_trajectory` and `fit_velocity("ols")`; gallery `velocity` section |
 | 2026-10-21 | Release `v0.6.0` (frame repositories) | Changelog section `[0.6.0]` (#106 `group=`, #107 `add_chain_offsets`/`open_frame`, #108 `reference_urls`); NISAR (T35, T12.5) moved to v0.7 in `todo.md`; index stamped |
 | 2026-10-20 | Virtual references to published copies | `build_virtual_frame(reference_urls=)` and `_open_repository(authorize=)` in `virtual.py`; three tests |
 | 2026-10-20 | Frame repositories | `frame.py` (new): `add_chain_offsets`, `open_frame`; `api/cloud.md` section; Icechunk tutorial section "A continuous series, rebased once"; `tests/test_frame.py` |

@@ -326,7 +326,9 @@ def fit_velocity(
         "Choosing a velocity method" in the documentation.
     terms : Trajectory, optional
         Deterministic model for ``"ols"`` and ``"whittle"`` (default offset,
-        velocity and annual cycle). MIDAS needs none.
+        velocity and annual cycle). MIDAS needs none. ``rate_changes`` needs
+        ``"ols"``, which also returns ``present_velocity``; for
+        colored-noise sigmas on selected pixels, use :func:`disp_xr.fit_noise`.
     layer : str
         Layer of a Dataset.
     min_valid : int
@@ -367,9 +369,19 @@ def fit_velocity(
     units = da.attrs.get("units", "")
     rate = {"units": f"{units}/year"}
     terms = terms or Trajectory()
+    if terms.rate_changes and method != "ols":
+        # These report one rate and its sigma: with rate changes that would
+        # silently be the rate before the first change, not the current one.
+        raise ValueError(
+            f"Trajectory.rate_changes needs method='ols', not {method!r}; "
+            "for colored-noise sigmas on selected pixels use fit_noise"
+        )
     if method == "ols":
         fit = fit_trajectory(da, terms, min_valid=min_valid)
-        out = fit[["velocity", "velocity_sigma", "n_valid"]]
+        keep = ["velocity", "velocity_sigma", "n_valid"]
+        if "present_velocity" in fit:
+            keep += ["present_velocity", "present_velocity_sigma"]
+        out = fit[keep]
     elif method == "midas":
         da = time_contiguous(da)
         times = da["time"].values

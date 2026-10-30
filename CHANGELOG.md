@@ -6,6 +6,17 @@ All notable changes to disp-xr. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- `Trajectory(rate_changes=("2021-06-01",))`: changes of rate at known dates
+  (hinges `max(0, t - t_change)`, the series stays continuous), as in geepers
+  `estimate_trend(rate_change_dates=...)`. `fit_trajectory` and
+  `fit_velocity(method="ols")` also return `present_velocity` and
+  `present_velocity_sigma`, the rate after the last change, with the
+  covariance of the terms in the sigma; `velocity` stays the rate before the
+  first change. The other `fit_velocity` methods report one rate, so they
+  refuse rate changes rather than return the first segment's rate.
+
 ## [0.6.0] - 2026-10-21
 
 Frame repositories: a whole DISP frame as one Icechunk repository of virtual

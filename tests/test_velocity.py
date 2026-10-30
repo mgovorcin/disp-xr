@@ -160,3 +160,36 @@ def test_errors(frame):
         dxr.fit_velocity(ds, "whittle", terms=Trajectory(polynomial=0))
     with pytest.raises(ValueError, match="time"):
         dxr.fit_velocity(ds.displacement.isel(time=0))
+
+
+@pytest.mark.parametrize("method", ["whittle", "midas", "gls"])
+def test_rate_changes_need_ols(method):
+    """The other methods report one rate: it would silently be the first."""
+    times = pd.date_range("2018-01-01", periods=100, freq="12D")
+    da = xr.DataArray(
+        np.arange(100.0)[:, None, None], dims=("time", "y", "x"), coords={"time": times}
+    )
+    with pytest.raises(ValueError, match="rate_changes needs method='ols'"):
+        dxr.fit_velocity(da, method, terms=dxr.Trajectory(rate_changes=("2020-01-01",)))
+
+
+def test_ols_velocity_reports_the_present_rate():
+    times = pd.date_range("2018-01-01", periods=200, freq="12D").values
+    terms = dxr.Trajectory(periods=(), rate_changes=("2021-06-01",))
+    design = terms.design(times)
+    y = design @ np.array([1.0, 4.0, -3.0])
+    da = xr.DataArray(y[:, None, None], dims=("time", "y", "x"), coords={"time": times})
+    out = dxr.fit_velocity(da, "ols", terms=terms)
+    np.testing.assert_allclose(out.velocity, 4.0, atol=1e-6)
+    np.testing.assert_allclose(out.present_velocity, 1.0, atol=1e-6)
+
+
+def test_fit_noise_estimates_rate_changes():
+    """The route the fit_velocity error names for colored-noise sigmas."""
+    times = pd.date_range("2018-01-01", periods=200, freq="12D").values
+    terms = Trajectory(periods=(), rate_changes=("2021-06-01",))
+    rng = np.random.default_rng(0)
+    y = terms.design(times) @ np.array([1.0, 4.0, -3.0]) + rng.normal(0, 0.5, 200)
+    result = fit_noise(times, y, terms=terms)
+    value, sigma = result.parameters["rate_change_2021-06-01"]
+    assert abs(value + 3.0) < 4 * sigma and sigma > 0

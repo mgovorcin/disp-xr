@@ -81,6 +81,17 @@ class DesignMatrixBuilder:
 
         return np.column_stack(columns)
 
+    def add_rate_change_terms(self, rate_change_dates: List[str]) -> np.ndarray:
+        """Add hinges ``max(0, t - t_change)``: continuous, the slope changes."""
+        if not rate_change_dates:
+            return np.empty((len(self.time_years), 0))
+        return np.column_stack(
+            [
+                np.maximum(0.0, self.time_years - self._relative(date))
+                for date in rate_change_dates
+            ]
+        )
+
     def add_exponential_terms(
         self, exponential_terms: Dict[str, List[int]]
     ) -> np.ndarray:
@@ -140,6 +151,7 @@ def create_design_matrix(
     exponential_terms: Optional[Dict[str, List[int]]] = None,
     logarithmic_terms: Optional[Dict[str, List[int]]] = None,
     reference_index: int = 0,
+    rate_change_dates: Optional[List[str]] = None,
 ) -> np.ndarray:
     """Create design matrix for time series analysis with enhanced validation.
 
@@ -159,6 +171,9 @@ def create_design_matrix(
         Logarithmic terms: {'YYYYMMDD': [char_time_days, ...]}
     reference_index : int, default=0
         Index of reference date
+    rate_change_dates : List[str], optional
+        Dates where the slope changes and the series stays continuous; the
+        columns come last, so the other terms keep their positions
 
     Returns
     -------
@@ -201,6 +216,9 @@ def create_design_matrix(
         log_matrix = builder.add_logarithmic_terms(logarithmic_terms)
         matrix_parts.append(log_matrix)
 
+    if rate_change_dates:
+        matrix_parts.append(builder.add_rate_change_terms(rate_change_dates))
+
     if not matrix_parts:
         raise ValueError("At least one time function must be specified")
 
@@ -220,6 +238,7 @@ def get_coefficient_names(
     step_dates: Optional[List[str]] = None,
     exponential_terms: Optional[Dict[str, List[int]]] = None,
     logarithmic_terms: Optional[Dict[str, List[int]]] = None,
+    rate_change_dates: Optional[List[str]] = None,
 ) -> List[str]:
     """Get descriptive names for model coefficients with enhanced naming."""
     periods = periods or []
@@ -269,6 +288,10 @@ def get_coefficient_names(
         for tau_days in char_times:
             names.append(f"postseismic_log_{onset_date}_tau{tau_days}d")
 
+    # Rate changes, last: the other terms keep their positions
+    for date in rate_change_dates or []:
+        names.append(f"rate_change_{date}")
+
     return names
 
 
@@ -287,6 +310,7 @@ def infer_parameters_from_names(coefficient_names: List[str]) -> Dict[str, Any]:
         - step_dates: Optional[List[str]]
         - exponential_terms: Optional[Dict[str, List[int]]]
         - logarithmic_terms: Optional[Dict[str, List[int]]]
+        - rate_change_dates: Optional[List[str]]
 
     """
     polynomial_degree: int = 0
@@ -294,6 +318,7 @@ def infer_parameters_from_names(coefficient_names: List[str]) -> Dict[str, Any]:
     step_dates: List[str] = []
     exponential_terms: Dict[str, List[int]] = {}
     logarithmic_terms: Dict[str, List[int]] = {}
+    rate_change_dates: List[str] = []
 
     # Mapping for polynomial terms
     poly_name_to_degree = {
@@ -337,6 +362,11 @@ def infer_parameters_from_names(coefficient_names: List[str]) -> Dict[str, Any]:
             if step_date not in step_dates:
                 step_dates.append(step_date)
 
+        elif name.startswith("rate_change_"):
+            date = name[len("rate_change_") :]
+            if date not in rate_change_dates:
+                rate_change_dates.append(date)
+
         # Check exponential decay terms
         elif name.startswith(("postseismic_exp_", "exp_decay_")):
             # postseismic_exp_{onset}_tau{days}d; exp_decay_ is the old name.
@@ -367,4 +397,5 @@ def infer_parameters_from_names(coefficient_names: List[str]) -> Dict[str, Any]:
         "step_dates": step_dates or None,
         "exponential_terms": exponential_terms or None,
         "logarithmic_terms": logarithmic_terms or None,
+        "rate_change_dates": rate_change_dates or None,
     }
