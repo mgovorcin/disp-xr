@@ -909,7 +909,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/46/ea/5bb0e8a8a4b04221b054365a5904fd63b6bcc22edcf4aa75a253f946b86e/boto3-1.43.102-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/5c/c2/dcc81bfa2cc96ffad54561e36763fd8f6d0be4e85a470ce78cb11dcac9a1/dem_stitcher-3.2.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/a7/5f/ed01f9a3cdffbd5a008556fc7b2a08ddb1cc6ace7effa7340604b1d16699/docstring_parser-0.18.0-py3-none-any.whl
-      - pypi: git+https://github.com/opera-adt/geepers.git?rev=d5421787d9c41dbf7e4d0679249bb9d5145bcc40#d5421787d9c41dbf7e4d0679249bb9d5145bcc40
+      - pypi: git+https://github.com/opera-adt/geepers.git?rev=75dcf4f6859a20c894d10d7daea0f1ccfbc9fe83#75dcf4f6859a20c894d10d7daea0f1ccfbc9fe83
       - pypi: https://files.pythonhosted.org/packages/d2/84/107a480f7aa34a6878fb4fb85cda66f37e8aaee769c5917e3eaa2d55222e/pandera-0.33.1-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/bc/e7/5c595c75e9f41a44f30e526eda465ea0b4eec93470e074e4a111b253f13a/s3transfer-0.19.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/24/28/13e251ab9e272087cb0a32ead02650f93341b1b885b2d83f9c5854681cfe/tile_mate-0.0.16-py3-none-any.whl
@@ -1316,7 +1316,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/46/ea/5bb0e8a8a4b04221b054365a5904fd63b6bcc22edcf4aa75a253f946b86e/boto3-1.43.102-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/5c/c2/dcc81bfa2cc96ffad54561e36763fd8f6d0be4e85a470ce78cb11dcac9a1/dem_stitcher-3.2.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/a7/5f/ed01f9a3cdffbd5a008556fc7b2a08ddb1cc6ace7effa7340604b1d16699/docstring_parser-0.18.0-py3-none-any.whl
-      - pypi: git+https://github.com/opera-adt/geepers.git?rev=d5421787d9c41dbf7e4d0679249bb9d5145bcc40#d5421787d9c41dbf7e4d0679249bb9d5145bcc40
+      - pypi: git+https://github.com/opera-adt/geepers.git?rev=75dcf4f6859a20c894d10d7daea0f1ccfbc9fe83#75dcf4f6859a20c894d10d7daea0f1ccfbc9fe83
       - pypi: https://files.pythonhosted.org/packages/d2/84/107a480f7aa34a6878fb4fb85cda66f37e8aaee769c5917e3eaa2d55222e/pandera-0.33.1-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/bc/e7/5c595c75e9f41a44f30e526eda465ea0b4eec93470e074e4a111b253f13a/s3transfer-0.19.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/24/28/13e251ab9e272087cb0a32ead02650f93341b1b885b2d83f9c5854681cfe/tile_mate-0.0.16-py3-none-any.whl
@@ -1696,7 +1696,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/57/f0/e24f3e5d5d539abeb783087b87c26cfb99c259f1126700569e000243745a/cachey-0.2.1-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/a7/5f/ed01f9a3cdffbd5a008556fc7b2a08ddb1cc6ace7effa7340604b1d16699/docstring_parser-0.18.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/a0/b6/78aaf9141fb46742928c113f3cf6ef2259d538cb02b604b7656c1dc9883c/fastapi-0.142.2-py3-none-any.whl
-      - pypi: git+https://github.com/opera-adt/geepers.git?rev=d5421787d9c41dbf7e4d0679249bb9d5145bcc40#d5421787d9c41dbf7e4d0679249bb9d5145bcc40
+      - pypi: git+https://github.com/opera-adt/geepers.git?rev=75dcf4f6859a20c894d10d7daea0f1ccfbc9fe83#75dcf4f6859a20c894d10d7daea0f1ccfbc9fe83
       - pypi: https://files.pythonhosted.org/packages/04/4b/29cac41a4d98d144bf5f6d33995617b185d14b22401f75ca86f384e87ff1/h11-0.16.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/b6/9d/cd4777dbcf3bef9d9627e0fe4bc43d2e294b1baeb01d0422399d5e9de319/HeapDict-1.0.1-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/a7/01/90cb898ee87d0a5c89c60a6a95978c70bceab4180abc8855de9771df09e1/morecantile-7.1.0-py3-none-any.whl
@@ -2080,7 +2080,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/57/f0/e24f3e5d5d539abeb783087b87c26cfb99c259f1126700569e000243745a/cachey-0.2.1-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/a7/5f/ed01f9a3cdffbd5a008556fc7b2a08ddb1cc6ace7effa7340604b1d16699/docstring_parser-0.18.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/a0/b6/78aaf9141fb46742928c113f3cf6ef2259d538cb02b604b7656c1dc9883c/fastapi-0.142.2-py3-none-any.whl
-      - pypi: git+https://github.com/opera-adt/geepers.git?rev=d5421787d9c41dbf7e4d0679249bb9d5145bcc40#d5421787d9c41dbf7e4d0679249bb9d5145bcc40
+      - pypi: git+https://github.com/opera-adt/geepers.git?rev=75dcf4f6859a20c894d10d7daea0f1ccfbc9fe83#75dcf4f6859a20c894d10d7daea0f1ccfbc9fe83
       - pypi: https://files.pythonhosted.org/packages/04/4b/29cac41a4d98d144bf5f6d33995617b185d14b22401f75ca86f384e87ff1/h11-0.16.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/b6/9d/cd4777dbcf3bef9d9627e0fe4bc43d2e294b1baeb01d0422399d5e9de319/HeapDict-1.0.1-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/a7/01/90cb898ee87d0a5c89c60a6a95978c70bceab4180abc8855de9771df09e1/morecantile-7.1.0-py3-none-any.whl
@@ -2407,7 +2407,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/zlib-ng-2.3.3-hce19668_1.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/zstd-1.5.7-hb78ec9c_7.conda
       - pypi: https://files.pythonhosted.org/packages/a7/5f/ed01f9a3cdffbd5a008556fc7b2a08ddb1cc6ace7effa7340604b1d16699/docstring_parser-0.18.0-py3-none-any.whl
-      - pypi: git+https://github.com/opera-adt/geepers.git?rev=d5421787d9c41dbf7e4d0679249bb9d5145bcc40#d5421787d9c41dbf7e4d0679249bb9d5145bcc40
+      - pypi: git+https://github.com/opera-adt/geepers.git?rev=75dcf4f6859a20c894d10d7daea0f1ccfbc9fe83#75dcf4f6859a20c894d10d7daea0f1ccfbc9fe83
       - pypi: https://files.pythonhosted.org/packages/d2/84/107a480f7aa34a6878fb4fb85cda66f37e8aaee769c5917e3eaa2d55222e/pandera-0.33.1-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8f/eb/461d5f167b6f5c7d97696f397c82f82e3480e003fce3f0a1cd1dd26e2eb2/typeguard-4.6.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/65/f3/107a22063bf27bdccf2024833d3445f4eea42b2e598abfbd46f6a63b6cb0/typing_inspect-0.9.0-py3-none-any.whl
@@ -2703,7 +2703,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/zlib-ng-2.3.3-h31dac16_1.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/zstd-1.5.7-hf451053_7.conda
       - pypi: https://files.pythonhosted.org/packages/a7/5f/ed01f9a3cdffbd5a008556fc7b2a08ddb1cc6ace7effa7340604b1d16699/docstring_parser-0.18.0-py3-none-any.whl
-      - pypi: git+https://github.com/opera-adt/geepers.git?rev=d5421787d9c41dbf7e4d0679249bb9d5145bcc40#d5421787d9c41dbf7e4d0679249bb9d5145bcc40
+      - pypi: git+https://github.com/opera-adt/geepers.git?rev=75dcf4f6859a20c894d10d7daea0f1ccfbc9fe83#75dcf4f6859a20c894d10d7daea0f1ccfbc9fe83
       - pypi: https://files.pythonhosted.org/packages/d2/84/107a480f7aa34a6878fb4fb85cda66f37e8aaee769c5917e3eaa2d55222e/pandera-0.33.1-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8f/eb/461d5f167b6f5c7d97696f397c82f82e3480e003fce3f0a1cd1dd26e2eb2/typeguard-4.6.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/65/f3/107a22063bf27bdccf2024833d3445f4eea42b2e598abfbd46f6a63b6cb0/typing_inspect-0.9.0-py3-none-any.whl
@@ -3012,7 +3012,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/zlib-ng-2.3.3-hce19668_1.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/zstd-1.5.7-hb78ec9c_7.conda
       - pypi: https://files.pythonhosted.org/packages/a7/5f/ed01f9a3cdffbd5a008556fc7b2a08ddb1cc6ace7effa7340604b1d16699/docstring_parser-0.18.0-py3-none-any.whl
-      - pypi: git+https://github.com/opera-adt/geepers.git?rev=d5421787d9c41dbf7e4d0679249bb9d5145bcc40#d5421787d9c41dbf7e4d0679249bb9d5145bcc40
+      - pypi: git+https://github.com/opera-adt/geepers.git?rev=75dcf4f6859a20c894d10d7daea0f1ccfbc9fe83#75dcf4f6859a20c894d10d7daea0f1ccfbc9fe83
       - pypi: https://files.pythonhosted.org/packages/d2/84/107a480f7aa34a6878fb4fb85cda66f37e8aaee769c5917e3eaa2d55222e/pandera-0.33.1-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8f/eb/461d5f167b6f5c7d97696f397c82f82e3480e003fce3f0a1cd1dd26e2eb2/typeguard-4.6.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/65/f3/107a22063bf27bdccf2024833d3445f4eea42b2e598abfbd46f6a63b6cb0/typing_inspect-0.9.0-py3-none-any.whl
@@ -3307,7 +3307,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/zlib-ng-2.3.3-h31dac16_1.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/zstd-1.5.7-hf451053_7.conda
       - pypi: https://files.pythonhosted.org/packages/a7/5f/ed01f9a3cdffbd5a008556fc7b2a08ddb1cc6ace7effa7340604b1d16699/docstring_parser-0.18.0-py3-none-any.whl
-      - pypi: git+https://github.com/opera-adt/geepers.git?rev=d5421787d9c41dbf7e4d0679249bb9d5145bcc40#d5421787d9c41dbf7e4d0679249bb9d5145bcc40
+      - pypi: git+https://github.com/opera-adt/geepers.git?rev=75dcf4f6859a20c894d10d7daea0f1ccfbc9fe83#75dcf4f6859a20c894d10d7daea0f1ccfbc9fe83
       - pypi: https://files.pythonhosted.org/packages/d2/84/107a480f7aa34a6878fb4fb85cda66f37e8aaee769c5917e3eaa2d55222e/pandera-0.33.1-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8f/eb/461d5f167b6f5c7d97696f397c82f82e3480e003fce3f0a1cd1dd26e2eb2/typeguard-4.6.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/65/f3/107a22063bf27bdccf2024833d3445f4eea42b2e598abfbd46f6a63b6cb0/typing_inspect-0.9.0-py3-none-any.whl
@@ -3625,7 +3625,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/zlib-ng-2.3.3-hce19668_1.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/zstd-1.5.7-hb78ec9c_7.conda
       - pypi: https://files.pythonhosted.org/packages/a7/5f/ed01f9a3cdffbd5a008556fc7b2a08ddb1cc6ace7effa7340604b1d16699/docstring_parser-0.18.0-py3-none-any.whl
-      - pypi: git+https://github.com/opera-adt/geepers.git?rev=d5421787d9c41dbf7e4d0679249bb9d5145bcc40#d5421787d9c41dbf7e4d0679249bb9d5145bcc40
+      - pypi: git+https://github.com/opera-adt/geepers.git?rev=75dcf4f6859a20c894d10d7daea0f1ccfbc9fe83#75dcf4f6859a20c894d10d7daea0f1ccfbc9fe83
       - pypi: https://files.pythonhosted.org/packages/d2/84/107a480f7aa34a6878fb4fb85cda66f37e8aaee769c5917e3eaa2d55222e/pandera-0.33.1-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8f/eb/461d5f167b6f5c7d97696f397c82f82e3480e003fce3f0a1cd1dd26e2eb2/typeguard-4.6.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/65/f3/107a22063bf27bdccf2024833d3445f4eea42b2e598abfbd46f6a63b6cb0/typing_inspect-0.9.0-py3-none-any.whl
@@ -3929,7 +3929,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/zlib-ng-2.3.3-h31dac16_1.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/zstd-1.5.7-hf451053_7.conda
       - pypi: https://files.pythonhosted.org/packages/a7/5f/ed01f9a3cdffbd5a008556fc7b2a08ddb1cc6ace7effa7340604b1d16699/docstring_parser-0.18.0-py3-none-any.whl
-      - pypi: git+https://github.com/opera-adt/geepers.git?rev=d5421787d9c41dbf7e4d0679249bb9d5145bcc40#d5421787d9c41dbf7e4d0679249bb9d5145bcc40
+      - pypi: git+https://github.com/opera-adt/geepers.git?rev=75dcf4f6859a20c894d10d7daea0f1ccfbc9fe83#75dcf4f6859a20c894d10d7daea0f1ccfbc9fe83
       - pypi: https://files.pythonhosted.org/packages/d2/84/107a480f7aa34a6878fb4fb85cda66f37e8aaee769c5917e3eaa2d55222e/pandera-0.33.1-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8f/eb/461d5f167b6f5c7d97696f397c82f82e3480e003fce3f0a1cd1dd26e2eb2/typeguard-4.6.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/65/f3/107a22063bf27bdccf2024833d3445f4eea42b2e598abfbd46f6a63b6cb0/typing_inspect-0.9.0-py3-none-any.whl
@@ -4255,9 +4255,9 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/zlib-ng-2.3.3-hce19668_1.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/zstd-1.5.7-hb78ec9c_7.conda
       - pypi: https://files.pythonhosted.org/packages/a7/5f/ed01f9a3cdffbd5a008556fc7b2a08ddb1cc6ace7effa7340604b1d16699/docstring_parser-0.18.0-py3-none-any.whl
-      - pypi: git+https://github.com/opera-adt/geepers.git?rev=d5421787d9c41dbf7e4d0679249bb9d5145bcc40#d5421787d9c41dbf7e4d0679249bb9d5145bcc40
+      - pypi: git+https://github.com/opera-adt/geepers.git?rev=75dcf4f6859a20c894d10d7daea0f1ccfbc9fe83#75dcf4f6859a20c894d10d7daea0f1ccfbc9fe83
       - pypi: https://files.pythonhosted.org/packages/0a/20/e022dbc6b4753a9bc9fc5fb28a27163430c1731b9913997f6544c1b2518c/lxml-6.1.3-cp312-cp312-manylinux_2_26_x86_64.manylinux_2_28_x86_64.whl
-      - pypi: https://files.pythonhosted.org/packages/d2/84/107a480f7aa34a6878fb4fb85cda66f37e8aaee769c5917e3eaa2d55222e/pandera-0.33.1-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/29/17/239d1e64d290c26f126582445649bc7c925a7a80f2472b8bd04d6ec22f8d/pandera-0.35.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/a7/03/921a3d3c75785aca9ebfbfcabfbc3a1be12e2ab5265deb026d55a5a3f83e/tqdm-4.70.1-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8f/eb/461d5f167b6f5c7d97696f397c82f82e3480e003fce3f0a1cd1dd26e2eb2/typeguard-4.6.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/65/f3/107a22063bf27bdccf2024833d3445f4eea42b2e598abfbd46f6a63b6cb0/typing_inspect-0.9.0-py3-none-any.whl
@@ -4566,9 +4566,9 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/zlib-ng-2.3.3-h31dac16_1.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/zstd-1.5.7-hf451053_7.conda
       - pypi: https://files.pythonhosted.org/packages/a7/5f/ed01f9a3cdffbd5a008556fc7b2a08ddb1cc6ace7effa7340604b1d16699/docstring_parser-0.18.0-py3-none-any.whl
-      - pypi: git+https://github.com/opera-adt/geepers.git?rev=d5421787d9c41dbf7e4d0679249bb9d5145bcc40#d5421787d9c41dbf7e4d0679249bb9d5145bcc40
+      - pypi: git+https://github.com/opera-adt/geepers.git?rev=75dcf4f6859a20c894d10d7daea0f1ccfbc9fe83#75dcf4f6859a20c894d10d7daea0f1ccfbc9fe83
       - pypi: https://files.pythonhosted.org/packages/dd/1f/a180b57d9eeabaab77f9d5aa30356898ea749c4795596a8f66d1eb6bef2e/lxml-6.1.3-cp312-cp312-macosx_10_13_universal2.whl
-      - pypi: https://files.pythonhosted.org/packages/d2/84/107a480f7aa34a6878fb4fb85cda66f37e8aaee769c5917e3eaa2d55222e/pandera-0.33.1-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/29/17/239d1e64d290c26f126582445649bc7c925a7a80f2472b8bd04d6ec22f8d/pandera-0.35.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/a7/03/921a3d3c75785aca9ebfbfcabfbc3a1be12e2ab5265deb026d55a5a3f83e/tqdm-4.70.1-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8f/eb/461d5f167b6f5c7d97696f397c82f82e3480e003fce3f0a1cd1dd26e2eb2/typeguard-4.6.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/65/f3/107a22063bf27bdccf2024833d3445f4eea42b2e598abfbd46f6a63b6cb0/typing_inspect-0.9.0-py3-none-any.whl
@@ -4893,9 +4893,9 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/zlib-ng-2.3.3-hce19668_1.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/zstd-1.5.7-hb78ec9c_7.conda
       - pypi: https://files.pythonhosted.org/packages/a7/5f/ed01f9a3cdffbd5a008556fc7b2a08ddb1cc6ace7effa7340604b1d16699/docstring_parser-0.18.0-py3-none-any.whl
-      - pypi: git+https://github.com/opera-adt/geepers.git?rev=d5421787d9c41dbf7e4d0679249bb9d5145bcc40#d5421787d9c41dbf7e4d0679249bb9d5145bcc40
+      - pypi: git+https://github.com/opera-adt/geepers.git?rev=75dcf4f6859a20c894d10d7daea0f1ccfbc9fe83#75dcf4f6859a20c894d10d7daea0f1ccfbc9fe83
       - pypi: https://files.pythonhosted.org/packages/ac/7d/8bf1fd8bae8247743968bb76d027a1ac5bd2c4b44495fba6a71b30d10706/lxml-6.1.3-cp313-cp313-manylinux_2_26_x86_64.manylinux_2_28_x86_64.whl
-      - pypi: https://files.pythonhosted.org/packages/d2/84/107a480f7aa34a6878fb4fb85cda66f37e8aaee769c5917e3eaa2d55222e/pandera-0.33.1-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/29/17/239d1e64d290c26f126582445649bc7c925a7a80f2472b8bd04d6ec22f8d/pandera-0.35.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/a7/03/921a3d3c75785aca9ebfbfcabfbc3a1be12e2ab5265deb026d55a5a3f83e/tqdm-4.70.1-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8f/eb/461d5f167b6f5c7d97696f397c82f82e3480e003fce3f0a1cd1dd26e2eb2/typeguard-4.6.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/65/f3/107a22063bf27bdccf2024833d3445f4eea42b2e598abfbd46f6a63b6cb0/typing_inspect-0.9.0-py3-none-any.whl
@@ -5203,9 +5203,9 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/zlib-ng-2.3.3-h31dac16_1.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/zstd-1.5.7-hf451053_7.conda
       - pypi: https://files.pythonhosted.org/packages/a7/5f/ed01f9a3cdffbd5a008556fc7b2a08ddb1cc6ace7effa7340604b1d16699/docstring_parser-0.18.0-py3-none-any.whl
-      - pypi: git+https://github.com/opera-adt/geepers.git?rev=d5421787d9c41dbf7e4d0679249bb9d5145bcc40#d5421787d9c41dbf7e4d0679249bb9d5145bcc40
+      - pypi: git+https://github.com/opera-adt/geepers.git?rev=75dcf4f6859a20c894d10d7daea0f1ccfbc9fe83#75dcf4f6859a20c894d10d7daea0f1ccfbc9fe83
       - pypi: https://files.pythonhosted.org/packages/52/05/3ef45db776baea068044c799bbba68f3ca00a440c0e930a17c572f3d9639/lxml-6.1.3-cp313-cp313-macosx_10_13_universal2.whl
-      - pypi: https://files.pythonhosted.org/packages/d2/84/107a480f7aa34a6878fb4fb85cda66f37e8aaee769c5917e3eaa2d55222e/pandera-0.33.1-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/29/17/239d1e64d290c26f126582445649bc7c925a7a80f2472b8bd04d6ec22f8d/pandera-0.35.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/a7/03/921a3d3c75785aca9ebfbfcabfbc3a1be12e2ab5265deb026d55a5a3f83e/tqdm-4.70.1-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8f/eb/461d5f167b6f5c7d97696f397c82f82e3480e003fce3f0a1cd1dd26e2eb2/typeguard-4.6.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/65/f3/107a22063bf27bdccf2024833d3445f4eea42b2e598abfbd46f6a63b6cb0/typing_inspect-0.9.0-py3-none-any.whl
@@ -5531,9 +5531,9 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/zlib-ng-2.3.3-hce19668_1.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/zstd-1.5.7-hb78ec9c_7.conda
       - pypi: https://files.pythonhosted.org/packages/a7/5f/ed01f9a3cdffbd5a008556fc7b2a08ddb1cc6ace7effa7340604b1d16699/docstring_parser-0.18.0-py3-none-any.whl
-      - pypi: git+https://github.com/opera-adt/geepers.git?rev=d5421787d9c41dbf7e4d0679249bb9d5145bcc40#d5421787d9c41dbf7e4d0679249bb9d5145bcc40
+      - pypi: git+https://github.com/opera-adt/geepers.git?rev=75dcf4f6859a20c894d10d7daea0f1ccfbc9fe83#75dcf4f6859a20c894d10d7daea0f1ccfbc9fe83
       - pypi: https://files.pythonhosted.org/packages/e9/44/27e3cee3dcdb3b7bc09727b642bdbfcd098490ea77df04611db9060d7722/lxml-6.1.3-cp314-cp314-manylinux_2_26_x86_64.manylinux_2_28_x86_64.whl
-      - pypi: https://files.pythonhosted.org/packages/d2/84/107a480f7aa34a6878fb4fb85cda66f37e8aaee769c5917e3eaa2d55222e/pandera-0.33.1-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/29/17/239d1e64d290c26f126582445649bc7c925a7a80f2472b8bd04d6ec22f8d/pandera-0.35.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/a7/03/921a3d3c75785aca9ebfbfcabfbc3a1be12e2ab5265deb026d55a5a3f83e/tqdm-4.70.1-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8f/eb/461d5f167b6f5c7d97696f397c82f82e3480e003fce3f0a1cd1dd26e2eb2/typeguard-4.6.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/65/f3/107a22063bf27bdccf2024833d3445f4eea42b2e598abfbd46f6a63b6cb0/typing_inspect-0.9.0-py3-none-any.whl
@@ -5842,9 +5842,9 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/zlib-ng-2.3.3-h31dac16_1.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/zstd-1.5.7-hf451053_7.conda
       - pypi: https://files.pythonhosted.org/packages/a7/5f/ed01f9a3cdffbd5a008556fc7b2a08ddb1cc6ace7effa7340604b1d16699/docstring_parser-0.18.0-py3-none-any.whl
-      - pypi: git+https://github.com/opera-adt/geepers.git?rev=d5421787d9c41dbf7e4d0679249bb9d5145bcc40#d5421787d9c41dbf7e4d0679249bb9d5145bcc40
+      - pypi: git+https://github.com/opera-adt/geepers.git?rev=75dcf4f6859a20c894d10d7daea0f1ccfbc9fe83#75dcf4f6859a20c894d10d7daea0f1ccfbc9fe83
       - pypi: https://files.pythonhosted.org/packages/0c/15/fc75a70b0af6021d0ea16811f1fc71cc42cd06ce90fe10f007a69b2eed84/lxml-6.1.3-cp314-cp314-macosx_10_15_universal2.whl
-      - pypi: https://files.pythonhosted.org/packages/d2/84/107a480f7aa34a6878fb4fb85cda66f37e8aaee769c5917e3eaa2d55222e/pandera-0.33.1-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/29/17/239d1e64d290c26f126582445649bc7c925a7a80f2472b8bd04d6ec22f8d/pandera-0.35.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/a7/03/921a3d3c75785aca9ebfbfcabfbc3a1be12e2ab5265deb026d55a5a3f83e/tqdm-4.70.1-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8f/eb/461d5f167b6f5c7d97696f397c82f82e3480e003fce3f0a1cd1dd26e2eb2/typeguard-4.6.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/65/f3/107a22063bf27bdccf2024833d3445f4eea42b2e598abfbd46f6a63b6cb0/typing_inspect-0.9.0-py3-none-any.whl
@@ -6176,7 +6176,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/57/f0/e24f3e5d5d539abeb783087b87c26cfb99c259f1126700569e000243745a/cachey-0.2.1-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/a7/5f/ed01f9a3cdffbd5a008556fc7b2a08ddb1cc6ace7effa7340604b1d16699/docstring_parser-0.18.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/a0/b6/78aaf9141fb46742928c113f3cf6ef2259d538cb02b604b7656c1dc9883c/fastapi-0.142.2-py3-none-any.whl
-      - pypi: git+https://github.com/opera-adt/geepers.git?rev=d5421787d9c41dbf7e4d0679249bb9d5145bcc40#d5421787d9c41dbf7e4d0679249bb9d5145bcc40
+      - pypi: git+https://github.com/opera-adt/geepers.git?rev=75dcf4f6859a20c894d10d7daea0f1ccfbc9fe83#75dcf4f6859a20c894d10d7daea0f1ccfbc9fe83
       - pypi: https://files.pythonhosted.org/packages/04/4b/29cac41a4d98d144bf5f6d33995617b185d14b22401f75ca86f384e87ff1/h11-0.16.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/b6/9d/cd4777dbcf3bef9d9627e0fe4bc43d2e294b1baeb01d0422399d5e9de319/HeapDict-1.0.1-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/09/ba/a4568248771ce81957bfb7cc600264a40fbcda092391ee1c415c50be4bea/httpcore2-2.13.1-py3-none-any.whl
@@ -6516,7 +6516,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/57/f0/e24f3e5d5d539abeb783087b87c26cfb99c259f1126700569e000243745a/cachey-0.2.1-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/a7/5f/ed01f9a3cdffbd5a008556fc7b2a08ddb1cc6ace7effa7340604b1d16699/docstring_parser-0.18.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/a0/b6/78aaf9141fb46742928c113f3cf6ef2259d538cb02b604b7656c1dc9883c/fastapi-0.142.2-py3-none-any.whl
-      - pypi: git+https://github.com/opera-adt/geepers.git?rev=d5421787d9c41dbf7e4d0679249bb9d5145bcc40#d5421787d9c41dbf7e4d0679249bb9d5145bcc40
+      - pypi: git+https://github.com/opera-adt/geepers.git?rev=75dcf4f6859a20c894d10d7daea0f1ccfbc9fe83#75dcf4f6859a20c894d10d7daea0f1ccfbc9fe83
       - pypi: https://files.pythonhosted.org/packages/04/4b/29cac41a4d98d144bf5f6d33995617b185d14b22401f75ca86f384e87ff1/h11-0.16.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/b6/9d/cd4777dbcf3bef9d9627e0fe4bc43d2e294b1baeb01d0422399d5e9de319/HeapDict-1.0.1-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/09/ba/a4568248771ce81957bfb7cc600264a40fbcda092391ee1c415c50be4bea/httpcore2-2.13.1-py3-none-any.whl
@@ -9281,8 +9281,8 @@ packages:
   requires_python: '>=3.11'
 - pypi: ./
   name: disp-xr
-  version: 0.3.0.post1.dev2+g87d9af80b.d20261011
-  sha256: 32540d61e0a1b0f96f88beabc7d821e6b27088efcbeb2e04a7e74fefd37cbb8d
+  version: 0.6.0.post1.dev1+gda63d5f84.d20261102
+  sha256: 9a796b8703cad27788d57ca096bde51ac85dcaaa284455929d18610a6958d019
   requires_dist:
   - click>=7.0
   - dask
@@ -9316,7 +9316,7 @@ packages:
   - mkdocs-jupyter>=0.25 ; extra == 'docs'
   - ipykernel ; extra == 'docs'
   - matplotlib ; extra == 'docs'
-  - geepers>=0.4 ; extra == 'gnss'
+  - geepers[analysis]>=0.4 ; extra == 'gnss'
   - h3>=4 ; extra == 'hex'
   - geopandas ; extra == 'hex'
   - mintpy ; extra == 'mintpy'
@@ -10312,28 +10312,31 @@ packages:
   - pkg:pypi/gdal?source=hash-mapping
   size: 2464040
   timestamp: 1788235755138
-- pypi: git+https://github.com/opera-adt/geepers.git?rev=d5421787d9c41dbf7e4d0679249bb9d5145bcc40#d5421787d9c41dbf7e4d0679249bb9d5145bcc40
+- pypi: git+https://github.com/opera-adt/geepers.git?rev=75dcf4f6859a20c894d10d7daea0f1ccfbc9fe83#75dcf4f6859a20c894d10d7daea0f1ccfbc9fe83
   name: geepers
-  version: 0.3.0.post1.dev59+gd5421787d
+  version: 0.3.0.post1.dev91+g75dcf4f68
   requires_dist:
+  - numpy
   - pandas
-  - lxml
-  - geopandas
-  - pyogrio
-  - xarray
-  - dask>=2025
   - pyproj
-  - rasterio
-  - rioxarray
-  - scipy
-  - shapely>=2
   - requests
+  - scipy
   - tqdm
-  - zarr
   - tyro>=0.9.24
-  - pandera
+  - shapely>=2 ; extra == 'grid'
+  - geopandas ; extra == 'analysis'
+  - pyogrio ; extra == 'analysis'
+  - xarray ; extra == 'analysis'
+  - dask>=2025 ; extra == 'analysis'
+  - rasterio ; extra == 'analysis'
+  - rioxarray ; extra == 'analysis'
+  - zarr ; extra == 'analysis'
+  - pandera ; extra == 'analysis'
+  - lxml ; extra == 'analysis'
+  - shapely>=2 ; extra == 'analysis'
   - matplotlib>=3.8 ; extra == 'plot'
   - contextily ; extra == 'plot'
+  - geepers[analysis,grid,plot] ; extra == 'all'
   - pre-commit ; extra == 'test'
   - pytest ; extra == 'test'
   - pytest-cov ; extra == 'test'
@@ -18740,6 +18743,81 @@ packages:
   - numpy>=1.24.4 ; extra == 'all'
   - narwhals>=1.26.0 ; extra == 'all'
   - pyarrow>=13 ; extra == 'all'
+  requires_python: '>=3.10'
+- pypi: https://files.pythonhosted.org/packages/29/17/239d1e64d290c26f126582445649bc7c925a7a80f2472b8bd04d6ec22f8d/pandera-0.35.0-py3-none-any.whl
+  name: pandera
+  version: 0.35.0
+  sha256: ce5cab5e882480d07575361899a4140585b80c489410cf97b7ef6e8aa90de3b6
+  requires_dist:
+  - packaging>=20.0
+  - pydantic
+  - typeguard
+  - typing-extensions
+  - typing-inspect>=0.6.0
+  - typer>=0.12.3 ; extra == 'cli'
+  - rich ; extra == 'cli'
+  - pyyaml>=5.1 ; extra == 'cli'
+  - numpy>=1.24.4 ; extra == 'pandas'
+  - pandas>=2.1.1 ; extra == 'pandas'
+  - hypothesis>=6.92.7 ; extra == 'strategies'
+  - scipy ; extra == 'hypotheses'
+  - pyyaml>=5.1 ; extra == 'io'
+  - frictionless<=4.40.8 ; extra == 'frictionless'
+  - pandas-stubs ; extra == 'mypy'
+  - scipy-stubs ; python_full_version >= '3.10' and extra == 'mypy'
+  - fastapi ; extra == 'fastapi'
+  - geopandas ; extra == 'geopandas'
+  - shapely ; extra == 'geopandas'
+  - pyspark[connect]>=3.2.0 ; extra == 'pyspark'
+  - modin ; extra == 'modin'
+  - ray ; extra == 'modin'
+  - dask[dataframe] ; extra == 'modin'
+  - distributed ; extra == 'modin'
+  - modin ; extra == 'modin-ray'
+  - ray ; extra == 'modin-ray'
+  - modin ; extra == 'modin-dask'
+  - dask[dataframe] ; extra == 'modin-dask'
+  - distributed ; extra == 'modin-dask'
+  - dask[dataframe] ; extra == 'dask'
+  - distributed ; extra == 'dask'
+  - ibis-framework>=9.0.0 ; extra == 'ibis'
+  - pyarrow-hotfix ; extra == 'ibis'
+  - polars>=1.20.0 ; extra == 'polars'
+  - xarray>=2024.10.0 ; extra == 'xarray'
+  - numpy>=1.24.4 ; extra == 'xarray'
+  - narwhals>=1.26.0 ; extra == 'narwhals'
+  - pyarrow>=13 ; extra == 'pyarrow'
+  - narwhals>=1.26.0 ; extra == 'pyarrow'
+  - narwhals-datafusion>=0.1.5 ; extra == 'datafusion'
+  - torch ; extra == 'torch'
+  - tensordict ; extra == 'torch'
+  - typer>=0.12.3 ; extra == 'all'
+  - rich ; extra == 'all'
+  - hypothesis>=6.92.7 ; extra == 'all'
+  - scipy ; extra == 'all'
+  - scipy-stubs ; python_full_version >= '3.10' and extra == 'all'
+  - pyyaml>=5.1 ; extra == 'all'
+  - black ; extra == 'all'
+  - frictionless<=4.40.8 ; extra == 'all'
+  - pyspark[connect]>=3.2.0 ; extra == 'all'
+  - modin ; extra == 'all'
+  - ray ; extra == 'all'
+  - dask[dataframe] ; extra == 'all'
+  - distributed ; extra == 'all'
+  - pandas-stubs ; extra == 'all'
+  - fastapi ; extra == 'all'
+  - geopandas ; extra == 'all'
+  - shapely ; extra == 'all'
+  - ibis-framework>=9.0.0 ; extra == 'all'
+  - pyarrow-hotfix ; extra == 'all'
+  - polars>=1.20.0 ; extra == 'all'
+  - xarray>=2024.10.0 ; extra == 'all'
+  - numpy>=1.24.4 ; extra == 'all'
+  - narwhals>=1.26.0 ; extra == 'all'
+  - pyarrow>=13 ; extra == 'all'
+  - narwhals-datafusion>=0.1.5 ; extra == 'all'
+  - torch ; extra == 'all'
+  - tensordict ; extra == 'all'
   requires_python: '>=3.10'
 - conda: https://conda.anaconda.org/conda-forge/linux-64/pandoc-3.12-ha770c72_0.conda
   sha256: 9ec6bb8e28618be34febca56bc54e55957eb094bb7f0ec4fb57dbac42b1526f0

@@ -8,6 +8,15 @@ All notable changes to disp-xr. The format follows
 
 ### Added
 
+- `fit_series(cube, model)` (provisional; `gnss` extra): geepers per-series
+  models as maps, on 5 x 5 median cells in 30-day bins by default. `"smooth"`
+  gives a time-varying rate without an assumed shape, with the random-walk limit
+  of 5 mm/sqrt(yr) geepers recommends for DISP-S1. `"linearity"` tests whether a
+  single rate is enough and for how long; it is a **draft that needs V&V and
+  improvement**, warns when called, and its output may change. A Dataset that is
+  not chained raises, and one that is not re-referenced warns.
+- The geepers pin moves to `75dcf4f`, which has these models. `disp-xr[gnss]`
+  still needs a geepers 0.4 on PyPI to install.
 - `Trajectory(rate_changes=("2021-06-01",))`: changes of rate at known dates
   (hinges `max(0, t - t_change)`, the series stays continuous), as in geepers
   `estimate_trend(rate_change_dates=...)`. `fit_trajectory` and

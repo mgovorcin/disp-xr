@@ -109,3 +109,31 @@ OLS and Whittle fit the `Trajectory` you give them. Include known steps
 terms; an unmodelled step or seasonal cycle ends up in the residuals and
 inflates the estimated noise. Whittle estimates the noise from those
 residuals, so a missing term also makes its sigma too large.
+
+## When one rate may not be enough
+
+`fit_velocity` assumes one rate for the whole record. `fit_series` (provisional,
+`gnss` extra) runs per-series models from
+[geepers](https://github.com/opera-adt/geepers) on multilooked cells of a
+chained, re-referenced cube, 5 x 5 medians in 30-day bins by default:
+
+```python
+cube = dxr.chain(ds).disp.rereference("median")
+maps = dxr.fit_series(cube.sel(x=xs, y=ys))     # smooth, time-varying rate
+maps.rate, maps.rate_sigma, maps.trend_shape    # present-day rate; line, hinges or smooth
+maps.rates                                      # the rate at every bin
+
+draft = dxr.fit_series(cube.sel(x=xs, y=ys), "linearity")
+draft.linearity_model, draft.validity_years
+```
+
+- **`"smooth"`** has been checked against GNSS on station pairs of two frames, in
+  geepers' `docs/analysis-modules.md`. Its limit of 5 mm/sqrt(yr) is for DISP-S1 with
+  these medians and bins; check it if you change them.
+- **`"linearity"` is a draft: it needs V&V on DISP and improvement.** It warns when
+  called, and its output may change.
+- **Re-reference first.** Otherwise what the frame shares is reported as change.
+- **Cost:** each fit takes 0.1 to 0.3 s, measured on one F11116 block: about 5
+  core-hours for a frame at 1 km and 200 at 150 m, so run full resolution on regions.
+  Reading comes on top and can dominate: 625 cells from a virtual frame took 3 minutes
+  on 16 threads. For large areas, process a native store (`dxr.open_zarr`).
