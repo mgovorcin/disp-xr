@@ -130,8 +130,12 @@ draft.linearity_model, draft.validity_years
 - **`"smooth"`** has been checked against GNSS on station pairs of two frames, in
   geepers' `docs/analysis-modules.md`. Its limit of 5 mm/sqrt(yr) is for DISP-S1 with
   these medians and bins; check it if you change them.
-- **`"linearity"` is a draft: it needs V&V on DISP and improvement.** It warns when
-  called, and its output may change.
+- **`"linearity"` is a draft.** It warns when called, and its output may change. The
+  [V&V](https://github.com/mgovorcin/disp-xr/blob/main/docs/studies/series_vnv.md) found: read a series as non-linear only if
+  `min(p_quadratic, p_piecewise) < 0.01` and `departure > 10 mm` (`linearity_model` alone
+  flags 59 % of straight lines at typical noise); do not trust `breakpoint` or extrapolate
+  `rate_after`; `velocity_sigma` is too small with the default noise; and the test does not
+  find steps such as unwrapping errors.
 - **Re-reference first.** Otherwise what the frame shares is reported as change.
 - **Cost:** each fit takes 0.1 to 0.3 s, measured on one F11116 block: about 5
   core-hours for a frame at 1 km and 200 at 150 m, so run full resolution on regions.
