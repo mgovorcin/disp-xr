@@ -1,6 +1,6 @@
 # disp-xr project index
 
-**Last indexed:** 2026-10-30 · `main` after v0.6.0 (branch `feat/trajectory-rate-changes`) on `origin` = `mgovorcin/disp-xr`
+**Last indexed:** 2026-11-02 · `main` after #112 (branch `feat/fit-series`) on `origin` = `mgovorcin/disp-xr`
 
 How and when this file is rebuilt: see "Project Index (cyclical indexing)" in `CLAUDE.md` at the repository root.
 
@@ -128,7 +128,7 @@ since #30 was checked locally and says so in its description.
 | `accessor.py`, `_history.py`, `units.py`, `validate.py` | API rules | `.disp` accessor, operation history, unit conversion, validation | — |
 | `config.py` | API rules | `donfig` settings, `DISP_XR_*` overrides, `check_load` and `LoadTooLargeError` | T37.3a |
 | `cli/__init__.py` | F14, F16 | `disp_xr` commands wrapping library functions | T15 |
-| `timeseries/` | F8, S1, S4 | `trajectory.py` (`fit_trajectory`), `noise.py` (`fit_noise`, from geepers), `velocity.py` (`fit_velocity`: OLS, Whittle, MIDAS, GLS), `gls.py` (grouped GLS; missing-epoch blocks solved in pieces of at most 64 MB, #94), design matrix, legacy `fit_timeseries_block`; jax optional | T20, T21, T22, T23, T32 |
+| `timeseries/` | F8, S1, S4 | `trajectory.py` (`fit_trajectory`), `noise.py` (`fit_noise`, from geepers), `velocity.py` (`fit_velocity`: OLS, Whittle, MIDAS, GLS), `series.py` (`fit_series`, geepers models on multilooked cells; provisional, linearity draft), `gls.py` (grouped GLS; missing-epoch blocks solved in pieces of at most 64 MB, #94), design matrix, legacy `fit_timeseries_block`; jax optional | T20, T21, T22, T23, T32 |
 | `utils.py` | — | Deprecated aliases only | T38 |
 | `quality_metrics.py`, `io.py`, `mintpy.py`, `static_layers.py`, `download.py` | — | Deprecated aliases | T38 |
 | `log/` | Infrastructure | Unchanged | — |
@@ -163,6 +163,8 @@ since #30 was checked locally and says so in its description.
 
 ## Out of sync
 
+- `disp-xr[gnss]` cannot be installed from PyPI: it needs `geepers>=0.4`, and PyPI's newest is 0.3.0. `fit_series` needs that release too. Development uses the git pin.
+
 - Local checkouts `01_OPERA/STAKEHOLDER/disp-xr` and `01_OPERA/VLM/disp-xr` are on the old `timeseries_fitting` branch, and the conda envs `disp_xr` and `disp_xr_py311` hold non-editable installs of old commits.
 - The OPERA requirement values drawn by default (3 (1 + sqrt(L)) mm, 2 mm/yr) were to be confirmed against the requirements document before v0.3; they are released in `v0.3.0` unconfirmed (`specs.md` S4).
 ## Not verified
@@ -183,6 +185,7 @@ since #30 was checked locally and says so in its description.
 
 | Date | Trigger | Changes |
 | --- | --- | --- |
+| 2026-11-02 | Per-series geepers models | `timeseries/series.py` (`fit_series`: smooth, draft linearity), `api/process.md`, `api_policy.md` Provisional row; geepers pin `75dcf4f` |
 | 2026-10-30 | Trajectory rate changes | `rate_changes` in `Trajectory` (`timeseries/trajectory.py`, `_design_matrix.py`), `present_velocity` in `fit_trajectory` and `fit_velocity("ols")`; gallery `velocity` section |
 | 2026-10-21 | Release `v0.6.0` (frame repositories) | Changelog section `[0.6.0]` (#106 `group=`, #107 `add_chain_offsets`/`open_frame`, #108 `reference_urls`); NISAR (T35, T12.5) moved to v0.7 in `todo.md`; index stamped |
 | 2026-10-20 | Virtual references to published copies | `build_virtual_frame(reference_urls=)` and `_open_repository(authorize=)` in `virtual.py`; three tests |

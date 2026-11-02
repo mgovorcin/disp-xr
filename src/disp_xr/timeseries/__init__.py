@@ -15,6 +15,7 @@ from .estimate_fit import (
     sincos_to_amplitude_phase,
 )
 from .noise import NoiseResult, fit_noise
+from .series import fit_series
 from .temporal import (
     apply_segmented,
     gap_mask,
@@ -35,6 +36,7 @@ __all__ = [
     "fit_noise",
     "fit_timeseries_block",
     "fit_trajectory",
+    "fit_series",
     "fit_velocity",
     "gap_mask",
     "grid_step_days",
