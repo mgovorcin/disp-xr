@@ -8,6 +8,10 @@ All notable changes to disp-xr. The format follows
 
 ### Added
 
+- `fit_series(model="linearity")` gains `significant` (`alpha`, `min_departure_mm`) and takes
+  `velocity`, `velocity_sigma` and `validity_years` from a second fit
+  (`uncertainty_noise="RWFNWN"`; `None` restores one fit), following the V&V in
+  `docs/studies/series_vnv.md`. It stays a draft.
 - `fit_series(cube, model)` (provisional; `gnss` extra): geepers per-series
   models as maps, on 5 x 5 median cells in 30-day bins by default. `"smooth"`
   gives a time-varying rate without an assumed shape, with the random-walk limit

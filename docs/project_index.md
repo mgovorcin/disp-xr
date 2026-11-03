@@ -1,6 +1,6 @@
 # disp-xr project index
 
-**Last indexed:** 2026-11-02 · `main` after #113 (branch `study/series-vnv`) on `origin` = `mgovorcin/disp-xr`
+**Last indexed:** 2026-11-02 · `main` after #113 (branch `feat/series-gate`, on `study/series-vnv`) on `origin` = `mgovorcin/disp-xr`
 
 How and when this file is rebuilt: see "Project Index (cyclical indexing)" in `CLAUDE.md` at the repository root.
 
@@ -186,6 +186,7 @@ since #30 was checked locally and says so in its description.
 
 | Date | Trigger | Changes |
 | --- | --- | --- |
+| 2026-11-02 | `fit_series` gate | `significant`, `alpha`, `min_departure_mm`, `uncertainty_noise` (second `RWFNWN` fit); still a draft |
 | 2026-11-02 | V&V of the linearity test | `docs/studies/series_vnv.md`, `studies/series_vnv/`; `velocity-methods.md` note; draft label stays, gate and `RWFNWN` sigma recommended, owner decision open |
 | 2026-11-02 | Per-series geepers models | `timeseries/series.py` (`fit_series`: smooth, draft linearity), `api/process.md`, `api_policy.md` Provisional row; geepers pin `75dcf4f` |
 | 2026-10-30 | Trajectory rate changes | `rate_changes` in `Trajectory` (`timeseries/trajectory.py`, `_design_matrix.py`), `present_velocity` in `fit_trajectory` and `fit_velocity("ols")`; gallery `velocity` section |

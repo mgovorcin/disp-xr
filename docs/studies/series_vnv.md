@@ -1,7 +1,7 @@
 # V&V of the linearity test and change points
 
-Status (2026-11-02): done for the settings below, on one region. Owner decision on the
-follow-up is open.
+Status (2026-11-02): done for the settings below, on one region. Step 1 of the
+recommendation is in `fit_series`; the rest is open.
 
 This study asks three things about per-series models on DISP-S1 at 5 x 5 pixels and 30-day
 medians (`fit_series` defaults): can the draft label come off `model="linearity"`, which
@@ -10,8 +10,7 @@ settings should it use, and are geepers' change points worth adding to disp-xr?
 ## Answers
 
 1. **The draft label stays for now.** The test works once it is read through a gate, but
-   `fit_series` does not apply that gate yet, and the evidence for real signals is 13
-   station pairs from one part of California.
+   the evidence for real signals is 13 station pairs from one part of California.
 2. **Read a series as non-linear only if `min(p_quadratic, p_piecewise) < 0.01` and
    `departure > 10 mm`.** `linearity_model` alone calls 59 % of straight lines non-linear at
    typical noise; the gate calls 2 %.
@@ -46,9 +45,10 @@ binned to 30 days; all methods run on the same series, with geepers at the commi
 - **Holdout** (`real.py`): fit all but the last three years, then predict the last year's
   mean, against GNSS and against the series itself.
 - **`fit_series` itself** (`end_to_end.py`): same model as the direct calls on 93 % of 442
-  pairs, same gated verdict on 98 %, median rate difference 0.11 mm/yr. The two differ in where
-  the bins start and in differencing before or after binning, so a plain verdict can turn on
-  such details; the gated one rarely does.
+  pairs, same `significant` on 98 %, median `velocity_sigma` 0.89 mm/yr against 0.85 and
+  `validity_years` 10.6 against 11.4. The two differ in where the bins start and in
+  differencing before or after binning, so a plain verdict can turn on such details; the gated
+  one rarely does.
 
 ## False alarms
 
@@ -218,10 +218,10 @@ record:
 
 Owner decision, in this order:
 
-1. In `fit_series(model="linearity")`, add a `significant` output for the gate and take
-   `velocity_sigma` and `validity_years` from `RWFNWN`. This needs a second fit per series:
-   today's `noise=` sets one model for everything. Keep `breakpoint` and `rate_after`,
-   documented as not fit for extrapolation or dating.
+1. Done: `fit_series(model="linearity")` has `significant` and takes `velocity`,
+   `velocity_sigma` and `validity_years` from a second `RWFNWN` fit, about 15 % more time per
+   series. `breakpoint` and `rate_after` stay, documented as not fit for dating or
+   extrapolation.
 2. Repeat the GNSS and two-track checks on a second region (F08882, Houston, has the stations).
    If the gate holds, remove the draft label.
 3. Add an offsets-above-15-mm flag from `detect_changepoints` as a data-quality layer, after

@@ -434,16 +434,21 @@ def dates():
 def end_to_end():
     r = pd.read_csv(RESULTS / "end_to_end.csv")
     ok = r.fs_model.notna()
-
-    def g(p, q, dep):
-        return (np.minimum(p, q) < 0.01) & (dep > 10)
-
+    direct = (np.minimum(r.lin_p_quad, r.lin_p_hinge) < 0.01) & (r.lin_departure > 10)
     print("\n## fit_series against direct calls\n")
     print(
         f"{ok.sum()} of {len(r)} fitted; same model {(r.lin_model == r.fs_model)[ok].mean():.3f}; "
-        f"same gated verdict {(g(r.lin_p_quad, r.lin_p_hinge, r.lin_departure) == g(r.fs_p_quad, r.fs_p_hinge, r.fs_departure))[ok].mean():.3f}; "
-        f"rate difference median {(r.lin_rate - r.fs_velocity).abs().median():.2f} mm/yr"
+        f"same significant {(direct == (r.fs_significant == 1))[ok].mean():.3f}; "
+        f"significant {(r.fs_significant == 1)[ok].mean():.3f} against {direct[ok].mean():.3f}"
     )
+    for name, a, b in (
+        ("rate", r.rw_rate, r.fs_velocity),
+        ("rate sigma", r.rw_rate_sigma, r.fs_sigma),
+        ("horizon", r.rw_horizon, r.fs_validity),
+    ):
+        print(
+            f"{name} (RWFNWN): median |difference| {(a - b)[ok].abs().median():.3f}, medians {a[ok].median():.2f} and {b[ok].median():.2f}"
+        )
 
 
 if __name__ == "__main__":

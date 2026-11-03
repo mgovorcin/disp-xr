@@ -258,4 +258,7 @@ f38502 gnss    4   3.0  2023-06-04
 
 ## fit_series against direct calls
 
-442 of 445 fitted; same model 0.934; same gated verdict 0.980; rate difference median 0.11 mm/yr
+442 of 445 fitted; same model 0.934; same significant 0.980; significant 0.059 against 0.048
+rate (RWFNWN): median |difference| 0.138, medians -0.04 and 0.02
+rate sigma (RWFNWN): median |difference| 0.160, medians 0.85 and 0.89
+horizon (RWFNWN): median |difference| 1.788, medians 11.36 and 10.57
