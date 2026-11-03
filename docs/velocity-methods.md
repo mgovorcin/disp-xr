@@ -132,7 +132,7 @@ draft.velocity, draft.velocity_sigma, draft.validity_years
   geepers' `docs/analysis-modules.md`. Its limit of 5 mm/sqrt(yr) is for DISP-S1 with
   these medians and bins; check it if you change them.
 - **`"linearity"` is a draft.** It warns when called, and its output may change. The
-  [V&V](https://github.com/mgovorcin/disp-xr/blob/main/docs/studies/series_vnv.md) covers one region. Read `significant` (p below 0.01 and `departure` above 10 mm):
+  [V&V](https://github.com/mgovorcin/disp-xr/blob/main/docs/studies/series_vnv.md) checks false alarms on two regions and detection on one. Read `significant` (p below 0.01 and `departure` above 10 mm):
   `linearity_model` alone flags 59 % of straight lines at typical noise. Do not date events
   with `breakpoint` or extrapolate `rate_after`. `velocity_sigma` and `validity_years` come
   from a noise model with a random walk, because they are too optimistic without one. The

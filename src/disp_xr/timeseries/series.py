@@ -14,7 +14,7 @@ F11116 the rate was -13 mm/yr before removing the block's median and 0.6 after.
 Requires the ``gnss`` extra, with a geepers that has ``geepers.smooth``.
 
 ``"linearity"`` is a **draft**, so its output may change: the V&V
-(``docs/studies/series_vnv.md``) covers one region. Read its verdict from
+(``docs/studies/series_vnv.md``) checks detection on one region. Read its verdict from
 ``significant``, not ``linearity_model``. ``"smooth"`` is provisional, with the
 checks against GNSS described in the geepers documentation
 (``docs/analysis-modules.md``).
@@ -41,7 +41,7 @@ SHAPES = ("linear", "piecewise", "smooth")
 LINEARITY_MODELS = ("linear", "quadratic", "piecewise")
 HORIZON_DRIVERS = ("rate uncertainty", "non-linearity", "capped")
 SIGNIFICANT = ("no", "yes")
-DRAFT = "draft: V&V on one region, see docs/studies/series_vnv.md"
+DRAFT = "draft: detection checked on one region (docs/studies/series_vnv.md)"
 _TO_MM = {
     "m": 1000.0,
     "meter": 1000.0,
@@ -330,7 +330,7 @@ def fit_series(
         ``"smooth"``: a time-varying rate without an assumed shape,
         ``geepers.smooth.fit_smooth_trend``. Provisional. ``"linearity"``: is a
         single rate enough, and for how long, ``geepers.linearity``. **Draft:**
-        V&V on one region, so it warns, and its output may change.
+        detection checked on one region, so it warns, and its output may change.
     layer : str
         Layer of a Dataset.
     window : int
@@ -415,8 +415,8 @@ def fit_series(
     _models()
     if model == "linearity":
         warnings.warn(
-            "fit_series(model='linearity') is a draft, validated on one region: "
-            "read significant, not linearity_model; its output may change",
+            "fit_series(model='linearity') is a draft (detection checked in one "
+            "region): read significant, not linearity_model; its output may change",
             UserWarning,
             stacklevel=3,
         )

@@ -1,7 +1,8 @@
 # V&V of the linearity test and change points
 
-Status (2026-11-02): done for the settings below, on one region. Step 1 of the
-recommendation is in `fit_series`; the rest is open.
+Status (2026-11-02): done for the settings below, on central California and Houston. Step 1
+of the recommendation is in `fit_series`; whether the draft label comes off is the owner's
+decision.
 
 This study asks three things about per-series models on DISP-S1 at 5 x 5 pixels and 30-day
 medians (`fit_series` defaults): can the draft label come off `model="linearity"`, which
@@ -9,8 +10,9 @@ settings should it use, and are geepers' change points worth adding to disp-xr?
 
 ## Answers
 
-1. **The draft label stays for now.** The test works once it is read through a gate, but
-   the evidence for real signals is 13 station pairs from one part of California.
+1. **The draft label stays until the owner decides.** The gate's false alarms hold on both
+   regions (none in 540 Houston pairs). Detection rests on 13 station pairs in California,
+   because Houston has no real departure large enough to test it.
 2. **Read a series as non-linear only if `min(p_quadratic, p_piecewise) < 0.01` and
    `departure > 10 mm`.** `linearity_model` alone calls 59 % of straight lines non-linear at
    typical noise; the gate calls 2 %.
@@ -19,13 +21,14 @@ settings should it use, and are geepers' change points worth adding to disp-xr?
    years (3 pairs), and `rate_after` predicts the next three years worse than the plain line.
 4. **Take rate uncertainty and the validity horizon from a noise model with a random walk
    (`RWFNWN`), and the verdict from `FNWN`.** With `FNWN`, rate errors are about 5 times
-   the reported sigma on synthetic lines at typical noise and 3.6 times against GNSS. A
+   the reported sigma on synthetic lines at typical noise and 3.6 times against GNSS in
+   California. With `RWFNWN` they are 1.7 times in California and 0.84 in Houston. A
    random walk in the verdict's noise model absorbs real signals: it found 1 of the 13
    strong GNSS pairs.
 5. **Do not add change points as a ground-signal product.** At typical noise they appear
    on 88 % of straight lines, and rate changes on 60 %. **Offsets above 15 mm are worth
    adding later as a data-quality flag:** no false alarms on synthetic lines, every step
-   of 28 mm or more found at the right size. `detect_changepoints` is enough;
+   of 28 mm or more found at the right size, and in Houston they found a bad ministack. `detect_changepoints` is enough;
    `fit_sparse_changepoints` gives the same answer on 99.5 % of pairs.
 
 ## Data and method
@@ -40,8 +43,10 @@ binned to 30 days; all methods run on the same series, with geepers at the commi
   geepers, F11116 and F38502. 445 pairs within 25 km are differenced in pixels and in GNSS,
   from station sets of 53, 42 and 29, plus 125 differences of windows 500 m apart. Of these
   pairs, 43 come from stations screened for signal (the `f38502v` set).
-- **Second track** (`fetch_overlap.py`): the screened stations inside F11116, read from
+- **Second track** (`fetch_windows.py`): the screened stations inside F11116, read from
   local granules, so strong signals are also seen on another track.
+- **Houston** (`houston_stations.py`, `fetch_windows.py`, `real.py`): F08882 with its
+  descending partner F38238, 95 stations with six years or more. See "Houston".
 - **Holdout** (`real.py`): fit all but the last three years, then predict the last year's
   mean, against GNSS and against the series itself.
 - **`fit_series` itself** (`end_to_end.py`): same model as the direct calls on 93 % of 442
@@ -203,11 +208,39 @@ record:
   has little real signal, so this does not show how the verdict behaves where the ground does
   change.
 
+## Houston
+
+F08882 (ascending, 540 pairs, 2016-10 to 2026-02) and F38238 (descending, to 2023-11; F08882 is
+cut there for the comparison). Scored as above, then without UH01 and TSFT.
+
+**False alarms hold.** The gate flags none of the 540 pairs and none of the near-null windows
+(`linearity_model` 19 %), and neither track flags any of the 453 pairs they share.
+
+**UH01 and TSFT are GNSS problems.** At first the pixels seem to miss all 31 pairs that GNSS
+calls strongly non-linear (up to 229 mm), but 24 of those involve these two stations. UH01's
+LOS series jumps about 650 mm around 2021, more than its one catalogued step removes. TSFT's
+vertical moves about 170 mm in 2022-23 and partly returns. Neither track shows either one.
+
+**Detection is not tested.** Without those stations, the largest GNSS departure is 20 mm and the
+largest in the pixels is 12 mm. The pixels flag none of the 7 pairs above 10 mm in GNSS, which
+the synthetic results lead one to expect at this size. Houston's pairs are close to straight
+over 25 km at this level, so this region cannot confirm or refute the 0.69.
+
+**`RWFNWN` uncertainties hold.** Without those stations, pixels and GNSS differ by a median of
+0.70 mm/yr, and the misfit is 1.45 times the combined sigma with `FNWN` and 0.84 with `RWFNWN`.
+
+**The offset flag found a bad ministack.** 55 of F08882's 61 offsets above 15 mm fall in 2019-08
+to 2019-12, against 3 in all of F38238, so unlike California these do not repeat. In the
+ministack from 2019-06-20 to 2020-01-10, the median at the stations swings by up to 89 mm from
+one epoch to the next, mostly 35 to 65 (`jump_f08882.py`). At the next ministack that drops to
+at most 14 mm.
+F38238 does not show it over those months. The cause was not determined. Chaining carries
+that ministack's last epoch into all later ones.
+
 ## What this does not cover
 
-- **One region.** All strong pairs are in one part of central California. Other signals,
-  including Houston subsidence and coastal frames, are untested. Stations were picked for
-  long records or for signal, so these are not random pixels.
+- **Detection in one region.** All strong pairs are in one part of central California.
+  Stations were picked for long records or for signal, so these are not random pixels.
 - **Station windows only**, not whole frames. The
   500 m differences are the only check of other pixels.
 - **Few independent strong pairs.** 13 pairs share 18 stations; the two-track check has 5.
@@ -222,7 +255,8 @@ Owner decision, in this order:
    `velocity_sigma` and `validity_years` from a second `RWFNWN` fit, about 15 % more time per
    series. `breakpoint` and `rate_after` stay, documented as not fit for dating or
    extrapolation.
-2. Repeat the GNSS and two-track checks on a second region (F08882, Houston, has the stations).
-   If the gate holds, remove the draft label.
+2. Done on Houston: false alarms and uncertainties hold; detection could not be tested there.
+   Move `"linearity"` from draft to provisional, documented as checked for departures above
+   about 20 mm in one region. Otherwise, find a second region with strong non-linear signals.
 3. Add an offsets-above-15-mm flag from `detect_changepoints` as a data-quality layer, after
-   checking P533 and P552 against coherence and a descending track. This is separate work.
+   checking P533, P552 and F08882's 2019 ministack against coherence. This is separate work.

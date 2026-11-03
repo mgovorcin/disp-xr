@@ -1,18 +1,20 @@
 """Where the change points fall: every date, by series kind, against ministack boundaries."""
 
 import itertools
+import sys
 from concurrent.futures import ProcessPoolExecutor
 
 import numpy as np
 import pandas as pd
 from common import (
     DAYS,
-    LOS,
+    END,
     NAME,
     RESULTS,
     detect_changepoints,
     folder_of,
     grid,
+    los_of,
     pixel_series,
 )
 from geepers.collocation import distance_matrix
@@ -45,11 +47,17 @@ def boundaries(folder):
 if __name__ == "__main__":
     src, tasks, cuts = UnrSource(), [], []
     catalog = src.steps()
-    for frame in ("f11116", "f38502", "f38502v", "f11116x"):
+    stem = sys.argv[1] if len(sys.argv) > 1 else "change_dates"
+    frames = sys.argv[2:] or ["f11116", "f38502", "f38502v", "f11116x"]
+    for frame in frames:
         folder = folder_of(frame)
         st = pd.read_csv(folder / "stations.csv")
         cuts += [{"frame": frame, "date": d} for d in boundaries(folder)]
         dates, cube = pixel_series(folder)
+        if frame in END:
+            keep = dates <= END[frame]
+            dates, cube = dates[keep], cube[keep]
+        los = los_of(frame)
         px, off, gn, steps = {}, {}, {}, {}
         for k, row in enumerate(st.itertuples()):
             px[row.id] = grid(pd.Series(cube[:, k, 0], index=dates))
@@ -59,7 +67,7 @@ if __name__ == "__main__":
             )
             t = t.set_index(pd.to_datetime(t["date"]))
             gn[row.id] = grid(
-                (t.east * LOS["east"] + t.north * LOS["north"] + t.up * LOS["up"])
+                (t.east * los["east"] + t.north * los["north"] + t.up * los["up"])
                 * 1000.0
             )
             steps[row.id] = list(
@@ -92,6 +100,6 @@ if __name__ == "__main__":
                 )
     with ProcessPoolExecutor(32) as pool:
         rows = [r for out in pool.map(job, tasks, chunksize=4) for r in out]
-    pd.DataFrame(rows).to_csv(RESULTS / "change_dates.csv", index=False)
-    pd.DataFrame(cuts).to_csv(RESULTS / "ministacks.csv", index=False)
+    pd.DataFrame(rows).to_csv(RESULTS / f"{stem}.csv", index=False)
+    pd.DataFrame(cuts).to_csv(RESULTS / f"{stem}_ministacks.csv", index=False)
     print(len(rows), "change points;", len(cuts), "ministacks")

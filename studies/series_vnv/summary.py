@@ -6,6 +6,7 @@ from common import RESULTS
 
 pd.set_option("display.width", 200, "display.max_columns", 40, "display.max_rows", 200)
 TRACKS = ("f11116", "f38502", "f38502v")
+BAD_GNSS = ("UH01", "TSFT")
 
 
 def flagged(t, pre="lin", dep=0.0, alpha=0.01):
@@ -114,8 +115,8 @@ def cluster_interval(px, stat, n=1000):
     return np.nanquantile(out, [0.05, 0.95]).round(2)
 
 
-def real():
-    d = pd.read_csv(RESULTS / "real.csv")
+def real(name="real.csv", tracks=TRACKS):
+    d = pd.read_csv(RESULTS / name)
     fails = {c: int(d[c].notna().sum()) for c in d if c.endswith("_error")}
     print(
         "\n# Real series\n\nseries",
@@ -123,7 +124,7 @@ def real():
         "\nfailures",
         fails,
     )
-    main = d[d.frame.isin(TRACKS)]
+    main = d[d.frame.isin(tracks)]
 
     near = main[main.role == "near"]
     v = tests(near)
@@ -281,16 +282,13 @@ def real():
     return d
 
 
-def two_tracks(d):
+def two_tracks(d, comparisons):
     def side(frame, role):
         t = d[(d.frame == frame) & (d.role == role)].copy()
         t["key"] = [tuple(sorted(x)) for x in zip(t.a, t.b)]
         return t.set_index("key")
 
-    for name, fa, fb in (
-        ("Quiet stations, longest records", "f11116", "f38502"),
-        ("Screened for signal", "f11116x", "f38502v"),
-    ):
+    for name, fa, fb in comparisons:
         a, b, g = side(fa, "pixel"), side(fb, "pixel"), side(fa, "gnss")
         k = a.index.intersection(b.index).intersection(g.index)
         a, b, g = a.loc[k], b.loc[k], g.loc[k]
@@ -348,7 +346,7 @@ def two_tracks(d):
 def dates():
     c = pd.read_csv(RESULTS / "change_dates.csv", parse_dates=["date"])
     c = c[c.frame.isin(TRACKS)]
-    m = pd.read_csv(RESULTS / "ministacks.csv", parse_dates=["date"])
+    m = pd.read_csv(RESULTS / "change_dates_ministacks.csv", parse_dates=["date"])
     rng = np.random.default_rng(0)
 
     def within(days, cuts, limit=30):
@@ -451,9 +449,70 @@ def end_to_end():
         )
 
 
+def houston():
+    """Without UH01 and TSFT: GNSS events that neither track shows (see the report)."""
+    d = pd.read_csv(RESULTS / "real_houston.csv")
+    keep = ~(d.a.isin(BAD_GNSS) | d.b.isin(BAD_GNSS))
+    px = d[(d.frame == "f08882") & (d.role == "pixel") & keep].reset_index(drop=True)
+    g = d[(d.frame == "f08882") & (d.role == "gnss") & keep].reset_index(drop=True)
+    print(f"\n## Without {BAD_GNSS}: {len(px)} pairs, pixel flags on GNSS non-linear\n")
+    vp = tests(px)
+    for lim in (5, 10, 20):
+        s = (flagged(g, dep=lim) == 1).to_numpy()
+        print(
+            f">{lim} mm in GNSS: {s.sum()} pairs; gate {vp['p<.01, >10 mm'][s].mean():.2f}, model {vp['model != linear'][s].mean():.2f}, change point {vp['change point'][s].mean():.2f}, largest GNSS {g.lin_departure[s].max():.0f} mm"
+        )
+    print(
+        "largest pixel departure among all pairs:",
+        round(px.lin_departure.max(), 1),
+        "mm; pairs over 5 mm:",
+        int((px.lin_departure > 5).sum()),
+    )
+    e = px.lin_rate - g.lin_rate
+    print(
+        "rates: median |pixel - GNSS|",
+        round(e.abs().median(), 2),
+        "rms",
+        round(float(np.sqrt((e**2).mean())), 2),
+    )
+    for pre, name in (("lin", "FNWN"), ("rw", "RWFNWN")):
+        z = (px[f"{pre}_rate"] - g[f"{pre}_rate"]) / np.hypot(
+            px[f"{pre}_rate_sigma"], g[f"{pre}_rate_sigma"]
+        )
+        print(
+            f"{name}: misfit/sigma NMAD {1.4826 * (z - z.median()).abs().median():.2f}"
+        )
+
+    c = pd.read_csv(RESULTS / "change_dates_houston.csv", parse_dates=["date"])
+    c = c[(c.role == "pixel") & (c.offset.abs() > 15)]
+    print("\nPixel offsets above 15 mm, by frame:", c.groupby("frame").size().to_dict())
+    both = pd.concat([c.assign(st=c.a), c.assign(st=c.b)])
+    print(
+        both.groupby(["frame", "st"])
+        .agg(
+            n=("kind", "size"),
+            size=("offset", lambda x: round(x.abs().median(), 1)),
+            when=("date", lambda x: str(x.median().date())),
+        )
+        .sort_values("n", ascending=False)
+        .head(6)
+        .to_string()
+    )
+
+
 if __name__ == "__main__":
     synthetic()
-    dates_input = real()
-    two_tracks(dates_input)
+    table = real()
+    two_tracks(
+        table,
+        (
+            ("Quiet stations, longest records", "f11116", "f38502"),
+            ("Screened for signal", "f11116x", "f38502v"),
+        ),
+    )
     dates()
     end_to_end()
+    print("\n\n# Houston, F08882 and its descending partner F38238\n")
+    table = real("real_houston.csv", ("f08882",))
+    two_tracks(table, (("Ascending and descending, to 2023-11", "f08882t", "f38238"),))
+    houston()

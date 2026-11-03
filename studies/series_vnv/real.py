@@ -6,17 +6,19 @@ holdout fits the first part of each pixel pair and predicts the last three years
 """
 
 import itertools
+import sys
 from concurrent.futures import ProcessPoolExecutor
 
 import numpy as np
 import pandas as pd
 from common import (
     DAYS,
-    LOS,
+    END,
     RESULTS,
     folder_of,
     grid,
     linearity_test,
+    los_of,
     pixel_series,
     run_methods,
     validity_horizon,
@@ -98,10 +100,15 @@ if __name__ == "__main__":
     src = UnrSource()
     catalog = src.steps()
     tasks = []
-    for frame in ("f11116", "f38502", "f38502v", "f11116x"):
+    frames = sys.argv[2:] or ["f11116", "f38502", "f38502v", "f11116x"]
+    for frame in frames:
         folder = folder_of(frame)
         st = pd.read_csv(folder / "stations.csv")
         dates, cube = pixel_series(folder)
+        if frame in END:
+            keep = dates <= END[frame]
+            dates, cube = dates[keep], cube[keep]
+        los = los_of(frame)
         px, off, gn, steps = {}, {}, {}, {}
         for k, row in enumerate(st.itertuples()):
             px[row.id] = grid(pd.Series(cube[:, k, 0], index=dates))
@@ -111,7 +118,7 @@ if __name__ == "__main__":
             )
             t = t.set_index(pd.to_datetime(t["date"]))
             gn[row.id] = grid(
-                (t.east * LOS["east"] + t.north * LOS["north"] + t.up * LOS["up"])
+                (t.east * los["east"] + t.north * los["north"] + t.up * los["up"])
                 * 1000.0
             )
             steps[row.id] = list(
@@ -143,5 +150,7 @@ if __name__ == "__main__":
             if k % 100 == 0:
                 print(k, flush=True)
     RESULTS.mkdir(exist_ok=True)
-    pd.DataFrame(rows).to_csv(RESULTS / "real.csv", index=False)
+    pd.DataFrame(rows).to_csv(
+        RESULTS / (sys.argv[1] if len(sys.argv) > 1 else "real.csv"), index=False
+    )
     print("done", flush=True)
