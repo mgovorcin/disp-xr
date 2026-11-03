@@ -107,22 +107,58 @@ def test_short_or_empty_cells_are_nan_with_code_minus_one():
     assert maps.trend_shape.values[1, 1] == 0
 
 
-def test_linearity_is_marked_as_a_draft():
-    with pytest.warns(UserWarning, match="draft"):
+def test_linearity_is_provisional_and_does_not_warn():
+    import warnings
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
         maps = dxr.fit_series(_cube(_line), "linearity", n_simulations=100)
-    assert "draft" in maps.attrs["status"]
+    assert maps.attrs["status"].startswith("provisional")
     assert (maps.linearity_model == 0).all()
     np.testing.assert_allclose(maps.velocity, 4e-3, atol=4e-4)
     assert (maps.validity_years > 0).all()
 
 
 def test_linearity_finds_a_rate_change():
-    with pytest.warns(UserWarning, match="draft"):
-        maps = dxr.fit_series(_cube(_hinge), "linearity", n_simulations=100)
+    maps = dxr.fit_series(_cube(_hinge), "linearity", n_simulations=100)
     assert (maps.linearity_model != 0).all()
     assert (maps.departure > 0).all()
     breakpoint_ = pd.Timestamp(maps.breakpoint.values[0, 0])
     assert abs((breakpoint_ - pd.Timestamp("2021-01-01")).days) < 365
+
+
+def test_significant_is_the_gate_on_p_and_departure():
+    hinge = dxr.fit_series(_cube(_hinge), "linearity", n_simulations=100)
+    line = dxr.fit_series(_cube(_line), "linearity", n_simulations=100)
+    high = dxr.fit_series(
+        _cube(_hinge), "linearity", n_simulations=100, min_departure_mm=1e6
+    )
+    assert (hinge.significant == 1).all()
+    assert (line.significant == 0).all()
+    assert (high.significant == 0).all()
+    assert (high.linearity_model != 0).all()  # the verdict is not the gate's
+
+
+def test_rate_noise_comes_from_a_second_fit():
+    from geepers.linearity import linearity_test
+
+    cube = _cube(_line, n=5)
+    two = dxr.fit_series(cube, "linearity", n_simulations=100)
+    one = dxr.fit_series(cube, "linearity", n_simulations=100, uncertainty_noise=None)
+    assert two.velocity_sigma.attrs["noise_model"] == "RWFNWN"
+    assert one.velocity_sigma.attrs["noise_model"] == "FNWN"
+    index, starts = _bins(cube.time.values, 30.0)
+    series = cube.displacement.isel(y=slice(0, 5), x=slice(0, 5)).median(("y", "x"))
+    y = pd.Series(series.values * 1000.0).groupby(index).median().to_numpy(dtype=float)
+    direct = linearity_test(
+        starts, y, sampling_days=30.0, noise_model="RWFNWN", n_simulations=1
+    )
+    np.testing.assert_allclose(
+        two.velocity_sigma.values[0, 0], direct.trend.velocity_uncertainty / 1000.0
+    )
+    # The verdict's columns do not depend on the second fit
+    np.testing.assert_array_equal(two.p_quadratic, one.p_quadratic)
+    np.testing.assert_array_equal(two.departure, one.departure)
 
 
 def test_needs_a_chained_series_and_known_units():

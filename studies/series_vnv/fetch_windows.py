@@ -1,9 +1,14 @@
-"""Read the signal-screened stations' windows from local F11116 granules: a second track.
+"""Read station windows from local granules, for a station list with id, lon and lat.
 
 Same windows as insar_gnss_fetch.py in the smooth-trend validation (5 x 5 at 30 m through
-recommended_mask, a second window 500 m east), for the stations inside F11116. Needs h5py.
+recommended_mask, a second window 500 m east), for the stations inside the frame. Saves the
+frame-center line of sight when given the static layer. Needs h5py, pyproj and rasterio.
+
+    python fetch_windows.py f11116x <F11116 granules> <cache>/f38502v/stations.csv
+    python fetch_windows.py f08882 <F08882 granules> results/houston_stations.csv <enu.tif>
 """
 
+import json
 import sys
 from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
@@ -11,12 +16,10 @@ from pathlib import Path
 import h5py
 import numpy as np
 import pandas as pd
-from pyproj import Transformer
+from pyproj import CRS, Transformer
 
 HALF, OFFSET = 2, 17
 HERE = Path(__file__).resolve().parent
-GRANULES = Path("/u/aurora-r0/govorcin/01_OPERA/DISP/data/F11116")
-OUT = HERE / "results" / "f11116x"
 
 
 def window(ds, i, j):
@@ -24,8 +27,8 @@ def window(ds, i, j):
 
 
 def job(task):
-    path, xy = task
-    out = OUT / f"{path.stem}.npz"
+    path, xy, folder = task
+    out = folder / f"{path.stem}.npz"
     if out.exists():
         return 0
     with h5py.File(path, "r") as h:
@@ -54,26 +57,32 @@ def job(task):
 
 
 if __name__ == "__main__":
-    cache = Path(sys.argv[1])
-    OUT.mkdir(parents=True, exist_ok=True)
-    st = pd.read_csv(cache / "f38502v" / "stations.csv")
-    paths = sorted(GRANULES.glob("OPERA*.nc"))
+    name, granules, stations = sys.argv[1], Path(sys.argv[2]), Path(sys.argv[3])
+    folder = HERE / "results" / name
+    folder.mkdir(parents=True, exist_ok=True)
+    st = pd.read_csv(stations)
+    paths = sorted(granules.glob("OPERA_L3_DISP-S1_IW*.nc"))
     with h5py.File(paths[0]) as h:
         x, y = h["x"][:], h["y"][:]
-    px, py = Transformer.from_crs(4326, 32610, always_xy=True).transform(st.lon, st.lat)
-    keep = (
-        (px > x.min() + 100)
-        & (px < x.max() - 700)
-        & (py > y.min() + 100)
-        & (py < y.max() - 100)
-    )
+        wkt = h["spatial_ref"].attrs["crs_wkt"]
+    crs = CRS.from_wkt(wkt.decode() if isinstance(wkt, bytes) else str(wkt))
+    px, py = Transformer.from_crs(4326, crs, always_xy=True).transform(st.lon, st.lat)
+    keep = (px > x.min() + 100) & (px < x.max() - 700)
+    keep &= (py > y.min() + 100) & (py < y.max() - 100)
     st = st.assign(x=px, y=py)[keep].reset_index(drop=True)
-    st.to_csv(OUT / "stations.csv", index=False)
+    st.to_csv(folder / "stations.csv", index=False)
+    if len(sys.argv) > 4:
+        import rasterio
+
+        with rasterio.open(sys.argv[4]) as src:
+            enu = src.read(out_shape=(src.count, 200, 200)).astype(float)
+        enu[enu == 0] = np.nan
+        east, north, up = np.nanmedian(enu, axis=(1, 2))[:3]
+        los = {"east": float(east), "north": float(north), "up": float(up)}
+        (folder / "los.json").write_text(json.dumps(los))
+        print(name, "line of sight", los)
     xy = st[["x", "y"]].to_numpy()
     print(len(paths), "granules,", len(st), "stations", flush=True)
     with ProcessPoolExecutor(16) as pool:
-        print(
-            "read",
-            sum(pool.map(job, [(p, xy) for p in paths], chunksize=4)),
-            flush=True,
-        )
+        tasks = [(p, xy, folder) for p in paths]
+        print("read", sum(pool.map(job, tasks, chunksize=4)), flush=True)

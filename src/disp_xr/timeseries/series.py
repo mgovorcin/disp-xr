@@ -13,9 +13,12 @@ F11116 the rate was -13 mm/yr before removing the block's median and 0.6 after.
 
 Requires the ``gnss`` extra, with a geepers that has ``geepers.smooth``.
 
-``"linearity"`` is a **draft**: not validated on DISP (needs V&V) and to be
-improved, so its output may change. ``"smooth"`` is provisional, with the checks
-against GNSS described in the geepers documentation (``docs/analysis-modules.md``).
+Both are provisional. ``"linearity"`` is checked (``docs/studies/series_vnv.md``)
+for false alarms on two regions and for detection on one, where it finds
+departures above about 20 mm. Read its verdict from
+``significant``, not ``linearity_model``. ``"smooth"`` is provisional, with the
+checks against GNSS described in the geepers documentation
+(``docs/analysis-modules.md``).
 """
 
 from __future__ import annotations
@@ -38,7 +41,11 @@ __all__ = ["fit_series"]
 SHAPES = ("linear", "piecewise", "smooth")
 LINEARITY_MODELS = ("linear", "quadratic", "piecewise")
 HORIZON_DRIVERS = ("rate uncertainty", "non-linearity", "capped")
-DRAFT = "draft: needs V&V and improvement"
+SIGNIFICANT = ("no", "yes")
+LINEARITY_STATUS = (
+    "provisional: detects departures above about 20 mm, checked on one region "
+    "(docs/studies/series_vnv.md)"
+)
 _TO_MM = {
     "m": 1000.0,
     "meter": 1000.0,
@@ -185,6 +192,9 @@ def _linearity_block(
     min_valid: int,
     tolerance_mm: float,
     fit_options: dict,
+    alpha: float,
+    min_departure_mm: float,
+    uncertainty_noise: Optional[str],
 ) -> tuple[np.ndarray, ...]:
     from threadpoolctl import threadpool_limits
 
@@ -194,7 +204,8 @@ def _linearity_block(
     n = y.shape[0]
     code = np.full(n, _NOT_SET, dtype=np.int8)
     driver = np.full(n, _NOT_SET, dtype=np.int8)
-    breakpoints = np.full(n, np.datetime64("NaT"), dtype="datetime64[ns]")
+    significant = np.full(n, _NOT_SET, dtype=np.int8)
+    breakpoints = np.full(n, np.datetime64("NaT", "ns"))
     names = (
         "velocity",
         "velocity_sigma",
@@ -215,13 +226,34 @@ def _linearity_block(
                 result = linearity_test(dates, y[i], **fit_options)
             except (ValueError, np.linalg.LinAlgError):
                 continue  # too few usable epochs for the model: left as NaN
-            horizon = validity_horizon(result, tolerance=tolerance_mm)
             code[i] = LINEARITY_MODELS.index(result.model)
-            driver[i] = HORIZON_DRIVERS.index(horizon.driver)
+            significant[i] = (
+                min(result.p_values.values()) < alpha
+                and result.departure > min_departure_mm
+            )
+            rate = result
+            if uncertainty_noise is not None:
+                try:
+                    # Only the fit and the BIC are used: no need for the p-value
+                    rate = linearity_test(
+                        dates,
+                        y[i],
+                        **{
+                            **fit_options,
+                            "noise_model": uncertainty_noise,
+                            "n_simulations": 1,
+                        },
+                    )
+                except (ValueError, np.linalg.LinAlgError):
+                    rate = None  # the verdict stands; its rate is left as NaN
+            if rate is not None:
+                horizon = validity_horizon(rate, tolerance=tolerance_mm)
+                driver[i] = HORIZON_DRIVERS.index(horizon.driver)
+                values["velocity"][i] = rate.trend.velocity / to_mm
+                values["velocity_sigma"][i] = rate.trend.velocity_uncertainty / to_mm
+                values["validity_years"][i] = horizon.years
             if result.breakpoint is not None:
                 breakpoints[i] = np.datetime64(result.breakpoint, "ns")
-            values["velocity"][i] = result.trend.velocity / to_mm
-            values["velocity_sigma"][i] = result.trend.velocity_uncertainty / to_mm
             values["p_quadratic"][i] = result.p_values.get("quadratic", np.nan)
             values["p_piecewise"][i] = result.p_values.get("piecewise", np.nan)
             values["acceleration"][i] = result.acceleration / to_mm
@@ -230,10 +262,10 @@ def _linearity_block(
             values["rate_after"][i] = result.rate_after / to_mm
             values["rate_change_sigma"][i] = result.rate_change_sigma / to_mm
             values["departure"][i] = result.departure / to_mm
-            values["validity_years"][i] = horizon.years
     return (
         code.reshape(shape),
         driver.reshape(shape),
+        significant.reshape(shape),
         breakpoints.reshape(shape),
         *(values[name].reshape(shape) for name in names),
     )
@@ -283,6 +315,9 @@ def fit_series(
     knots_per_year: float = 1.0,
     detect_changes: bool = True,
     noise: str = "FNWN",
+    uncertainty_noise: Optional[str] = "RWFNWN",
+    alpha: float = 0.01,
+    min_departure_mm: float = 10.0,
     tolerance_mm: float = 10.0,
     n_simulations: int = 2000,
     allow_denoised: bool = False,
@@ -298,8 +333,8 @@ def fit_series(
     model : {"smooth", "linearity"}
         ``"smooth"``: a time-varying rate without an assumed shape,
         ``geepers.smooth.fit_smooth_trend``. Provisional. ``"linearity"``: is a
-        single rate enough, and for how long, ``geepers.linearity``. **Draft:
-        needs V&V and improvement**, so it warns, and its output may change.
+        single rate enough, and for how long, ``geepers.linearity``. Provisional:
+        detects departures above about 20 mm, checked on one region.
     layer : str
         Layer of a Dataset.
     window : int
@@ -322,7 +357,17 @@ def fit_series(
     min_evidence, knots_per_year, detect_changes
         ``"smooth"``: as in ``fit_smooth_trend``.
     noise : {"FNWN", "PLWN", "PL", "WN", "RWFNWN"}
-        ``"linearity"``: noise model of ``linearity_test``.
+        ``"linearity"``: noise model of the verdict. Keep a random walk out of it:
+        ``"RWFNWN"`` found 1 of 13 pairs that GNSS shows are strongly non-linear.
+    uncertainty_noise : str or None
+        ``"linearity"``: noise model of ``velocity``, ``velocity_sigma``,
+        ``validity_years`` and ``validity_driver``, from a second fit, about 15 % more
+        time per series on F11116 pairs. With ``"FNWN"`` rate errors are 3 to 5 times
+        ``velocity_sigma`` at DISP-S1 noise (V&V). None uses ``noise``, one fit.
+    alpha, min_departure_mm : float
+        ``"linearity"``: ``significant`` needs the smaller p-value below ``alpha``
+        and ``departure`` above ``min_departure_mm``. The defaults are from the
+        V&V, at 5 x 5 medians in 30-day bins: check them if you change either.
     tolerance_mm : float
         ``"linearity"``: extrapolation error that sets ``validity_years``.
     n_simulations : int
@@ -341,11 +386,17 @@ def fit_series(
         ``n_rate_changes``, and ``rates``, ``rates_sigma`` ``(time, y, x)`` at
         the start of each bin.
 
-        ``"linearity"``: ``linearity_model`` (0 linear, 1 quadratic, 2
-        piecewise), ``velocity``, ``velocity_sigma``, ``p_quadratic``,
+        ``"linearity"``: ``significant`` (0 no, 1 yes: the verdict to read),
+        ``linearity_model`` (0 linear, 1 quadratic, 2 piecewise; lowest BIC, which
+        flags 59 % of straight lines at typical noise), ``velocity``,
+        ``velocity_sigma``, ``p_quadratic``,
         ``p_piecewise``, ``acceleration``, ``acceleration_sigma``,
         ``breakpoint``, ``rate_before``, ``rate_after``, ``rate_change_sigma``,
-        ``departure``, ``validity_years`` and ``validity_driver``.
+        ``departure``, ``validity_years`` and ``validity_driver``. ``breakpoint``
+        did not repeat between tracks, and ``rate_after`` predicts three years ahead
+        worse than ``velocity``: do not date events with the one or extrapolate
+        the other. Steps, such as unwrapping errors, are not found: pass known ones
+        as ``steps``.
 
     Raises
     ------
@@ -366,13 +417,6 @@ def fit_series(
     if window < 1:
         raise ValueError(f"window must be at least 1, not {window}")
     _models()
-    if model == "linearity":
-        warnings.warn(
-            "fit_series(model='linearity') is a draft: it needs V&V on DISP and "
-            "improvement, and its output may change",
-            UserWarning,
-            stacklevel=3,
-        )
     check_not_denoised(obj, allow_denoised)
     da = obj[layer] if isinstance(obj, xr.Dataset) else obj
     _check_input(obj, da)
@@ -438,6 +482,11 @@ def fit_series(
         ).rename(bin_time="time")
     else:
         kwargs["tolerance_mm"] = tolerance_mm
+        kwargs["alpha"] = alpha
+        kwargs["min_departure_mm"] = min_departure_mm
+        kwargs["uncertainty_noise"] = (
+            None if uncertainty_noise == noise else uncertainty_noise
+        )
         kwargs["fit_options"] = {
             **common,
             "noise_model": noise,
@@ -447,10 +496,10 @@ def fit_series(
             _linearity_block,
             cells,
             input_core_dims=[["time"]],
-            output_core_dims=[[]] * 14,
+            output_core_dims=[[]] * 15,
             kwargs=kwargs,
             dask="parallelized",
-            output_dtypes=[np.int8, np.int8, "datetime64[ns]"] + [float] * 11,
+            output_dtypes=[np.int8, np.int8, np.int8, "datetime64[ns]"] + [float] * 11,
         )
         out = xr.Dataset(
             {
@@ -464,23 +513,38 @@ def fit_series(
                         _flags(HORIZON_DRIVERS, "what sets validity_years")
                     )
                 ),
-                "breakpoint": results[2],
-                "velocity": results[3].assign_attrs(rate_units),
-                "velocity_sigma": results[4].assign_attrs(rate_units),
-                "p_quadratic": results[5],
-                "p_piecewise": results[6],
-                "acceleration": (
-                    results[7].assign_attrs(units=f"{da.attrs['units']}/year^2")
+                "significant": (
+                    results[2].assign_attrs(
+                        _flags(SIGNIFICANT, "not a straight line"),
+                        alpha=alpha,
+                        min_departure_mm=min_departure_mm,
+                    )
                 ),
-                "acceleration_sigma": (
+                "breakpoint": results[3],
+                "velocity": (
+                    results[4].assign_attrs(
+                        rate_units, noise_model=uncertainty_noise or noise
+                    )
+                ),
+                "velocity_sigma": (
+                    results[5].assign_attrs(
+                        rate_units, noise_model=uncertainty_noise or noise
+                    )
+                ),
+                "p_quadratic": results[6],
+                "p_piecewise": results[7],
+                "acceleration": (
                     results[8].assign_attrs(units=f"{da.attrs['units']}/year^2")
                 ),
-                "rate_before": results[9].assign_attrs(rate_units),
-                "rate_after": results[10].assign_attrs(rate_units),
-                "rate_change_sigma": results[11].assign_attrs(rate_units),
-                "departure": results[12].assign_attrs(units=da.attrs["units"]),
+                "acceleration_sigma": (
+                    results[9].assign_attrs(units=f"{da.attrs['units']}/year^2")
+                ),
+                "rate_before": results[10].assign_attrs(rate_units),
+                "rate_after": results[11].assign_attrs(rate_units),
+                "rate_change_sigma": results[12].assign_attrs(rate_units),
+                "departure": results[13].assign_attrs(units=da.attrs["units"]),
                 "validity_years": (
-                    results[13].assign_attrs(units="years", tolerance_mm=tolerance_mm)
+                    results[14].assign_attrs(units="years", tolerance_mm=tolerance_mm)
                 ),
             }
         )
@@ -488,7 +552,7 @@ def fit_series(
         out = out.assign_coords(spatial_ref=da.coords["spatial_ref"])
     out.attrs = {
         "model": f"geepers {model}, {window} x {window} medians, {bin_days:g}-day bins",
-        "status": DRAFT if model == "linearity" else "provisional",
+        "status": LINEARITY_STATUS if model == "linearity" else "provisional",
         "reference_time": str(pd.Timestamp(cells["time"].values[0])),
     }
     return with_grid_mapping(out)

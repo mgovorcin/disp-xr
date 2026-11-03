@@ -5,6 +5,7 @@ import os
 os.environ.setdefault("OMP_NUM_THREADS", "1")
 os.environ.setdefault("OPENBLAS_NUM_THREADS", "1")
 
+import json
 import re
 import warnings
 from pathlib import Path
@@ -30,6 +31,10 @@ NAME = re.compile(r"_(\d{8})T\d+Z_(\d{8})T\d+Z_v[\d.]+_(\d{8})T")
 LOS = {"east": 0.607, "north": -0.110, "up": 0.787}
 
 
+# F08882 cut where F38238 ends, so that the two tracks cover the same years
+END = {"f08882t": "2023-11-30"}
+
+
 def pixel_series(folder):
     """Rebase every cached product to the first reference: mm, per station and window."""
     rows = {}
@@ -52,8 +57,20 @@ def pixel_series(folder):
 
 
 def folder_of(frame):
-    """A cached station set; f11116x is fetch_overlap.py's, on the same stations as f38502v."""
-    return RESULTS / frame if frame == "f11116x" else CACHE / frame
+    """A cached station set, or one fetch_windows.py wrote into results."""
+    if frame in END:
+        frame = frame.removesuffix("t")
+    return (
+        RESULTS / frame
+        if (RESULTS / frame / "stations.csv").exists()
+        else CACHE / frame
+    )
+
+
+def los_of(frame):
+    """The frame's line of sight, if fetch_windows.py saved it."""
+    path = folder_of(frame) / "los.json"
+    return json.loads(path.read_text()) if path.exists() else LOS
 
 
 def grid(series):

@@ -1,6 +1,6 @@
 # disp-xr project index
 
-**Last indexed:** 2026-11-02 · `main` after #113 (branch `study/series-vnv`) on `origin` = `mgovorcin/disp-xr`
+**Last indexed:** 2026-11-02 · `main` after #113 (branch `feat/series-gate`, on `study/series-vnv`) on `origin` = `mgovorcin/disp-xr`
 
 How and when this file is rebuilt: see "Project Index (cyclical indexing)" in `CLAUDE.md` at the repository root.
 
@@ -23,7 +23,7 @@ How and when this file is rebuilt: see "Project Index (cyclical indexing)" in `C
 | [docs_plan.md](docs_plan.md) | Documentation coverage per feature, stale notebooks, GitHub Pages gaps, tutorial order before going public | — |
 | [studies/split_metric.md](studies/split_metric.md) | T29 trade study report: frames, criteria, decision (scripts in `studies/split_metric/` at the root) | — |
 | [studies/gnss_validation.md](studies/gnss_validation.md) | T34 GNSS validation against geepers on the T29 frames: double-differenced agreement, tie checks, discrepancies (scripts in `studies/gnss_validation/` at the root) | — |
-| [studies/series_vnv.md](studies/series_vnv.md) | V&V of the draft linearity test and of change points on DISP-S1: synthetic, GNSS pairs, two tracks, holdout (scripts in `studies/series_vnv/` at the root) | — |
+| [studies/series_vnv.md](studies/series_vnv.md) | V&V of the linearity test and of change points on DISP-S1: synthetic, GNSS pairs, two tracks, holdout (scripts in `studies/series_vnv/` at the root) | — |
 | [check_plan.py](check_plan.py) | Mechanical check of `todo.md` (run in every indexing cycle) | — |
 | [gallery/](gallery/) | 18 executed example pages (`# %%` scripts run by mkdocs-jupyter), one or more per feature | — |
 | [real_data/](real_data/) | Pre-executed notebooks on production granules (saved outputs, not run by the docs build): Houston F08882, production change F11116, San Andreas creep F11116, terrain-following troposphere F39362, product versions 1.0 against 1.1 F08622 | — |
@@ -186,6 +186,9 @@ since #30 was checked locally and says so in its description.
 
 | Date | Trigger | Changes |
 | --- | --- | --- |
+| 2026-11-02 | Linearity test provisional | Owner decision: no draft warning, `status` provisional, checked for departures above about 20 mm |
+| 2026-11-02 | Houston repeat of the V&V | `series_vnv.md` Houston section: false alarms and `RWFNWN` hold, detection not testable, bad F08882 ministack 2019-06-20; label decision open |
+| 2026-11-02 | `fit_series` gate | `significant`, `alpha`, `min_departure_mm`, `uncertainty_noise` (second `RWFNWN` fit); still a draft |
 | 2026-11-02 | V&V of the linearity test | `docs/studies/series_vnv.md`, `studies/series_vnv/`; `velocity-methods.md` note; draft label stays, gate and `RWFNWN` sigma recommended, owner decision open |
 | 2026-11-02 | Per-series geepers models | `timeseries/series.py` (`fit_series`: smooth, draft linearity), `api/process.md`, `api_policy.md` Provisional row; geepers pin `75dcf4f` |
 | 2026-10-30 | Trajectory rate changes | `rate_changes` in `Trajectory` (`timeseries/trajectory.py`, `_design_matrix.py`), `present_velocity` in `fit_trajectory` and `fit_velocity("ols")`; gallery `velocity` section |
