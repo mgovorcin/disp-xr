@@ -1,8 +1,8 @@
 # V&V of the linearity test and change points
 
 Status (2026-11-02): done for the settings below, on central California and Houston. Step 1
-of the recommendation is in `fit_series`; whether the draft label comes off is the owner's
-decision.
+of the recommendation is in `fit_series`, and on the owner's decision (2026-11-02)
+`"linearity"` is provisional, documented for departures above about 20 mm.
 
 This study asks three things about per-series models on DISP-S1 at 5 x 5 pixels and 30-day
 medians (`fit_series` defaults): can the draft label come off `model="linearity"`, which
@@ -10,7 +10,8 @@ settings should it use, and are geepers' change points worth adding to disp-xr?
 
 ## Answers
 
-1. **The draft label stays until the owner decides.** The gate's false alarms hold on both
+1. **The draft label came off (owner, 2026-11-02): provisional, for departures above about
+   20 mm.** The gate's false alarms hold on both
    regions (none in 540 Houston pairs). Detection rests on 13 station pairs in California,
    because Houston has no real departure large enough to test it.
 2. **Read a series as non-linear only if `min(p_quadratic, p_piecewise) < 0.01` and
@@ -256,7 +257,7 @@ Owner decision, in this order:
    series. `breakpoint` and `rate_after` stay, documented as not fit for dating or
    extrapolation.
 2. Done on Houston: false alarms and uncertainties hold; detection could not be tested there.
-   Move `"linearity"` from draft to provisional, documented as checked for departures above
-   about 20 mm in one region. Otherwise, find a second region with strong non-linear signals.
+   Done: `"linearity"` is provisional, documented as checked for departures above about 20 mm
+   in one region. A second region with strong non-linear signals would firm up detection.
 3. Add an offsets-above-15-mm flag from `detect_changepoints` as a data-quality layer, after
    checking P533, P552 and F08882's 2019 ministack against coherence. This is separate work.

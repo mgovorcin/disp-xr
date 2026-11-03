@@ -49,7 +49,7 @@ any release. So are the deprecated module aliases (`disp_xr.io`,
 | Level | Meaning | Currently |
 | --- | --- | --- |
 | Stable | Covered by everything above. | Everything public not listed below |
-| Provisional | May change in a minor release, with a changelog entry but without a deprecation cycle. | DISP-NISAR support (product spec not yet validated, plan task T35); `disp_xr.batch` (region jobs); `fit_series`, whose `"linearity"` model is a draft that needs V&V (it warns when called) and whose `"smooth"` model has been checked against GNSS on two frames only; the REST service (`disp_xr.serve`, `disp_xr serve`; plan task T40) |
+| Provisional | May change in a minor release, with a changelog entry but without a deprecation cycle. | DISP-NISAR support (product spec not yet validated, plan task T35); `disp_xr.batch` (region jobs); `fit_series`, whose `"linearity"` model has been checked for detection (departures above about 20 mm) in one region and whose `"smooth"` model has been checked against GNSS on two frames only; the REST service (`disp_xr.serve`, `disp_xr serve`; plan task T40) |
 
 ## Deprecation
 

@@ -107,18 +107,20 @@ def test_short_or_empty_cells_are_nan_with_code_minus_one():
     assert maps.trend_shape.values[1, 1] == 0
 
 
-def test_linearity_is_marked_as_a_draft():
-    with pytest.warns(UserWarning, match="draft"):
+def test_linearity_is_provisional_and_does_not_warn():
+    import warnings
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
         maps = dxr.fit_series(_cube(_line), "linearity", n_simulations=100)
-    assert "draft" in maps.attrs["status"]
+    assert maps.attrs["status"].startswith("provisional")
     assert (maps.linearity_model == 0).all()
     np.testing.assert_allclose(maps.velocity, 4e-3, atol=4e-4)
     assert (maps.validity_years > 0).all()
 
 
 def test_linearity_finds_a_rate_change():
-    with pytest.warns(UserWarning, match="draft"):
-        maps = dxr.fit_series(_cube(_hinge), "linearity", n_simulations=100)
+    maps = dxr.fit_series(_cube(_hinge), "linearity", n_simulations=100)
     assert (maps.linearity_model != 0).all()
     assert (maps.departure > 0).all()
     breakpoint_ = pd.Timestamp(maps.breakpoint.values[0, 0])
@@ -126,12 +128,11 @@ def test_linearity_finds_a_rate_change():
 
 
 def test_significant_is_the_gate_on_p_and_departure():
-    with pytest.warns(UserWarning, match="draft"):
-        hinge = dxr.fit_series(_cube(_hinge), "linearity", n_simulations=100)
-        line = dxr.fit_series(_cube(_line), "linearity", n_simulations=100)
-        high = dxr.fit_series(
-            _cube(_hinge), "linearity", n_simulations=100, min_departure_mm=1e6
-        )
+    hinge = dxr.fit_series(_cube(_hinge), "linearity", n_simulations=100)
+    line = dxr.fit_series(_cube(_line), "linearity", n_simulations=100)
+    high = dxr.fit_series(
+        _cube(_hinge), "linearity", n_simulations=100, min_departure_mm=1e6
+    )
     assert (hinge.significant == 1).all()
     assert (line.significant == 0).all()
     assert (high.significant == 0).all()
@@ -142,11 +143,8 @@ def test_rate_noise_comes_from_a_second_fit():
     from geepers.linearity import linearity_test
 
     cube = _cube(_line, n=5)
-    with pytest.warns(UserWarning, match="draft"):
-        two = dxr.fit_series(cube, "linearity", n_simulations=100)
-        one = dxr.fit_series(
-            cube, "linearity", n_simulations=100, uncertainty_noise=None
-        )
+    two = dxr.fit_series(cube, "linearity", n_simulations=100)
+    one = dxr.fit_series(cube, "linearity", n_simulations=100, uncertainty_noise=None)
     assert two.velocity_sigma.attrs["noise_model"] == "RWFNWN"
     assert one.velocity_sigma.attrs["noise_model"] == "FNWN"
     index, starts = _bins(cube.time.values, 30.0)

@@ -13,8 +13,9 @@ F11116 the rate was -13 mm/yr before removing the block's median and 0.6 after.
 
 Requires the ``gnss`` extra, with a geepers that has ``geepers.smooth``.
 
-``"linearity"`` is a **draft**, so its output may change: the V&V
-(``docs/studies/series_vnv.md``) checks detection on one region. Read its verdict from
+Both are provisional. ``"linearity"`` is checked (``docs/studies/series_vnv.md``)
+for false alarms on two regions and for detection on one, where it finds
+departures above about 20 mm. Read its verdict from
 ``significant``, not ``linearity_model``. ``"smooth"`` is provisional, with the
 checks against GNSS described in the geepers documentation
 (``docs/analysis-modules.md``).
@@ -41,7 +42,10 @@ SHAPES = ("linear", "piecewise", "smooth")
 LINEARITY_MODELS = ("linear", "quadratic", "piecewise")
 HORIZON_DRIVERS = ("rate uncertainty", "non-linearity", "capped")
 SIGNIFICANT = ("no", "yes")
-DRAFT = "draft: detection checked on one region (docs/studies/series_vnv.md)"
+LINEARITY_STATUS = (
+    "provisional: detects departures above about 20 mm, checked on one region "
+    "(docs/studies/series_vnv.md)"
+)
 _TO_MM = {
     "m": 1000.0,
     "meter": 1000.0,
@@ -201,7 +205,7 @@ def _linearity_block(
     code = np.full(n, _NOT_SET, dtype=np.int8)
     driver = np.full(n, _NOT_SET, dtype=np.int8)
     significant = np.full(n, _NOT_SET, dtype=np.int8)
-    breakpoints = np.full(n, np.datetime64("NaT"), dtype="datetime64[ns]")
+    breakpoints = np.full(n, np.datetime64("NaT", "ns"))
     names = (
         "velocity",
         "velocity_sigma",
@@ -329,8 +333,8 @@ def fit_series(
     model : {"smooth", "linearity"}
         ``"smooth"``: a time-varying rate without an assumed shape,
         ``geepers.smooth.fit_smooth_trend``. Provisional. ``"linearity"``: is a
-        single rate enough, and for how long, ``geepers.linearity``. **Draft:**
-        detection checked on one region, so it warns, and its output may change.
+        single rate enough, and for how long, ``geepers.linearity``. Provisional:
+        detects departures above about 20 mm, checked on one region.
     layer : str
         Layer of a Dataset.
     window : int
@@ -413,13 +417,6 @@ def fit_series(
     if window < 1:
         raise ValueError(f"window must be at least 1, not {window}")
     _models()
-    if model == "linearity":
-        warnings.warn(
-            "fit_series(model='linearity') is a draft (detection checked in one "
-            "region): read significant, not linearity_model; its output may change",
-            UserWarning,
-            stacklevel=3,
-        )
     check_not_denoised(obj, allow_denoised)
     da = obj[layer] if isinstance(obj, xr.Dataset) else obj
     _check_input(obj, da)
@@ -555,7 +552,7 @@ def fit_series(
         out = out.assign_coords(spatial_ref=da.coords["spatial_ref"])
     out.attrs = {
         "model": f"geepers {model}, {window} x {window} medians, {bin_days:g}-day bins",
-        "status": DRAFT if model == "linearity" else "provisional",
+        "status": LINEARITY_STATUS if model == "linearity" else "provisional",
         "reference_time": str(pd.Timestamp(cells["time"].values[0])),
     }
     return with_grid_mapping(out)

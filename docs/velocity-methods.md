@@ -123,15 +123,15 @@ maps = dxr.fit_series(cube.sel(x=xs, y=ys))     # smooth, time-varying rate
 maps.rate, maps.rate_sigma, maps.trend_shape    # present-day rate; line, hinges or smooth
 maps.rates                                      # the rate at every bin
 
-draft = dxr.fit_series(cube.sel(x=xs, y=ys), "linearity")
-draft.significant, draft.departure              # the verdict, and its size
-draft.velocity, draft.velocity_sigma, draft.validity_years
+test = dxr.fit_series(cube.sel(x=xs, y=ys), "linearity")
+test.significant, test.departure                # the verdict, and its size
+test.velocity, test.velocity_sigma, test.validity_years
 ```
 
 - **`"smooth"`** has been checked against GNSS on station pairs of two frames, in
   geepers' `docs/analysis-modules.md`. Its limit of 5 mm/sqrt(yr) is for DISP-S1 with
   these medians and bins; check it if you change them.
-- **`"linearity"` is a draft.** It warns when called, and its output may change. The
+- **`"linearity"` is provisional, and finds departures above about 20 mm.** The
   [V&V](https://github.com/mgovorcin/disp-xr/blob/main/docs/studies/series_vnv.md) checks false alarms on two regions and detection on one. Read `significant` (p below 0.01 and `departure` above 10 mm):
   `linearity_model` alone flags 59 % of straight lines at typical noise. Do not date events
   with `breakpoint` or extrapolate `rate_after`. `velocity_sigma` and `validity_years` come
