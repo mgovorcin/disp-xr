@@ -1,6 +1,6 @@
 # disp-xr project index
 
-**Last indexed:** 2026-11-02 · `main` after #113 (branch `feat/series-gate`, on `study/series-vnv`) on `origin` = `mgovorcin/disp-xr`
+**Last indexed:** 2026-11-02 · `main` after #115 on `origin` = `mgovorcin/disp-xr`
 
 How and when this file is rebuilt: see "Project Index (cyclical indexing)" in `CLAUDE.md` at the repository root.
 
