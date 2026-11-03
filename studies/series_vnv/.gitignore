@@ -1,0 +1,4 @@
+results/*
+!results/summary.txt
+!results/noise_levels.csv
+__pycache__/
