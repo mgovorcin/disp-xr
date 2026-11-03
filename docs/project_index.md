@@ -1,6 +1,6 @@
 # disp-xr project index
 
-**Last indexed:** 2026-11-02 · `main` after #113 (branch `feat/series-gate`, on `study/series-vnv`) on `origin` = `mgovorcin/disp-xr`
+**Last indexed:** 2026-11-03 · `main` after #115 (branch `chore/geepers-040`) on `origin` = `mgovorcin/disp-xr`
 
 How and when this file is rebuilt: see "Project Index (cyclical indexing)" in `CLAUDE.md` at the repository root.
 
@@ -164,8 +164,6 @@ since #30 was checked locally and says so in its description.
 
 ## Out of sync
 
-- `disp-xr[gnss]` cannot be installed from PyPI: it needs `geepers>=0.4`, and PyPI's newest is 0.3.0. `fit_series` needs that release too. Development uses the git pin.
-
 - Local checkouts `01_OPERA/STAKEHOLDER/disp-xr` and `01_OPERA/VLM/disp-xr` are on the old `timeseries_fitting` branch, and the conda envs `disp_xr` and `disp_xr_py311` hold non-editable installs of old commits.
 - The OPERA requirement values drawn by default (3 (1 + sqrt(L)) mm, 2 mm/yr) were to be confirmed against the requirements document before v0.3; they are released in `v0.3.0` unconfirmed (`specs.md` S4).
 ## Not verified
@@ -186,6 +184,7 @@ since #30 was checked locally and says so in its description.
 
 | Date | Trigger | Changes |
 | --- | --- | --- |
+| 2026-11-03 | geepers 0.4.0 on PyPI | test and docs environments use the release instead of the `75dcf4f` git pin; `disp-xr[gnss]` installs from PyPI; Out of sync item removed |
 | 2026-11-02 | Linearity test provisional | Owner decision: no draft warning, `status` provisional, checked for departures above about 20 mm |
 | 2026-11-02 | Houston repeat of the V&V | `series_vnv.md` Houston section: false alarms and `RWFNWN` hold, detection not testable, bad F08882 ministack 2019-06-20; label decision open |
 | 2026-11-02 | `fit_series` gate | `significant`, `alpha`, `min_departure_mm`, `uncertainty_noise` (second `RWFNWN` fit); still a draft |

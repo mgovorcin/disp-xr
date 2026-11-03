@@ -6,6 +6,10 @@ All notable changes to disp-xr. The format follows
 
 ## [Unreleased]
 
+### Changed
+
+- The `gnss` extra installs from PyPI: geepers 0.4.0 is released (it was a git pin).
+
 ### Added
 
 - `fit_series(model="linearity")` gains `significant` (`alpha`, `min_departure_mm`) and takes

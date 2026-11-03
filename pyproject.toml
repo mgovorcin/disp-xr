@@ -166,10 +166,10 @@ types-pyyaml = "*"
 h3-py = ">=4"
 geopandas = "*"
 
-# gnss extra: geepers is on PyPI only. Pinned to a main commit until 0.4 is
-# released (it carries the analysis and validation functions); then ">=0.4".
+# gnss extra: geepers is on PyPI only (0.4 carries the analysis and validation
+# functions).
 [tool.pixi.feature.test.pypi-dependencies]
-geepers = { git = "https://github.com/opera-adt/geepers.git", rev = "75dcf4f6859a20c894d10d7daea0f1ccfbc9fe83", extras = ["analysis"] }
+geepers = { version = ">=0.4", extras = ["analysis"] }
 
 # Web tiles with earth-mover's xpublish-tiles (PRD C5; one gallery page).
 [tool.pixi.feature.tiles.pypi-dependencies]
@@ -182,7 +182,7 @@ httpx2 = "*"
 
 # The GNSS gallery pages run geepers on synthetic stations (gnss extra).
 [tool.pixi.feature.docs.pypi-dependencies]
-geepers = { git = "https://github.com/opera-adt/geepers.git", rev = "75dcf4f6859a20c894d10d7daea0f1ccfbc9fe83", extras = ["analysis"] }
+geepers = { version = ">=0.4", extras = ["analysis"] }
 
 [tool.pixi.feature.docs.dependencies]
 mkdocs = "*"
