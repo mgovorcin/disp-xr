@@ -6,27 +6,30 @@ All notable changes to disp-xr. The format follows
 
 ## [Unreleased]
 
-### Changed
+## [0.7.0] - 2026-11-03
 
-- The `gnss` extra installs from PyPI: geepers 0.4.0 is released (it was a git pin).
+Per-series models and rate changes. `fit_series` runs geepers' smooth trend and
+linearity test on every multilooked cell, both provisional; the linearity test is
+read through `significant`, after a V&V on DISP-S1 (`docs/studies/series_vnv.md`).
+`Trajectory` takes changes of rate at known dates. The `gnss` extra now installs
+from PyPI (geepers 0.4.0). No value changes to existing functions. DISP-NISAR
+support moves to 0.8.
 
 ### Added
 
-- `fit_series(model="linearity")` gains `significant` (`alpha`, `min_departure_mm`) and takes
-  `velocity`, `velocity_sigma` and `validity_years` from a second fit
-  (`uncertainty_noise="RWFNWN"`; `None` restores one fit), following the V&V in
-  `docs/studies/series_vnv.md`. It is now provisional, like `"smooth"`, and no longer
-  warns: checked for false alarms on two regions and for detection (departures above
-  about 20 mm) on one.
 - `fit_series(cube, model)` (provisional; `gnss` extra): geepers per-series
-  models as maps, on 5 x 5 median cells in 30-day bins by default. `"smooth"`
-  gives a time-varying rate without an assumed shape, with the random-walk limit
-  of 5 mm/sqrt(yr) geepers recommends for DISP-S1. `"linearity"` tests whether a
-  single rate is enough and for how long; it is a **draft that needs V&V and
-  improvement**, warns when called, and its output may change. A Dataset that is
-  not chained raises, and one that is not re-referenced warns.
-- The geepers pin moves to `75dcf4f`, which has these models. `disp-xr[gnss]`
-  still needs a geepers 0.4 on PyPI to install.
+  models as maps, on 5 x 5 median cells in 30-day bins by default. A Dataset that
+  is not chained raises, and one that is not re-referenced warns.
+  - `"smooth"`: a time-varying rate without an assumed shape, with the
+    random-walk limit of 5 mm/sqrt(yr) geepers recommends for DISP-S1.
+  - `"linearity"`: whether a single rate is enough, and for how long. Read
+    `significant` (smaller p-value below `alpha`, 0.01, and `departure` above
+    `min_departure_mm`, 10 mm), not `linearity_model`, which flags 59 % of straight
+    lines at typical noise. `velocity`, `velocity_sigma` and `validity_years` come
+    from a second fit with `uncertainty_noise` (`"RWFNWN"`; `None` for one fit).
+    Checked for false alarms on two regions and for detection, of departures above
+    about 20 mm, on one. `breakpoint` and `rate_after` are not fit for dating or
+    extrapolation.
 - `Trajectory(rate_changes=("2021-06-01",))`: changes of rate at known dates
   (hinges `max(0, t - t_change)`, the series stays continuous), as in geepers
   `estimate_trend(rate_change_dates=...)`. `fit_trajectory` and
@@ -35,6 +38,13 @@ All notable changes to disp-xr. The format follows
   covariance of the terms in the sigma; `velocity` stays the rate before the
   first change. The other `fit_velocity` methods report one rate, so they
   refuse rate changes rather than return the first segment's rate.
+- `docs/studies/series_vnv.md`: the V&V of the linearity test and of change
+  points (synthetic series, GNSS pairs on F11116, F38502 and F08882, two tracks,
+  holdout).
+
+### Changed
+
+- The `gnss` extra installs from PyPI: it needs geepers 0.4.0, now released.
 
 ## [0.6.0] - 2026-10-21
 
