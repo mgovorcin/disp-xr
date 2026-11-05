@@ -239,7 +239,7 @@ Goal: the everyday DISP workflow (open, mask, re-reference, correct, export, plo
   - [x] T12.2 Add `enu_to_los(east, north, up, los_ds)` and the inverse helper for incidence and azimuth. Pin the sign convention in the docstring (positive LOS toward the satellite, per the product spec).
   - [x] T12.3 Make DEM and water-mask downloads optional (`aws` extra) and cache them on disk. Done: DISP-S1-STATIC files are cached under `config["cache.dir"]`; the DEM comes from them and the water mask from the granules, so `download_dem` and `download_water_mask` are deprecated (imports now lazy).
   - [x] T12.4 Add tests with a synthetic LOS geometry, including the projection of a pure-up motion.
-  - [ ] T12.5 NISAR geometry source: LOS vectors, incidence and DEM for DISP-NISAR frames from DISP-NI-STATIC, selected through `ProductSpec.static_source`. Add slant range from incidence with the wavelength and orbit height of the spec. Open: `geometry.los.slant_range` is done; no DISP-NI-STATIC collection exists in CMR (checked 2026-10-02), so reading it waits for a real granule. Scheduled for v0.7 with T35.
+  - [ ] T12.5 NISAR geometry source: LOS vectors, incidence and DEM for DISP-NISAR frames from DISP-NI-STATIC, selected through `ProductSpec.static_source`. Add slant range from incidence with the wavelength and orbit height of the spec. Open: `geometry.los.slant_range` is done; no DISP-NI-STATIC collection exists in CMR (checked 2026-10-02), so reading it waits for a real granule. Scheduled for v0.8 with T35.
 
 ### T13. Corrections
 
@@ -536,7 +536,7 @@ Goal: DISP-NISAR at parity, multi-frame, performance targets met, published on c
 ### T35. DISP-NISAR parity
 
 - [ ] **T35. DISP-NISAR parity** — Depends on: T34 · PRD: NFR Compatibility
-  - Scheduled for v0.7 (maintainer, 2026-10-12, as v0.6; moved 2026-10-21, when 0.6.0 became the frame-repository release): waits for beta DISP-NISAR products; T12.5 (DISP-NI-STATIC geometry) goes with it.
+  - Scheduled for v0.8 (maintainer, 2026-10-12, as v0.6; moved 2026-10-21, when 0.6.0 became the frame-repository release, and 2026-11-03, when 0.7.0 became the per-series release): waits for beta DISP-NISAR products; T12.5 (DISP-NI-STATIC geometry) goes with it.
   - Context: the `DISP_NISAR` spec was registered in T5.2 from a sample granule and `disp_nisar/product_info.py` and marked unvalidated; the NISAR geometry source was added in T12.5. 1.0 must support both products. Still unconfirmed: the filename pattern (the ported regex hard-codes `IW`), the CMR short name and the ASF credential endpoint.
   - Done when: NISAR fixtures and at least one real NISAR granule pass the same test suite as S1, and `ProductSpec.validated` is True.
   - [ ] T35.1 Re-check the spec against the current NISAR product (filename, CMR short name, groups, layers, units, corrections, credential endpoint) and close the PRD open question.

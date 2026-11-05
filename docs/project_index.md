@@ -1,6 +1,6 @@
 # disp-xr project index
 
-**Last indexed:** 2026-11-03 · `main` after #115 (branch `chore/geepers-040`) on `origin` = `mgovorcin/disp-xr`
+**Last indexed:** 2026-11-03 · `main` after #117 (branch `chore/release-0.7.0`) on `origin` = `mgovorcin/disp-xr`
 
 How and when this file is rebuilt: see "Project Index (cyclical indexing)" in `CLAUDE.md` at the repository root.
 
@@ -184,6 +184,7 @@ since #30 was checked locally and says so in its description.
 
 | Date | Trigger | Changes |
 | --- | --- | --- |
+| 2026-11-03 | Release `v0.7.0` prepared | CHANGELOG `[0.7.0]` (#112 to #117); DISP-NISAR (T35, T12.5) moves to v0.8 in `todo.md` |
 | 2026-11-03 | geepers 0.4.0 on PyPI | test and docs environments use the release instead of the `75dcf4f` git pin; `disp-xr[gnss]` installs from PyPI; Out of sync item removed |
 | 2026-11-02 | Linearity test provisional | Owner decision: no draft warning, `status` provisional, checked for departures above about 20 mm |
 | 2026-11-02 | Houston repeat of the V&V | `series_vnv.md` Houston section: false alarms and `RWFNWN` hold, detection not testable, bad F08882 ministack 2019-06-20; label decision open |
